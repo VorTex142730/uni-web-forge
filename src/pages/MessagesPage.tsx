@@ -12,7 +12,8 @@ import {
   Video, 
   Smile, 
   Send, 
-  ChevronLeft
+  ChevronLeft,
+  MessageSquare
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { conversations, messages, users } from '@/data/messagesData';

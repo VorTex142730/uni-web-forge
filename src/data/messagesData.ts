@@ -135,7 +135,7 @@ export const messages: Record<number, Message[]> = {
     {
       id: 3,
       senderId: 3,
-      recipientId: in1,
+      recipientId: 1,
       text: 'Hi Raviraj, how are you doing?',
       timestamp: 'Yesterday 3:30 PM',
       isRead: true
