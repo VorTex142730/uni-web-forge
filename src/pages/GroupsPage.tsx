@@ -12,6 +12,7 @@ import {
 import { Grid, ListFilter, Search, Plus, LayoutGrid, List } from 'lucide-react';
 import GroupCard from '@/components/groups/GroupCard';
 import { groups } from '@/data/mockData';
+import { Link } from 'react-router-dom';
 
 const GroupsPage = () => {
   const [view, setView] = useState<'grid' | 'list'>('grid');
@@ -24,11 +25,13 @@ const GroupsPage = () => {
         <h1 className="text-3xl font-bold">Groups</h1>
         
         <div className="flex gap-4">
-          <Button variant="outline" className="gap-1" as="a" href="#all-groups">
-            All Groups
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs text-red-600">
-              {groups.length}
-            </span>
+          <Button variant="outline" className="gap-1" asChild>
+            <Link to="#all-groups">
+              All Groups
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs text-red-600">
+                {groups.length}
+              </span>
+            </Link>
           </Button>
           
           <Button className="gap-2">

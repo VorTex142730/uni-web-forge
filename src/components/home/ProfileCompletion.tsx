@@ -33,12 +33,11 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
         </div>
         <Progress
           value={progress}
-          className="h-36 w-36 rounded-full bg-gray-100 mx-auto"
-          indicatorClassName={cn(
-            "rounded-full bg-gradient-to-r",
-            progress < 30 ? "from-red-500 to-red-300" :
-            progress < 70 ? "from-yellow-500 to-yellow-300" :
-            "from-green-500 to-green-300"
+          className={cn(
+            "h-36 w-36 rounded-full bg-gray-100 mx-auto",
+            progress < 30 ? "bg-gradient-to-r from-red-500 to-red-300" :
+            progress < 70 ? "bg-gradient-to-r from-yellow-500 to-yellow-300" :
+            "bg-gradient-to-r from-green-500 to-green-300"
           )}
         />
       </div>
