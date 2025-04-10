@@ -22,7 +22,7 @@ const Layout: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <Sidebar />
-      <main className="pt-16 pl-16">
+      <main className="pt-16 pl-16 lg:pl-56 transition-all duration-300">
         <div className="container py-4">
           <Outlet />
         </div>

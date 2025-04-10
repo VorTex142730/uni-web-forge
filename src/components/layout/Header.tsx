@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
-import { users } from '@/data/mockData';
+import { Badge } from '@/components/ui/badge';
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,8 +28,8 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white border-b border-border pl-16 z-10">
-      <div className="flex justify-between items-center p-3 px-4">
+    <header className="fixed top-0 left-0 w-full bg-white border-b border-border z-10">
+      <div className="flex justify-between items-center p-3 px-4 pl-20 lg:pl-60">
         <div className="flex items-center">
           <Link to="/" className="text-2xl font-bold">HotSpoT</Link>
         </div>
@@ -52,19 +52,19 @@ const Header: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Link to="/messages" className="p-2 rounded-full hover:bg-gray-100">
+          <Link to="/messages" className="p-2 rounded-full hover:bg-gray-100 relative">
             <MessageSquare size={20} />
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
           </Link>
           
-          <Link to="/notifications" className="p-2 rounded-full hover:bg-gray-100">
+          <Link to="/notifications" className="p-2 rounded-full hover:bg-gray-100 relative">
             <Bell size={20} />
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
           </Link>
           
           <Link to="/cart" className="p-2 rounded-full hover:bg-gray-100 relative">
             <ShoppingCart size={20} />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-              1
-            </span>
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
           </Link>
           
           <DropdownMenu>
@@ -105,10 +105,6 @@ const Header: React.FC = () => {
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/timeline" className="w-full cursor-pointer">Timeline</Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
                 <Link to="/notifications" className="w-full cursor-pointer">Notifications</Link>
               </DropdownMenuItem>
               
@@ -117,32 +113,16 @@ const Header: React.FC = () => {
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/connections" className="w-full cursor-pointer">Connections</Link>
+                <Link to="/cart" className="w-full cursor-pointer">Cart</Link>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/groups" className="w-full cursor-pointer">Groups</Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <Link to="/forums" className="w-full cursor-pointer">Forums</Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <Link to="/photos" className="w-full cursor-pointer">Photos</Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <Link to="/videos" className="w-full cursor-pointer">Videos</Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <Link to="/invites" className="w-full cursor-pointer">Email Invites</Link>
+                <Link to="/blog" className="w-full cursor-pointer">Blog</Link>
               </DropdownMenuItem>
               
               <DropdownMenuSeparator />
               
-              <DropdownMenuItem asChild onClick={logout}>
+              <DropdownMenuItem onClick={logout}>
                 <button className="w-full text-left cursor-pointer">Log Out</button>
               </DropdownMenuItem>
             </DropdownMenuContent>

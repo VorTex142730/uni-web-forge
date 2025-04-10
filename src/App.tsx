@@ -14,6 +14,10 @@ import MembersPage from "./pages/MembersPage";
 import ForumsPage from "./pages/ForumsPage";
 import ShopPage from "./pages/ShopPage";
 import NotFound from "./pages/NotFound";
+import BlogPage from "./pages/BlogPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import MessagesPage from "./pages/MessagesPage";
+import CartPage from "./pages/CartPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 const queryClient = new QueryClient();
@@ -60,8 +64,12 @@ const App = () => (
               <Route path="/members" element={<MembersPage />} />
               <Route path="/forums" element={<ForumsPage />} />
               <Route path="/shop" element={<ShopPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/messages/:conversationId" element={<MessagesPage />} />
+              <Route path="/cart" element={<CartPage />} />
               <Route path="/profile" element={<div>Profile Page (Coming Soon)</div>} />
-              <Route path="/messages" element={<div>Messages Page (Coming Soon)</div>} />
             </Route>
             
             {/* Catch-all route */}
