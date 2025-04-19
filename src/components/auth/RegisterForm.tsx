@@ -53,21 +53,21 @@ const RegisterForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      const userCredential = await register(email, password);
-      const user = userCredential.user;
+      const user = await register(email, password); // Get the user object
+      if (user) {
+        // Store user data in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          firstName,
+          lastName,
+          nickname,
+          email,
+          college,
+          role,
+          createdAt: new Date().toISOString(),
+        });
 
-      // Store user data in Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        firstName,
-        lastName,
-        nickname,
-        email,
-        college,
-        role,
-        createdAt: new Date().toISOString(),
-      });
-
-      navigate("/");
+        navigate("/"); // Redirect after successful registration
+      }
     } catch (error) {
       console.error("Registration failed", error);
     }

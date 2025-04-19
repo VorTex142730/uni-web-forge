@@ -12,7 +12,7 @@ interface AuthContextType {
   user: FirebaseUser | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<FirebaseUser | void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -55,16 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return userCredential.user; // Return the user object
     } catch (error: any) {
       console.error("Registration failed:", error.message);
-      if (error.code === "auth/email-already-in-use") {
-        alert("This email is already in use.");
-      } else if (error.code === "auth/weak-password") {
-        alert("Password is too weak. Please use a stronger password.");
-      } else {
-        alert("An error occurred during registration. Please try again.");
-      }
       throw error; // Re-throw the error to handle it in the UI
     } finally {
       setLoading(false);
