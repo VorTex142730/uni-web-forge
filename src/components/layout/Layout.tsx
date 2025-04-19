@@ -1,13 +1,15 @@
-
 import React from 'react';
 import { Outlet } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { useAuth } from '@/context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
+import { cn } from '@/lib/utils';
 
-const Layout: React.FC = () => {
+const LayoutContent: React.FC = () => {
   const { loading } = useAuth();
+  const { expanded } = useSidebar();
 
   if (loading) {
     return (
@@ -22,12 +24,23 @@ const Layout: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <Sidebar />
-      <main className="pt-16 pl-16 lg:pl-56 transition-all duration-300">
+      <main className={cn(
+        "pt-16 transition-all duration-300",
+        expanded ? "pl-56" : "pl-16"
+      )}>
         <div className="container py-4">
           <Outlet />
         </div>
       </main>
     </div>
+  );
+};
+
+const Layout: React.FC = () => {
+  return (
+    <SidebarProvider>
+      <LayoutContent />
+    </SidebarProvider>
   );
 };
 
