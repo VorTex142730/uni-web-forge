@@ -66,10 +66,13 @@ const RegisterForm: React.FC = () => {
           createdAt: new Date().toISOString(),
         });
 
-        navigate("/"); // Redirect after successful registration
+        // Show success message and redirect to login
+        alert("Registration successful! Please log in to continue.");
+        navigate("/login"); // Explicitly redirect to login page
       }
     } catch (error) {
       console.error("Registration failed", error);
+      alert("An error occurred during registration. Please try again.");
     }
   };
 
