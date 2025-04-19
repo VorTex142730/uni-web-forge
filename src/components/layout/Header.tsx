@@ -10,21 +10,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebar } from '@/context/SidebarContext';
-import { Badge } from '@/components/ui/badge';
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const { expanded } = useSidebar();
-  
-  // Generate initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
-  };
 
   return (
     <header className="fixed top-0 left-0 w-full bg-white border-b border-border z-10">
@@ -36,12 +26,12 @@ const Header: React.FC = () => {
           <Link to="/" className="text-2xl font-bold">HotSpoT</Link>
         </div>
         
-        <div className="flex-1 mx-4">
+        <div className="flex-1 mx-8 max-w-md">
           <div className="relative">
             <input
               type="text"
               placeholder="Search..."
-              className="w-full bg-gray-100 rounded-lg px-4 py-2 pl-10 text-sm"
+              className="w-full bg-gray-100 rounded-full px-4 py-2 pl-10 text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -65,7 +55,6 @@ const Header: React.FC = () => {
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
           </Link>
           
           <Link to="/cart" className="relative">
@@ -74,13 +63,12 @@ const Header: React.FC = () => {
               <circle cx="20" cy="21" r="1"></circle>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
           </Link>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 cursor-pointer">
-                <span className="text-sm">Raviraj</span>
+                <span className="text-sm">Riya</span>
                 <ChevronDown size={16} />
                 <div className="relative">
                   <Avatar className="h-8 w-8 bg-gray-200">

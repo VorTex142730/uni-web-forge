@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Users, MessageSquare, BookOpen, ShoppingBag, Home, User, Grid, ChevronLeft, ChevronRight, Book } from 'lucide-react';
+import { Users, MessageSquare, BookOpen, ShoppingBag, Home, User, Grid, CheckSquare, Book } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/context/SidebarContext';
@@ -20,81 +20,70 @@ const Sidebar: React.FC = () => {
         expanded ? "w-56" : "w-16"
       )}
     >
-      <div className="pl-2 pt-4">
+      <div className="pl-3 pt-4 pb-6">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="border border-border rounded-full shadow-md hover:bg-gray-100"
+          // className="border border-border rounded-full shadow-md hover:bg-gray-100"
           onClick={toggleSidebar}
         >
-          {expanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <CheckSquare className="h-4 w-4" /> {/* Placeholder for the first image icon */}
         </Button>
       </div>
       
       <Link 
-        to="/" 
-        className={cn(
-          "sidebar-link flex items-center py-4 px-2", 
-          isActive('/') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
-        )}
-      >
-        <Home className="sidebar-icon h-5 w-5 ml-2" />
-        {expanded && <span className="ml-3 font-medium">Home</span>}
-      </Link>
-      
-      <Link 
         to="/groups" 
         className={cn(
-          "sidebar-link flex items-center py-4 px-2", 
+          "sidebar-link flex items-center py-4 px-3", 
           isActive('/groups') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
         )}
       >
-        <Grid className="sidebar-icon h-5 w-5 ml-2" />
-        {expanded && <span className="ml-3 font-medium">Groups</span>}
+        <Grid className="sidebar-icon h-5 w-5" />
+        {expanded && <span className="ml-2 font-medium">Groups</span>}
       </Link>
       
       <Link 
         to="/members" 
         className={cn(
-          "sidebar-link flex items-center py-4 px-2", 
+          "sidebar-link flex items-center py-4 px-3", 
           isActive('/members') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
         )}
       >
-        <Users className="sidebar-icon h-5 w-5 ml-2" />
-        {expanded && <span className="ml-3 font-medium">Members</span>}
+        <Users className="sidebar-icon h-5 w-5" />
+        {expanded && <span className="ml-2 font-medium">Members</span>}
       </Link>
       
       <Link 
         to="/forums" 
         className={cn(
-          "sidebar-link flex items-center py-4 px-2", 
+          "sidebar-link flex items-center py-4 px-3", 
           isActive('/forums') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
         )}
       >
-        <BookOpen className="sidebar-icon h-5 w-5 ml-2" />
-        {expanded && <span className="ml-3 font-medium">Forums</span>}
+        <BookOpen className="sidebar-icon h-5 w-5" />
+        {expanded && <span className="ml-2 font-medium">Forums</span>}
       </Link>
       
       <Link 
         to="/blog" 
         className={cn(
-          "sidebar-link flex items-center py-4 px-2", 
+          "sidebar-link flex items-center py-4 px-3", 
           isActive('/blog') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
         )}
       >
-        <Book className="sidebar-icon h-5 w-5 ml-2" />
-        {expanded && <span className="ml-3 font-medium">Blog</span>}
+        <Book className="sidebar-icon h-5 w-5" />
+        {expanded && <span className="ml-2 font-medium">Blog</span>}
       </Link>
       
       <Link 
         to="/shop" 
         className={cn(
-          "sidebar-link flex items-center py-4 px-2", 
+          "sidebar-link flex items-center py-4 px-3", 
           isActive('/shop') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
         )}
       >
-        <ShoppingBag className="sidebar-icon h-5 w-5 ml-2" />
-        {expanded && <span className="ml-3 font-medium">Shop</span>}
+        <ShoppingBag className="sidebar-icon h-5 w-5" />
+        {expanded && <span className="ml-2 font-medium">Shop</span>}
       </Link>
     </div>
   );
