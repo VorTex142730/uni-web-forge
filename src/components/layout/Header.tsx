@@ -1,8 +1,5 @@
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Bell, ShoppingCart, MessageSquare, ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Bell, ShoppingCart, MessageSquare, ChevronDown, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -11,15 +8,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/context/AuthContext';
 
-const Header: React.FC = () => {
+const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, logout } = useAuth();
   
   // Generate initials for avatar fallback
-  const getInitials = (name: string) => {
+  const getInitials = (name) => {
     return name
       .split(' ')
       .map(part => part[0])
@@ -28,13 +25,15 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white border-b border-border z-10">
-      <div className="flex justify-between items-center p-3 px-4 pl-20 lg:pl-60">
-        <div className="flex items-center">
-          <Link to="/" className="text-2xl font-bold">HotSpoT</Link>
+    <header className="fixed top-0 left-0 w-full bg-white border-b border-gray-200 z-10">
+      <div className="flex justify-between items-center h-16 px-4 pl-20 lg:pl-16">
+        {/* Logo */}
+        <div className="flex items-center ml-8">
+          <a href="/" className="text-2xl font-bold text-gray-800">HotSpoT</a>
         </div>
         
-        <div className="flex-1 mx-4">
+        {/* Search Bar */}
+        <div className="flex-1 max-w-xl mx-4">
           <div className="relative">
             <input
               type="text"
@@ -44,29 +43,31 @@ const Header: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="h-5 w-5 text-gray-400" />
             </div>
           </div>
         </div>
         
+        {/* Action Icons */}
         <div className="flex items-center space-x-4">
-          <Link to="/messages" className="p-2 rounded-full hover:bg-gray-100 relative">
+          {/* Messages Icon */}
+          <a href="/messages" className="relative">
             <MessageSquare size={20} />
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
-          </Link>
+          </a>
           
-          <Link to="/notifications" className="p-2 rounded-full hover:bg-gray-100 relative">
+          {/* Notifications Icon */}
+          <a href="/notifications" className="relative">
             <Bell size={20} />
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-          </Link>
+            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white">1</Badge>
+          </a>
           
-          <Link to="/cart" className="p-2 rounded-full hover:bg-gray-100 relative">
+          {/* Cart Icon */}
+          <a href="/cart" className="relative">
             <ShoppingCart size={20} />
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
-          </Link>
+            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white">2</Badge>
+          </a>
           
+          {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 cursor-pointer">
@@ -75,9 +76,6 @@ const Header: React.FC = () => {
                     <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
                     <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
                   </Avatar>
-                  {user?.status === 'online' && (
-                    <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></span>
-                  )}
                 </div>
                 <span className="hidden sm:inline-block">{user?.name || 'Guest'}</span>
                 <ChevronDown size={16} />
@@ -97,27 +95,23 @@ const Header: React.FC = () => {
               <DropdownMenuSeparator />
               
               <DropdownMenuItem asChild>
-                <Link to="/profile" className="w-full cursor-pointer">Profile</Link>
+                <a href="/profile" className="w-full cursor-pointer">Profile</a>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/account" className="w-full cursor-pointer">Account</Link>
+                <a href="/account" className="w-full cursor-pointer">Account</a>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/notifications" className="w-full cursor-pointer">Notifications</Link>
+                <a href="/notifications" className="w-full cursor-pointer">Notifications</a>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/messages" className="w-full cursor-pointer">Messages</Link>
+                <a href="/messages" className="w-full cursor-pointer">Messages</a>
               </DropdownMenuItem>
               
               <DropdownMenuItem asChild>
-                <Link to="/cart" className="w-full cursor-pointer">Cart</Link>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <Link to="/blog" className="w-full cursor-pointer">Blog</Link>
+                <a href="/cart" className="w-full cursor-pointer">Cart</a>
               </DropdownMenuItem>
               
               <DropdownMenuSeparator />
