@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 // import MessagesPage from "./pages/MessagesPage";
 // import CartPage from "./pages/CartPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
             </Route>
+            <Route path="/test" element={<TestPage/>} />
             
             {/* Protected routes */}
             <Route 

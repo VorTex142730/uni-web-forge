@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
@@ -14,6 +13,8 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/config/firebaseConfig"; // Ensure Firestore is initialized in your firebaseConfig
 
 const RegisterForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -49,21 +50,26 @@ const RegisterForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
-    const success = await register({
-      email,
-      password,
-      firstName,
-      lastName,
-      nickname,
-      college,
-      role,
-    });
-    
-    if (success) {
-      navigate('/');
+
+    try {
+      const userCredential = await register(email, password);
+      const user = userCredential.user;
+
+      // Store user data in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        firstName,
+        lastName,
+        nickname,
+        email,
+        college,
+        role,
+        createdAt: new Date().toISOString(),
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Registration failed", error);
     }
   };
 

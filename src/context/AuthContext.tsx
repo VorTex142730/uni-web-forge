@@ -1,149 +1,90 @@
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { User } from '@/types';
-import { users } from '@/data/mockData';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useState, useContext, useEffect } from "react";
+import {
+  User as FirebaseUser,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { auth } from "@/config/firebaseConfig";
 
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, remember?: boolean) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   loading: boolean;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  nickname?: string;
-  college?: string;
-  role?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('hotspot_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error("Error parsing saved user", error);
-        localStorage.removeItem('hotspot_user');
-      }
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string, remember: boolean = false): Promise<boolean> => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simple validation (in a real app, this would be a backend API call)
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter email and password",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return false;
-    }
-    
-    // For demo purposes, any valid email/password combination works
-    const foundUser = users[0]; // Just use the first mock user
-    
-    if (foundUser) {
-      setUser(foundUser);
-      if (remember) {
-        localStorage.setItem('hotspot_user', JSON.stringify(foundUser));
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      console.error("Login failed:", error.message);
+      if (error.code === "auth/user-not-found") {
+        alert("No user found with this email.");
+      } else if (error.code === "auth/wrong-password") {
+        alert("Incorrect password.");
+      } else if (error.code === "auth/invalid-email") {
+        alert("Invalid email format.");
+      } else {
+        alert("An error occurred during login. Please try again.");
       }
-      toast({
-        title: "Success",
-        description: "You have been logged in",
-      });
+      throw error; // Re-throw the error to handle it in the UI
+    } finally {
       setLoading(false);
-      return true;
-    } else {
-      toast({
-        title: "Error",
-        description: "Invalid email or password",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return false;
     }
   };
 
-  const register = async (userData: RegisterData): Promise<boolean> => {
+  const register = async (email: string, password: string) => {
     setLoading(true);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simple validation (in a real app, this would be a backend API call)
-    if (!userData.email || !userData.password || !userData.firstName || !userData.lastName) {
-      toast({
-        title: "Error",
-        description: "Please fill all required fields",
-        variant: "destructive",
-      });
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      console.error("Registration failed:", error.message);
+      if (error.code === "auth/email-already-in-use") {
+        alert("This email is already in use.");
+      } else if (error.code === "auth/weak-password") {
+        alert("Password is too weak. Please use a stronger password.");
+      } else {
+        alert("An error occurred during registration. Please try again.");
+      }
+      throw error; // Re-throw the error to handle it in the UI
+    } finally {
       setLoading(false);
-      return false;
     }
-    
-    // Create a new user (in a real app, this would be done by the backend)
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: `${userData.firstName} ${userData.lastName}`,
-      username: userData.nickname || userData.firstName,
-      status: 'online',
-      role: userData.role as 'Student' | 'Member' | undefined,
-      joinedDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('hotspot_user', JSON.stringify(newUser));
-    
-    toast({
-      title: "Success",
-      description: "Your account has been created",
-    });
-    
-    setLoading(false);
-    return true;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('hotspot_user');
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        login,
-        register,
-        logout,
-        loading,
-      }}
+      value={{ user, isAuthenticated: !!user, login, register, logout, loading }}
     >
       {children}
     </AuthContext.Provider>
@@ -152,8 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
