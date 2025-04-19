@@ -29,14 +29,13 @@ const CreatePost: React.FC = () => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm mb-4">
       <div className="flex items-start mb-4">
-        <Avatar className="h-10 w-10 mr-3">
-          <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
+        {/* <Avatar className="h-10 w-10 mr-3">
           <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
-        </Avatar>
+        </Avatar> */}
         
         <div className="flex-grow">
           <textarea
-            placeholder={`Share what's on your mind, ${user?.name}...`}
+            placeholder={`Share what's on your mind`}
             className="w-full border border-gray-200 rounded-lg p-3 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={postContent}
             onChange={(e) => setPostContent(e.target.value)}
@@ -46,10 +45,19 @@ const CreatePost: React.FC = () => {
       
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
         <div className="flex space-x-4">
-          <button className="p-2 rounded-full hover:bg-gray-100 text-gray-500">
+          <button 
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-500" 
+            title="Add a photo"
+          >
             <Camera className="h-5 w-5" />
           </button>
-          <button className="p-2 rounded-full hover:bg-gray-100 text-gray-500">
+          <button 
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-500" 
+            title="Add a video"
+          >
+            <Video className="h-5 w-5" />
+          </button>
+          <button className="p-2 rounded-full hover:bg-gray-100 text-gray-500" title="Add a video">
             <Video className="h-5 w-5" />
           </button>
         </div>

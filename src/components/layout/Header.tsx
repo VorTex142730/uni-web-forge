@@ -1,44 +1,32 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, ShoppingCart, MessageSquare, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebar } from '@/context/SidebarContext';
-import { Badge } from '@/components/ui/badge';
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { expanded } = useSidebar();
-  
-  // Generate initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
-  };
 
   return (
     <header className="fixed top-0 left-0 w-full bg-white border-b border-border z-10">
       <div className={cn(
-        "flex justify-between items-center p-3 px-4 transition-all duration-300",
+        "flex justify-between items-center px-4 py-2 transition-all duration-300",
         expanded ? "pl-60" : "pl-20"
       )}>
         <div className="flex items-center">
           <Link to="/" className="text-2xl font-bold">HotSpoT</Link>
         </div>
         
-        <div className="flex-1 mx-4">
+        <div className="flex-1 mx-8 max-w-md">
           <div className="relative">
             <input
               type="text"
@@ -55,36 +43,38 @@ const Header: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <Link to="/messages" className="p-2 rounded-full hover:bg-gray-100 relative">
-            <MessageSquare size={20} />
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
+        <div className="flex items-center space-x-6">
+          <Link to="/messages" className="relative">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
           </Link>
           
-          <Link to="/notifications" className="p-2 rounded-full hover:bg-gray-100 relative">
-            <Bell size={20} />
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
+          <Link to="/notifications" className="relative">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
           </Link>
           
-          <Link to="/cart" className="p-2 rounded-full hover:bg-gray-100 relative">
-            <ShoppingCart size={20} />
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
+          <Link to="/cart" className="relative">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
           </Link>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 cursor-pointer">
-                <div className="relative">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
-                    <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
-                  </Avatar>
-                  {user?.status === 'online' && (
-                    <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></span>
-                  )}
-                </div>
-                <span className="hidden sm:inline-block">{user?.name || 'Guest'}</span>
+                <span className="text-sm">Riya</span>
                 <ChevronDown size={16} />
+                <div className="relative">
+                  <Avatar className="h-8 w-8 bg-gray-200">
+                    <AvatarFallback>R</AvatarFallback>
+                  </Avatar>
+                </div>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
