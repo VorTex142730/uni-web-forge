@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Users, MessageSquare, BookOpen, ShoppingBag, Home, User, Grid, CheckSquare, Book } from 'lucide-react';
+import { Users, MessageSquare, BookOpen, ShoppingBag, Home, User, Grid, CheckSquare, Book, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/context/SidebarContext';
@@ -38,7 +38,7 @@ const Sidebar: React.FC = () => {
           isActive('/groups') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
         )}
       >
-        <Grid className="sidebar-icon h-5 w-5" />
+        <LayoutGrid className="sidebar-icon h-5 w-5" />
         {expanded && <span className="ml-2 font-medium">Groups</span>}
       </Link>
       
