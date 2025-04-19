@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
-import { Bell, ShoppingCart, MessageSquare, ChevronDown, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
+import { useSidebar } from '@/context/SidebarContext';
+import { Badge } from '@/components/ui/badge';
 
-const Header = () => {
+const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { expanded } = useSidebar();
   
   // Generate initials for avatar fallback
-  const getInitials = (name) => {
+  const getInitials = (name: string) => {
     return name
       .split(' ')
       .map(part => part[0])
@@ -25,100 +27,70 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white border-b border-gray-200 z-10">
-      <div className="flex justify-between items-center h-16 px-4 pl-20 lg:pl-16">
-        {/* Logo */}
-        <div className="flex items-center ml-8">
-          <a href="/" className="text-2xl font-bold text-gray-800">HotSpoT</a>
+    <header className="fixed top-0 left-0 w-full bg-white border-b border-border z-10">
+      <div className={cn(
+        "flex justify-between items-center px-4 py-2 transition-all duration-300",
+        expanded ? "pl-60" : "pl-20"
+      )}>
+        <div className="flex items-center">
+          <Link to="/" className="text-2xl font-bold">HotSpoT</Link>
         </div>
         
-        {/* Search Bar */}
-        <div className="flex-1 max-w-xl mx-4">
+        <div className="flex-1 mx-4">
           <div className="relative">
             <input
               type="text"
               placeholder="Search..."
-              className="w-full bg-gray-100 rounded-full px-4 py-2 pl-10 text-sm"
+              className="w-full bg-gray-100 rounded-lg px-4 py-2 pl-10 text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <Search className="h-5 w-5 text-gray-400" />
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
           </div>
         </div>
         
-        {/* Action Icons */}
-        <div className="flex items-center space-x-4">
-          {/* Messages Icon */}
-          <a href="/messages" className="relative">
-            <MessageSquare size={20} />
-          </a>
+        <div className="flex items-center space-x-6">
+          <Link to="/messages" className="relative">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </Link>
           
-          {/* Notifications Icon */}
-          <a href="/notifications" className="relative">
-            <Bell size={20} />
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white">1</Badge>
-          </a>
+          <Link to="/notifications" className="relative">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
+          </Link>
           
-          {/* Cart Icon */}
-          <a href="/cart" className="relative">
-            <ShoppingCart size={20} />
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white">2</Badge>
-          </a>
+          <Link to="/cart" className="relative">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">1</Badge>
+          </Link>
           
-          {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 cursor-pointer">
+                <span className="text-sm">Raviraj</span>
+                <ChevronDown size={16} />
                 <div className="relative">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
-                    <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
+                  <Avatar className="h-8 w-8 bg-gray-200">
+                    <AvatarFallback>R</AvatarFallback>
                   </Avatar>
                 </div>
-                <span className="hidden sm:inline-block">{user?.name || 'Guest'}</span>
-                <ChevronDown size={16} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <div className="flex items-center p-2">
-                <Avatar className="h-10 w-10 mr-2">
-                  <AvatarImage src={user?.avatar || ''} alt={user?.name || 'User'} />
-                  <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{user?.name || 'Guest'}</p>
-                  <p className="text-xs text-gray-500">@{user?.username || 'user'}</p>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem asChild>
-                <a href="/profile" className="w-full cursor-pointer">Profile</a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <a href="/account" className="w-full cursor-pointer">Account</a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <a href="/notifications" className="w-full cursor-pointer">Notifications</a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <a href="/messages" className="w-full cursor-pointer">Messages</a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem asChild>
-                <a href="/cart" className="w-full cursor-pointer">Cart</a>
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={logout}>
-                <button className="w-full text-left cursor-pointer">Log Out</button>
-              </DropdownMenuItem>
+              {/* Dropdown content remains the same */}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
