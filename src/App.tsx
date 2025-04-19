@@ -10,7 +10,7 @@ import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 // import GroupsPage from "./pages/GroupsPage";
-// import MembersPage from "./pages/MembersPage";
+import MembersPage from "./pages/MembersPage";
 // import ForumsPage from "./pages/ForumsPage";
 // import ShopPage from "./pages/ShopPage";
 import NotFound from "./pages/NotFound";
@@ -61,7 +61,7 @@ const App = () => (
             >
               <Route path="/" element={<Index />} />
               {/* <Route path="/groups" element={<GroupsPage />} /> */}
-              {/* <Route path="/members" element={<MembersPage />} /> */}
+              <Route path="/members" element={<MembersPage />} />
               {/* <Route path="/forums" element={<ForumsPage />} /> */}
               {/* <Route path="/shop" element={<ShopPage />} /> */}
               {/* <Route path="/blog" element={<BlogPage />} /> */}
