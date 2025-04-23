@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 // import CartPage from "./pages/CartPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import TestPage from "./pages/TestPage";
+import HomePage from '@/pages/HomePage';
 
 const queryClient = new QueryClient();
 
@@ -61,7 +62,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<HomePage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/:groupId" element={<GroupDetailsPage />} />
               <Route path="/members" element={<MembersPage />} />

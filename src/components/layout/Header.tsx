@@ -7,7 +7,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
@@ -15,12 +14,21 @@ import { useSidebar } from '@/context/SidebarContext';
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { expanded } = useSidebar();
   const navigate = useNavigate();
   
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -51,20 +59,15 @@ const Header: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-6">
-          <Link to="/messages" className="relative">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
+          <Link to="/messages" className="relative hover:text-primary">
+            <MessageSquare className="h-5 w-5" />
           </Link>
           
-          <Link to="/notifications" className="relative">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
+          <Link to="/notifications" className="relative hover:text-primary">
+            <Bell className="h-5 w-5" />
           </Link>
           
-          <Link to="/cart" className="relative">
+          <Link to="/cart" className="relative hover:text-primary">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="9" cy="21" r="1"></circle>
               <circle cx="20" cy="21" r="1"></circle>
@@ -75,90 +78,93 @@ const Header: React.FC = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 cursor-pointer">
-                <span className="text-sm">Riya</span>
+                <span className="text-sm">Raviraj</span>
                 <ChevronDown size={16} />
-                <div className="relative">
-                  <Avatar className="h-8 w-8 bg-gray-200">
-                    <AvatarFallback>R</AvatarFallback>
-                  </Avatar>
-                </div>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 py-2">
-              <div className="px-4 py-2 border-b border-gray-100">
+            <DropdownMenuContent align="end" className="w-[240px] p-0">
+              <div className="px-4 py-3 border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 bg-gray-200">
+                  <Avatar className="h-10 w-10">
                     <AvatarFallback>R</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-medium">Riya</span>
-                    <span className="text-sm text-gray-500">@Riya</span>
+                    <span className="font-medium">Raviraj</span>
+                    <span className="text-sm text-gray-500">@Vortex</span>
                   </div>
                 </div>
               </div>
               
-              <DropdownMenuItem 
-                className="px-4 py-2.5 cursor-pointer"
-                onClick={() => handleNavigation('/profile')}
-              >
-                <User className="mr-3 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <User className="mr-3 h-4 w-4" />
-                <span>Account</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <Clock className="mr-3 h-4 w-4" />
-                <span>Timeline</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <Bell className="mr-3 h-4 w-4" />
-                <span>Notifications</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <MessageSquare className="mr-3 h-4 w-4" />
-                <span>Messages</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <UserPlus className="mr-3 h-4 w-4" />
-                <span>Connections</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <Users className="mr-3 h-4 w-4" />
-                <span>Groups</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <MessageSquare className="mr-3 h-4 w-4" />
-                <span>Forums</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <Image className="mr-3 h-4 w-4" />
-                <span>Photos</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <Video className="mr-3 h-4 w-4" />
-                <span>Videos</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <Mail className="mr-3 h-4 w-4" />
-                <span>Email Invites</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
-                <LogOut className="mr-3 h-4 w-4" />
-                <span>Log Out</span>
-              </DropdownMenuItem>
+              <div className="py-1">
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <User className="mr-3 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <User className="mr-3 h-4 w-4" />
+                  <span>Account</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <Clock className="mr-3 h-4 w-4" />
+                  <span>Timeline</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Bell className="mr-3 h-4 w-4" />
+                    <span>Notifications</span>
+                  </div>
+                  <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <MessageSquare className="mr-3 h-4 w-4" />
+                  <span>Messages</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <UserPlus className="mr-3 h-4 w-4" />
+                    <span>Connections</span>
+                  </div>
+                  <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <Users className="mr-3 h-4 w-4" />
+                  <span>Groups</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <MessageSquare className="mr-3 h-4 w-4" />
+                  <span>Forums</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <Image className="mr-3 h-4 w-4" />
+                  <span>Photos</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <Video className="mr-3 h-4 w-4" />
+                  <span>Videos</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center">
+                  <Mail className="mr-3 h-4 w-4" />
+                  <span>Email Invites</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  className="px-4 py-2.5 cursor-pointer text-gray-600 hover:bg-gray-50 flex items-center"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-3 h-4 w-4" />
+                  <span>Log Out</span>
+                </DropdownMenuItem>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
