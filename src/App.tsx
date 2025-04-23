@@ -18,6 +18,7 @@ import DevLogin from '@/components/DevLogin';
 import ProfilePage from '@/pages/ProfilePage';
 import AccountPage from '@/pages/AccountPage';
 import Timeline from '@/pages/Timeline';
+import NotificationPage from '@/pages/NotificationPage';
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -86,10 +87,11 @@ const App = () => (
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/timeline" element={<Timeline />} />
+              {/* <Route path="/notification" element={<NotificationPage />} /> */}
               <Route path="/forums" element={<div>Forums Page (Coming Soon)</div>} />
               <Route path="/shop" element={<div>Shop Page (Coming Soon)</div>} />
               <Route path="/blog" element={<div>Blog Page (Coming Soon)</div>} />
-              <Route path="/notifications" element={<div>Notifications Page (Coming Soon)</div>} />
+              <Route path="/notifications" element={<NotificationPage />} />
               <Route path="/messages" element={<div>Messages Page (Coming Soon)</div>} />
               <Route path="/cart" element={<div>Cart Page (Coming Soon)</div>} />
             </Route>
