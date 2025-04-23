@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,7 @@ import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import GroupsPage from "./pages/GroupsPage";
+import GroupDetailsPage from "./pages/GroupDetailsPage";
 import MembersPage from "./pages/MembersPage";
 // import ForumsPage from "./pages/ForumsPage";
 // import ShopPage from "./pages/ShopPage";
@@ -63,6 +63,7 @@ const App = () => (
             >
               <Route path="/" element={<Index />} />
               <Route path="/groups" element={<GroupsPage />} />
+              <Route path="/groups/:groupId" element={<GroupDetailsPage />} />
               <Route path="/members" element={<MembersPage />} />
               {/* <Route path="/forums" element={<ForumsPage />} /> */}
               {/* <Route path="/shop" element={<ShopPage />} /> */}

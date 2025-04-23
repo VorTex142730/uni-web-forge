@@ -1,90 +1,58 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Users, MessageSquare, BookOpen, ShoppingBag, Home, User, Grid, CheckSquare, Book, LayoutGrid } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { NavLink } from 'react-router-dom';
+import { BookOpen, Users, MessageSquare, ShoppingBag, LayoutGrid, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/context/SidebarContext';
+import { cn } from '@/lib/utils';
 
-const Sidebar: React.FC = () => {
-  const location = useLocation();
-  const { expanded, toggleSidebar } = useSidebar();
-  
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+const Sidebar = () => {
+  const { isExpanded, toggleSidebar } = useSidebar();
+
+  const navItems = [
+    { icon: <LayoutGrid size={20} />, label: 'Groups', path: '/groups' },
+    { icon: <Users size={20} />, label: 'Members', path: '/members' },
+    { icon: <MessageSquare size={20} />, label: 'Forums', path: '/forums' },
+    { icon: <BookOpen size={20} />, label: 'Blog page', path: '/blog' },
+    { icon: <ShoppingBag size={20} />, label: 'Shop', path: '/shop' },
+  ];
 
   return (
     <div 
       className={cn(
-        "fixed top-0 left-0 h-full bg-hotspot-sidebar flex flex-col border-r border-border transition-all duration-300 z-10",
-        expanded ? "w-56" : "w-16"
+        "min-h-screen bg-pink-50 fixed left-0 top-0 z-30 border-r border-gray-100 transition-all duration-300",
+        isExpanded ? "w-64" : "w-16"
       )}
     >
-      <div className="pl-3 pt-4 pb-6">
+      {/* Menu Toggle */}
+      <div className="h-16 px-4 flex items-center border-b border-gray-100">
         <Button 
           variant="ghost" 
           size="icon" 
-          // className="border border-border rounded-full shadow-md hover:bg-gray-100"
+          className="text-gray-500 hover:bg-pink-100"
           onClick={toggleSidebar}
         >
-          <CheckSquare className="h-4 w-4" /> {/* Placeholder for the first image icon */}
+          <Menu size={20} />
         </Button>
       </div>
-      
-      <Link 
-        to="/groups" 
-        className={cn(
-          "sidebar-link flex items-center py-4 px-3", 
-          isActive('/groups') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
-        )}
-      >
-        <LayoutGrid className="sidebar-icon h-5 w-5" />
-        {expanded && <span className="ml-2 font-medium">Groups</span>}
-      </Link>
-      
-      <Link 
-        to="/members" 
-        className={cn(
-          "sidebar-link flex items-center py-4 px-3", 
-          isActive('/members') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
-        )}
-      >
-        <Users className="sidebar-icon h-5 w-5" />
-        {expanded && <span className="ml-2 font-medium">Members</span>}
-      </Link>
-      
-      <Link 
-        to="/forums" 
-        className={cn(
-          "sidebar-link flex items-center py-4 px-3", 
-          isActive('/forums') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
-        )}
-      >
-        <BookOpen className="sidebar-icon h-5 w-5" />
-        {expanded && <span className="ml-2 font-medium">Forums</span>}
-      </Link>
-      
-      <Link 
-        to="/blog" 
-        className={cn(
-          "sidebar-link flex items-center py-4 px-3", 
-          isActive('/blog') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
-        )}
-      >
-        <Book className="sidebar-icon h-5 w-5" />
-        {expanded && <span className="ml-2 font-medium">Blog</span>}
-      </Link>
-      
-      <Link 
-        to="/shop" 
-        className={cn(
-          "sidebar-link flex items-center py-4 px-3", 
-          isActive('/shop') ? "bg-hotspot-lightpink text-hotspot-primary" : ""
-        )}
-      >
-        <ShoppingBag className="sidebar-icon h-5 w-5" />
-        {expanded && <span className="ml-2 font-medium">Shop</span>}
-      </Link>
+
+      {/* Navigation */}
+      <div className="py-4">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => cn(
+              "flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-300",
+              "text-gray-700 hover:bg-pink-100/80",
+              isActive && "bg-pink-100 font-medium",
+              !isExpanded && "justify-center mx-0"
+            )}
+          >
+            <span className="text-gray-600 flex-shrink-0">{item.icon}</span>
+            {isExpanded && <span className="truncate">{item.label}</span>}
+          </NavLink>
+        ))}
+      </div>
     </div>
   );
 };
