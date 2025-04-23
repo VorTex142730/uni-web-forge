@@ -17,6 +17,7 @@ import HomePage from '@/pages/HomePage';
 import DevLogin from '@/components/DevLogin';
 import ProfilePage from '@/pages/ProfilePage';
 import AccountPage from '@/pages/AccountPage';
+import Timeline from '@/pages/Timeline';
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/members" element={<MembersPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/account" element={<AccountPage />} />
+              <Route path="/timeline" element={<Timeline />} />
               <Route path="/forums" element={<div>Forums Page (Coming Soon)</div>} />
               <Route path="/shop" element={<div>Shop Page (Coming Soon)</div>} />
               <Route path="/blog" element={<div>Blog Page (Coming Soon)</div>} />
