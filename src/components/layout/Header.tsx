@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronDown, User, Users, Clock, Bell, MessageSquare, UserPlus, Image, Video, Mail, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
@@ -15,6 +17,11 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const { expanded } = useSidebar();
+  const navigate = useNavigate();
+  
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <header className="fixed top-0 left-0 w-full bg-white border-b border-border z-10">
@@ -77,8 +84,81 @@ const Header: React.FC = () => {
                 </div>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {/* Dropdown content remains the same */}
+            <DropdownMenuContent align="end" className="w-64 py-2">
+              <div className="px-4 py-2 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 bg-gray-200">
+                    <AvatarFallback>R</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="font-medium">Riya</span>
+                    <span className="text-sm text-gray-500">@Riya</span>
+                  </div>
+                </div>
+              </div>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/profile')}
+              >
+                <User className="mr-3 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <User className="mr-3 h-4 w-4" />
+                <span>Account</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <Clock className="mr-3 h-4 w-4" />
+                <span>Timeline</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <Bell className="mr-3 h-4 w-4" />
+                <span>Notifications</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <MessageSquare className="mr-3 h-4 w-4" />
+                <span>Messages</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <UserPlus className="mr-3 h-4 w-4" />
+                <span>Connections</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <Users className="mr-3 h-4 w-4" />
+                <span>Groups</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <MessageSquare className="mr-3 h-4 w-4" />
+                <span>Forums</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <Image className="mr-3 h-4 w-4" />
+                <span>Photos</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <Video className="mr-3 h-4 w-4" />
+                <span>Videos</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <Mail className="mr-3 h-4 w-4" />
+                <span>Email Invites</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem className="px-4 py-2.5 cursor-pointer">
+                <LogOut className="mr-3 h-4 w-4" />
+                <span>Log Out</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
