@@ -15,7 +15,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import TestPage from "./pages/TestPage";
 import HomePage from '@/pages/HomePage';
 import DevLogin from '@/components/DevLogin';
-
+import ProfilePage from '@/pages/ProfilePage';
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -81,7 +81,7 @@ const App = () => (
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/:groupId" element={<GroupDetailsPage />} />
               <Route path="/members" element={<MembersPage />} />
-              <Route path="/profile" element={<div>Profile Page (Coming Soon)</div>} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/forums" element={<div>Forums Page (Coming Soon)</div>} />
               <Route path="/shop" element={<div>Shop Page (Coming Soon)</div>} />
               <Route path="/blog" element={<div>Blog Page (Coming Soon)</div>} />
