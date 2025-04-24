@@ -1,73 +1,194 @@
-# Welcome to your Lovable project
+# HotSpoT - University Social Platform
 
-## Project info
+![HotSpoT Logo](public/logo.png)
 
-**URL**: https://lovable.dev/projects/215d590f-2cab-4271-9944-555aeeee6f71
+## 🌟 Overview
 
-## How can I edit this code?
+HotSpoT is a modern social platform designed specifically for university students. It provides a space for students to connect, collaborate, and engage in academic and social activities through various features like groups, forums, and real-time messaging.
 
-There are several ways of editing your application.
+## 🚀 Features
 
-**Use Lovable**
+### 👥 Groups
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/215d590f-2cab-4271-9944-555aeeee6f71) and start prompting.
+- Create and join academic or interest-based groups
+- Public and private group options
+- Real-time group discussions
+- Photo and video sharing within groups
+- Member management and roles (admin, moderator, member)
 
-Changes made via Lovable will be committed automatically to this repo.
+### 👤 User Profiles
 
-**Use your preferred IDE**
+- Customizable user profiles
+- Academic information display
+- Activity timeline
+- Connection management
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 💬 Messaging
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Real-time private messaging
+- Group chats
+- File sharing capabilities
+- Read receipts and typing indicators
 
-Follow these steps:
+### 📱 Responsive Design
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- Fully responsive layout
+- Mobile-first approach
+- Cross-browser compatibility
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🛠️ Technology Stack
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Frontend:**
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+  - React 18
+  - TypeScript
+  - Tailwind CSS
+  - Shadcn/ui Components
+  - Lucide Icons
+
+- **Backend:**
+
+  - Firebase
+    - Authentication
+    - Firestore Database
+    - Storage
+    - Cloud Functions
+
+- **Development Tools:**
+  - Vite
+  - ESLint
+  - Prettier
+  - Git
+
+## 🏗️ Project Structure
+
+```
+uni-web-forge/
+├── src/
+│   ├── components/         # Reusable UI components
+│   ├── config/            # Configuration files
+│   ├── context/           # React context providers
+│   ├── hooks/             # Custom React hooks
+│   ├── lib/              # Utility functions and helpers
+│   ├── pages/            # Page components
+│   └── styles/           # Global styles and Tailwind config
+├── public/               # Static assets
+└── package.json         # Project dependencies and scripts
 ```
 
-**Edit a file directly in GitHub**
+## 🚀 Getting Started
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Prerequisites
 
-**Use GitHub Codespaces**
+- Node.js (v16 or higher)
+- npm or yarn
+- Firebase account
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Installation
 
-## What technologies are used for this project?
+1. Clone the repository:
 
-This project is built with:
+```bash
+git clone https://github.com/VorTex142730/uni-web-forge.git
+cd uni-web-forge
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. Install dependencies:
 
-## How can I deploy this project?
+```bash
+npm install
+# or
+yarn install
+```
 
-Simply open [Lovable](https://lovable.dev/projects/215d590f-2cab-4271-9944-555aeeee6f71) and click on Share -> Publish.
+3. Set up environment variables:
+   Create a `.env` file in the root directory and add your Firebase configuration:
 
-## Can I connect a custom domain to my Lovable project?
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
 
-Yes it is!
+4. Start the development server:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 📝 Firebase Setup
+
+1. Create a new Firebase project
+2. Enable Authentication with email/password
+3. Set up Firestore Database
+4. Configure Storage rules
+5. Add your web app to Firebase project
+6. Copy the configuration to your `.env` file
+
+## 🔒 Security Rules
+
+### Firestore Rules
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User profiles
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth.uid == userId;
+    }
+
+    // Groups
+    match /groups/{groupId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid in resource.data.admins;
+    }
+
+    // Group members
+    match /groupMembers/{memberId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Team
+
+- **Lead Developer:** [Your Name]
+- **UI/UX Designer:** [Designer Name]
+- **Project Manager:** [PM Name]
+
+## 📞 Support
+
+For support, email [your-email@example.com] or join our Discord channel [link].
+
+## 🙏 Acknowledgments
+
+- [Shadcn/ui](https://ui.shadcn.com/) for the amazing UI components
+- [Lucide Icons](https://lucide.dev/) for the beautiful icons
+- [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework
+- [Firebase](https://firebase.google.com/) for the backend infrastructure
+
+---
+
+Made with ❤️ for university students
