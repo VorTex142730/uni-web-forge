@@ -17,6 +17,7 @@ interface UserDetails {
   nickname: string;
   college: string;
   role: string;
+  photoURL?: string;
 }
 
 interface User extends FirebaseUser {
