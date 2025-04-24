@@ -1,24 +1,20 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-interface ConnectionsPageProps {
-  // You can add props as needed
-}
-
-const ConnectionsPage: React.FC<ConnectionsPageProps> = () => {
+const ConnectionsPage: React.FC = () => {
   const [sortOption, setSortOption] = useState<string>("Recently Active");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { user, userDetails } = useAuth();
+  const navigate = useNavigate();
   
-  // Mock user data
-  const user = {
-    name: "Riya",
-    username: "@Riya",
-    joinDate: "Apr 2025",
-    status: "Active now",
-    role: "Student"
-  };
-
-  // No connections found state
-  const connections = [];
+  if (!user || !userDetails) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen">
@@ -31,11 +27,18 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = () => {
           </div>
         </div>
         <div className="absolute left-8 -bottom-16">
-          <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white flex items-center justify-center">
-            {/* Default avatar */}
-            <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+          <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white flex items-center justify-center overflow-hidden">
+            {user.photoURL ? (
+              <img 
+                src={user.photoURL} 
+                alt={user.displayName || ''} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
           </div>
           {/* Online status indicator */}
           <div className="absolute top-0 right-0">
@@ -47,13 +50,13 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = () => {
       {/* Profile Info */}
       <div className="mt-20 px-8">
         <div className="flex items-center">
-          <h2 className="text-2xl font-bold mr-2">{user.name}</h2>
+          <h2 className="text-2xl font-bold mr-2">{userDetails.firstName} {userDetails.lastName}</h2>
           <span className="bg-blue-100 text-blue-500 text-xs px-2 py-1 rounded">
-            {user.role}
+            {userDetails.role}
           </span>
         </div>
         <div className="text-gray-500 mt-1">
-          {user.username} • Joined {user.joinDate} • {user.status}
+          @{user.username || user.displayName?.toLowerCase().replace(/\s/g, '')} • Joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} • Active now
         </div>
       </div>
       
@@ -62,13 +65,13 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = () => {
         {/* Sidebar */}
         <div className="w-1/4 pr-4">
           <nav className="space-y-1">
-            <div className="px-4 py-2 text-gray-600 hover:bg-gray-50">Profile</div>
-            <div className="px-4 py-2 text-gray-600 hover:bg-gray-50">Timeline</div>
-            <div className="px-4 py-2 text-blue-500 font-medium border-l-4 border-blue-500">Connections</div>
-            <div className="px-4 py-2 text-gray-600 hover:bg-gray-50">Groups</div>
-            <div className="px-4 py-2 text-gray-600 hover:bg-gray-50">Videos</div>
-            <div className="px-4 py-2 text-gray-600 hover:bg-gray-50">Photos</div>
-            <div className="px-4 py-2 text-gray-600 hover:bg-gray-50">Forums</div>
+            <button onClick={() => navigate('/profile')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Profile</button>
+            <button onClick={() => navigate('/timeline')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Timeline</button>
+            <button onClick={() => navigate('/connections')} className="w-full text-left px-4 py-2 text-blue-500 font-medium border-l-4 border-blue-500">Connections</button>
+            <button onClick={() => navigate('/groups')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Groups</button>
+            <button onClick={() => navigate('/videos')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Videos</button>
+            <button onClick={() => navigate('/photos')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Photos</button>
+            <button onClick={() => navigate('/forums')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Forums</button>
           </nav>
         </div>
         
@@ -102,51 +105,49 @@ const ConnectionsPage: React.FC<ConnectionsPageProps> = () => {
                   <option>Alphabetical</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
                 </div>
               </div>
               
               {/* View mode toggle */}
-              <div className="flex border border-gray-300 rounded-md overflow-hidden">
-                <button 
+              <div className="flex border border-gray-300 rounded-md">
+                <button
                   className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100' : 'bg-white'}`}
                   onClick={() => setViewMode('grid')}
                 >
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
                   </svg>
                 </button>
-                <button 
+                <button
                   className={`p-2 ${viewMode === 'list' ? 'bg-gray-100' : 'bg-white'}`}
                   onClick={() => setViewMode('list')}
                 >
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
                   </svg>
                 </button>
               </div>
             </div>
           </div>
-          
+
           {/* No connections message */}
-          {connections.length === 0 && (
-            <div className="flex items-start p-4 bg-white border border-gray-200 rounded-md">
-              <div className="p-2 bg-blue-100 rounded-full mr-4">
-                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-700">Sorry, no members were found.</p>
-              </div>
+          <div className="flex items-start p-4 bg-white border border-gray-200 rounded-md">
+            <div className="p-2 bg-blue-100 rounded-full mr-4">
+              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
             </div>
-          )}
+            <div>
+              <p className="text-gray-700">You haven't connected with anyone yet. Start exploring members to make connections!</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 };
 
 export default ConnectionsPage;
