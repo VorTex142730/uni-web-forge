@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, useNavigate } from 'react-router-dom';
@@ -14,12 +14,138 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { collection, getDocs, query, where, limit, or } from 'firebase/firestore';
+import { db } from '@/config/firebaseConfig';
+import { useDebounce } from '@/hooks/useDebounce';
+
+interface QuickSearchResult {
+  id: string;
+  type: 'user' | 'group' | 'forum';
+  title: string;
+  imageUrl?: string;
+}
 
 const Navbar = () => {
   const { isExpanded } = useSidebar();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [quickResults, setQuickResults] = useState<QuickSearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const performQuickSearch = async () => {
+      if (!debouncedSearch.trim()) {
+        setQuickResults([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const results: QuickSearchResult[] = [];
+        const searchTerm = debouncedSearch.toLowerCase();
+
+        // Search users
+        try {
+          const usersQuery = query(
+            collection(db, 'users'),
+            or(
+              where('firstName', '>=', searchTerm),
+              where('lastName', '>=', searchTerm),
+              where('nickname', '>=', searchTerm)
+            ),
+            limit(3)
+          );
+          const usersSnapshot = await getDocs(usersQuery);
+          usersSnapshot.forEach(doc => {
+            const userData = doc.data();
+            if (
+              userData.firstName?.toLowerCase().includes(searchTerm) ||
+              userData.lastName?.toLowerCase().includes(searchTerm) ||
+              userData.nickname?.toLowerCase().includes(searchTerm)
+            ) {
+              results.push({
+                id: doc.id,
+                type: 'user',
+                title: `${userData.firstName || ''} ${userData.lastName || ''}`,
+                imageUrl: userData.photoURL
+              });
+            }
+          });
+        } catch (error) {
+          console.error('Error searching users:', error);
+        }
+
+        // Search groups
+        try {
+          const groupsQuery = query(
+            collection(db, 'groups'),
+            where('name', '>=', searchTerm),
+            limit(3)
+          );
+          const groupsSnapshot = await getDocs(groupsQuery);
+          groupsSnapshot.forEach(doc => {
+            const groupData = doc.data();
+            if (groupData.name?.toLowerCase().includes(searchTerm)) {
+              results.push({
+                id: doc.id,
+                type: 'group',
+                title: groupData.name,
+                imageUrl: groupData.photoURL
+              });
+            }
+          });
+        } catch (error) {
+          console.error('Error searching groups:', error);
+        }
+
+        // Search forums
+        try {
+          const forumsQuery = query(
+            collection(db, 'forums'),
+            where('title', '>=', searchTerm),
+            limit(3)
+          );
+          const forumsSnapshot = await getDocs(forumsQuery);
+          forumsSnapshot.forEach(doc => {
+            const forumData = doc.data();
+            if (forumData.title?.toLowerCase().includes(searchTerm)) {
+              results.push({
+                id: doc.id,
+                type: 'forum',
+                title: forumData.title
+              });
+            }
+          });
+        } catch (error) {
+          console.error('Error searching forums:', error);
+        }
+
+        setQuickResults(results);
+      } catch (error) {
+        console.error('Quick search error:', error);
+        toast.error('Search failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    performQuickSearch();
+  }, [debouncedSearch]);
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -29,6 +155,26 @@ const Navbar = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setShowResults(false);
+    }
+  };
+
+  const handleResultClick = (result: QuickSearchResult) => {
+    navigate(`/${result.type}s/${result.id}`);
+    setShowResults(false);
+    setSearchQuery('');
+  };
+
+  const getResultIcon = (type: string) => {
+    switch (type) {
+      case 'user':
+        return <Users className="h-4 w-4" />;
+      case 'group':
+        return <Users2 className="h-4 w-4" />;
+      case 'forum':
+        return <MessageSquare className="h-4 w-4" />;
+      default:
+        return <Search className="h-4 w-4" />;
     }
   };
 
@@ -60,17 +206,73 @@ const Navbar = () => {
       </Link>
 
       {/* Search */}
-      <form onSubmit={handleSearch} className="flex-1 max-w-2xl mx-6">
-        <div className="relative">
-          <Input
-            type="search"
-            placeholder="Search..."
-            className="w-full bg-gray-100/80 border-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </form>
+      <div ref={searchRef} className="flex-1 max-w-2xl mx-6 relative">
+        <form onSubmit={handleSearch}>
+          <div className="relative">
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="w-full bg-gray-100/80 border-none pl-10"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowResults(true);
+              }}
+              onFocus={() => setShowResults(true)}
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          </div>
+        </form>
+
+        {/* Quick Results Dropdown */}
+        {showResults && (searchQuery.trim() || loading) && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+            {loading ? (
+              <div className="p-4 text-center text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2">Searching...</p>
+              </div>
+            ) : quickResults.length > 0 ? (
+              <div className="py-2">
+                {quickResults.map((result) => (
+                  <button
+                    key={`${result.type}-${result.id}`}
+                    className="w-full px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 text-left"
+                    onClick={() => handleResultClick(result)}
+                  >
+                    {result.imageUrl ? (
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={result.imageUrl} alt={result.title} />
+                        <AvatarFallback>{result.title[0]}</AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                        {getResultIcon(result.type)}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium">{result.title}</p>
+                      <p className="text-sm text-gray-500 capitalize">{result.type}</p>
+                    </div>
+                  </button>
+                ))}
+                <div className="px-4 py-2 border-t border-gray-100">
+                  <button
+                    className="w-full text-center text-blue-600 hover:text-blue-700"
+                    onClick={handleSearch}
+                  >
+                    View all results
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 text-center text-gray-500">
+                No results found
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Actions */}
       <div className="flex items-center space-x-4">

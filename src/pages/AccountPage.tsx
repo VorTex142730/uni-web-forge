@@ -5,18 +5,20 @@ import {
   updatePassword, 
   EmailAuthProvider, 
   reauthenticateWithCredential,
-  updateEmail
+  updateEmail,
+  updateProfile
 } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, storage } from '@/config/firebaseConfig';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 const AccountSettings = () => {
   const { user, userDetails } = useAuth();
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const profileFileInputRef = useRef<HTMLInputElement>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,6 +28,7 @@ const AccountSettings = () => {
   const [nickname, setNickname] = useState('');
   const [college, setCollege] = useState('');
   const [photoURL, setPhotoURL] = useState('');
+  const [coverPhotoURL, setCoverPhotoURL] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -41,30 +44,145 @@ const AccountSettings = () => {
       setNickname(userDetails.nickname || '');
       setCollege(userDetails.college || '');
       setPhotoURL(userDetails.photoURL || '');
+      setCoverPhotoURL(userDetails.coverPhotoURL || '');
     }
   }, [user, userDetails]);
 
+  const validateImage = (file: File) => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!validTypes.includes(file.type)) {
+      throw new Error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+    }
+
+    if (file.size > maxSize) {
+      throw new Error('Image size should be less than 5MB');
+    }
+
+    return true;
+  };
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user) {
+      console.log('No file selected or user not logged in');
+      return;
+    }
 
-    setUploading(true);
     try {
+      console.log('Starting photo upload...');
+      console.log('File details:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+
+      validateImage(file);
+      setUploading(true);
+
+      // Delete old photo if exists
+      if (photoURL) {
+        try {
+          console.log('Deleting old photo...');
+          const oldPhotoRef = ref(storage, `profile-photos/${user.uid}`);
+          await deleteObject(oldPhotoRef);
+          console.log('Old photo deleted successfully');
+        } catch (error) {
+          console.error('Error deleting old photo:', error);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Upload new photo
+      console.log('Uploading new photo...');
       const storageRef = ref(storage, `profile-photos/${user.uid}`);
-      await uploadBytes(storageRef, file);
+      const uploadResult = await uploadBytes(storageRef, file);
+      console.log('Upload successful:', uploadResult);
+
+      console.log('Getting download URL...');
       const downloadURL = await getDownloadURL(storageRef);
+      console.log('Download URL obtained:', downloadURL);
       
+      // Update user profile in Firebase Auth
+      console.log('Updating Firebase Auth profile...');
+      await updateProfile(user, { photoURL: downloadURL });
+      console.log('Firebase Auth profile updated');
+      
+      // Update user details in Firestore
+      console.log('Updating Firestore user document...');
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         photoURL: downloadURL,
         updatedAt: new Date().toISOString(),
       });
+      console.log('Firestore document updated');
 
       setPhotoURL(downloadURL);
       toast.success('Profile photo updated successfully');
     } catch (error: any) {
-      toast.error('Failed to upload photo');
-      console.error('Error uploading photo:', error);
+      console.error('Detailed error:', error);
+      toast.error(error.message || 'Failed to upload photo');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) {
+      console.log('No file selected or user not logged in');
+      return;
+    }
+
+    try {
+      console.log('Starting cover photo upload...');
+      console.log('File details:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+
+      validateImage(file);
+      setUploading(true);
+
+      // Delete old cover photo if exists
+      if (coverPhotoURL) {
+        try {
+          console.log('Deleting old cover photo...');
+          const oldCoverRef = ref(storage, `cover-photos/${user.uid}`);
+          await deleteObject(oldCoverRef);
+          console.log('Old cover photo deleted successfully');
+        } catch (error) {
+          console.error('Error deleting old cover photo:', error);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Upload new cover photo
+      console.log('Uploading new cover photo...');
+      const storageRef = ref(storage, `cover-photos/${user.uid}`);
+      const uploadResult = await uploadBytes(storageRef, file);
+      console.log('Upload successful:', uploadResult);
+
+      console.log('Getting download URL...');
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log('Download URL obtained:', downloadURL);
+      
+      // Update user details in Firestore
+      console.log('Updating Firestore user document...');
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        coverPhotoURL: downloadURL,
+        updatedAt: new Date().toISOString(),
+      });
+      console.log('Firestore document updated');
+
+      setCoverPhotoURL(downloadURL);
+      toast.success('Cover photo updated successfully');
+    } catch (error: any) {
+      console.error('Detailed error:', error);
+      toast.error(error.message || 'Failed to upload cover photo');
     } finally {
       setUploading(false);
     }
@@ -274,29 +392,13 @@ const AccountSettings = () => {
                             </div>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white hover:bg-blue-700 transition-colors"
-                          disabled={uploading}
-                        >
-                          <Camera size={16} />
-                        </button>
                       </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        className="hidden"
-                      />
                       <div className="flex-1">
-                        <p className="text-sm text-gray-600">
-                          Upload a new profile photo. The image should be square and at least 200x200 pixels.
-                        </p>
-                        {uploading && (
-                          <p className="text-sm text-blue-600 mt-1">Uploading...</p>
-                        )}
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <p className="text-blue-800">
+                            Profile photo upload feature is coming soon! We're working on implementing a free image hosting solution.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -308,14 +410,23 @@ const AccountSettings = () => {
                   <h2 className="text-2xl font-semibold text-gray-800 mb-6">Cover Photo</h2>
                   <div className="mb-8">
                     <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <p className="text-gray-500">Cover photo feature coming soon</p>
-                      </div>
-                      {/* TODO: Implement cover photo functionality */}
+                      {coverPhotoURL ? (
+                        <img 
+                          src={coverPhotoURL} 
+                          alt="Cover" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <p className="text-gray-500">No cover photo uploaded</p>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-4">
-                      Recommended dimensions: 1200x400 pixels. Maximum file size: 5MB.
-                    </p>
+                    <div className="mt-4 bg-blue-50 p-4 rounded-lg">
+                      <p className="text-blue-800">
+                        Cover photo upload feature is coming soon! We're working on implementing a free image hosting solution.
+                      </p>
+                    </div>
                   </div>
                 </>
               )}

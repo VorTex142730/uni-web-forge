@@ -23,6 +23,7 @@ import NotificationPage from '@/pages/NotificationPage';
 import ConnectionsPage from '@/pages/ConnectionsPage';
 import PhotosPage from '@/pages/PhotosPage';
 import VideosPage from '@/pages/VideosPage';
+import SearchPage from '@/pages/SearchPage';
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,11 @@ function App() {
                 <Route path="/test" element={
                   <ProtectedRoute>
                     <TestPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/search" element={
+                  <ProtectedRoute>
+                    <SearchPage />
                   </ProtectedRoute>
                 } />
               </Route>

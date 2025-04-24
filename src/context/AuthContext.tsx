@@ -18,6 +18,9 @@ interface UserDetails {
   college: string;
   role: string;
   photoURL?: string;
+  coverPhotoURL?: string;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 interface User extends FirebaseUser {
