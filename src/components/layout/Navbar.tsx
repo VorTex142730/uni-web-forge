@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings, Search } from 'lucide-react';
+import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings, Search, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, useNavigate } from 'react-router-dom';
@@ -26,7 +26,7 @@ interface QuickSearchResult {
 }
 
 const Navbar = () => {
-  const { isExpanded } = useSidebar();
+  const { isExpanded, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [quickResults, setQuickResults] = useState<QuickSearchResult[]>([]);
@@ -197,16 +197,28 @@ const Navbar = () => {
   };
 
   return (
-    <div className={`h-16 bg-white flex items-center justify-between px-6 fixed top-0 right-0 transition-all duration-300 ${
-      isExpanded ? 'left-64' : 'left-16'
-    } z-20 border-b border-gray-200`}>
-      {/* Logo */}
-      <Link to="/" className="flex items-center">
-        <h1 className="text-xl font-bold">HotSpoT</h1>
-      </Link>
+    <div className={`h-16 bg-white flex items-center justify-between px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${
+      isExpanded ? 'md:left-64' : 'md:left-16'
+    } left-0 z-20 border-b border-gray-200`}>
+      <div className="flex items-center">
+        {/* Mobile Menu Button */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="md:hidden mr-2"
+          onClick={toggleSidebar}
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+
+        {/* Logo */}
+        <Link to="/" className="flex items-center">
+          <h1 className="text-xl font-bold">HotSpoT</h1>
+        </Link>
+      </div>
 
       {/* Search */}
-      <div ref={searchRef} className="flex-1 max-w-2xl mx-6 relative">
+      <div ref={searchRef} className="flex-1 max-w-2xl mx-6 relative hidden md:block">
         <form onSubmit={handleSearch}>
           <div className="relative">
             <Input
@@ -275,7 +287,12 @@ const Navbar = () => {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 md:space-x-4">
+        {/* Mobile Search Button */}
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Search className="h-5 w-5" />
+        </Button>
+
         <Button 
           variant="ghost" 
           size="icon" 
@@ -316,107 +333,109 @@ const Navbar = () => {
           )}
         </Button>
         
-        {/* User Profile Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-medium">{user?.displayName}</span>
-              <ChevronDown size={16} className="text-gray-500" />
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.photoURL || ''} alt="Profile" />
-                <AvatarFallback>{user?.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 py-2">
-            <div className="px-4 py-2 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
+        {/* User Profile Dropdown - Hide on mobile */}
+        <div className="hidden md:block">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center space-x-2 cursor-pointer">
+                <span className="font-medium">{user?.displayName}</span>
+                <ChevronDown size={16} className="text-gray-500" />
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.photoURL || ''} alt="Profile" />
                   <AvatarFallback>{user?.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-medium">{user?.displayName}</span>
-                  <span className="text-sm text-gray-500">@{user?.username}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 py-2">
+              <div className="px-4 py-2 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user?.photoURL || ''} alt="Profile" />
+                    <AvatarFallback>{user?.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{user?.displayName}</span>
+                    <span className="text-sm text-gray-500">@{user?.username}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/profile')}
-            >
-              <User className="mr-3 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/timeline')}
-            >
-              <Clock className="mr-3 h-4 w-4" />
-              <span>Timeline</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/connections')}
-            >
-              <Users className="mr-3 h-4 w-4" />
-              <span>Connections</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/groups')}
-            >
-              <Users2 className="mr-3 h-4 w-4" />
-              <span>Groups</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/photos')}
-            >
-              <Image className="mr-3 h-4 w-4" />
-              <span>Photos</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/videos')}
-            >
-              <Video className="mr-3 h-4 w-4" />
-              <span>Videos</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/forums')}
-            >
-              <MessageSquare className="mr-3 h-4 w-4" />
-              <span>Forums</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/account')}
-            >
-              <Settings className="mr-3 h-4 w-4" />
-              <span>Account Settings</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer text-red-600 hover:text-red-700"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-3 h-4 w-4" />
-              <span>Logout</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/profile')}
+              >
+                <User className="mr-3 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/timeline')}
+              >
+                <Clock className="mr-3 h-4 w-4" />
+                <span>Timeline</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/connections')}
+              >
+                <Users className="mr-3 h-4 w-4" />
+                <span>Connections</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/groups')}
+              >
+                <Users2 className="mr-3 h-4 w-4" />
+                <span>Groups</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/photos')}
+              >
+                <Image className="mr-3 h-4 w-4" />
+                <span>Photos</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/videos')}
+              >
+                <Video className="mr-3 h-4 w-4" />
+                <span>Videos</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/forums')}
+              >
+                <MessageSquare className="mr-3 h-4 w-4" />
+                <span>Forums</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer"
+                onClick={() => handleNavigation('/account')}
+              >
+                <Settings className="mr-3 h-4 w-4" />
+                <span>Account Settings</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                className="px-4 py-2.5 cursor-pointer text-red-600 hover:text-red-700"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-3 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   );

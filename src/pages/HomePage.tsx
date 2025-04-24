@@ -167,13 +167,14 @@ const HomePage = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left Sidebar */}
-        <div className="col-span-3 space-y-6">
+      {/* Main grid container - stack on mobile, grid on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Left Sidebar - Full width on mobile */}
+        <div className="md:col-span-3 space-y-6">
           {/* Profile Completion Card */}
           <div className="bg-white rounded-lg shadow p-4">
             <h2 className="font-semibold mb-4">COMPLETE YOUR PROFILE</h2>
-            <div className="relative w-32 h-32 mx-auto mb-4">
+            <div className="relative w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
               <svg viewBox="0 0 100 100" className="transform -rotate-90">
                 <circle
                   cx="50"
@@ -224,11 +225,13 @@ const HomePage = () => {
 
           {/* Groups Card */}
           <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="font-semibold mb-4">GROUPS</h2>
-            <div className="flex space-x-4 mb-4">
-              <button className="text-sm text-gray-600">Newest</button>
-              <button className="text-sm text-gray-600">Active</button>
-              <button className="text-sm text-red-500">Popular</button>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold">GROUPS</h2>
+              <div className="flex space-x-4">
+                <button className="text-sm text-gray-600 hidden md:block">Newest</button>
+                <button className="text-sm text-gray-600 hidden md:block">Active</button>
+                <button className="text-sm text-red-500">Popular</button>
+              </div>
             </div>
             <div className="space-y-4">
               {groups.map(group => (
@@ -262,15 +265,15 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="col-span-6">
-          <h1 className="text-2xl font-semibold mb-6">Homepage</h1>
+        {/* Main Content - Full width on mobile */}
+        <div className="md:col-span-6">
+          <h1 className="text-xl md:text-2xl font-semibold mb-6">Homepage</h1>
           
           {/* Post Creation */}
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="p-4">
               <div className="flex items-start space-x-3">
-                <Avatar>
+                <Avatar className="hidden md:block">
                   <AvatarImage src={auth.currentUser?.photoURL || undefined} />
                   <AvatarFallback>
                     {auth.currentUser?.displayName?.charAt(0) || 'U'}
@@ -283,7 +286,7 @@ const HomePage = () => {
                     onChange={(e) => setPostContent(e.target.value)}
                     className="w-full"
                   />
-                  <div className="flex items-center justify-between mt-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between mt-4 space-y-4 md:space-y-0">
                     <div className="flex items-center space-x-4">
                       <button className="flex items-center text-gray-600">
                         <Image className="w-5 h-5 mr-2" />
@@ -297,6 +300,7 @@ const HomePage = () => {
                     <Button
                       onClick={handlePostSubmit}
                       disabled={!postContent.trim()}
+                      className="w-full md:w-auto"
                     >
                       Post
                     </Button>
@@ -308,13 +312,13 @@ const HomePage = () => {
 
           {/* Updates Feed */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
               <h2 className="font-semibold">All Updates</h2>
               <Input
                 placeholder="Search Feed..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64"
+                className="w-full md:w-64"
               />
             </div>
 
@@ -333,18 +337,18 @@ const HomePage = () => {
                   <div key={update.id} className="bg-white rounded-lg shadow p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <Avatar>
+                        <Avatar className="w-8 h-8 md:w-10 md:h-10">
                           <AvatarImage src={update.user.avatar} />
                           <AvatarFallback>{update.user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p>
+                          <p className="text-sm md:text-base">
                             <span className="font-medium">{update.user.name}</span>
                             {update.type === 'group_created' && (
                               <> created the group <span className="font-medium">{update.group?.name}</span></>
                             )}
                           </p>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-xs md:text-sm text-gray-500">
                             {formatDistanceToNow(update.timestamp, { addSuffix: true })}
                           </span>
                         </div>
@@ -354,7 +358,7 @@ const HomePage = () => {
                       </button>
                     </div>
                     {update.content && (
-                      <p className="mt-3">{update.content}</p>
+                      <p className="mt-3 text-sm md:text-base">{update.content}</p>
                     )}
                     <div className="mt-4">
                       <button className="flex items-center text-gray-600">
@@ -369,8 +373,8 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Right Sidebar */}
-        <div className="col-span-3">
+        {/* Right Sidebar - Hidden on mobile, shown on desktop */}
+        <div className="hidden md:block md:col-span-3">
           <div className="bg-white rounded-lg shadow p-4">
             <h2 className="font-semibold mb-4">MEMBERS</h2>
             <div className="flex space-x-4 mb-4">
