@@ -21,6 +21,9 @@ import AccountPage from '@/pages/AccountPage';
 import Timeline from '@/pages/Timeline';
 import NotificationPage from '@/pages/NotificationPage';
 import ConnectionsPage from '@/pages/ConnectionsPage';
+import PhotosPage from '@/pages/PhotosPage';
+import VideosPage from '@/pages/VideosPage';
+
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -28,7 +31,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    // You could add a loading spinner here
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -43,87 +45,108 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route element={<AuthLayout />}>
-              <Route 
-                path="/login" 
-                element={
-                  <PublicRoute>
-                    <LoginForm />
-                  </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/register" 
-                element={
-                  <PublicRoute>
-                    <RegisterForm />
-                  </PublicRoute>
-                } 
-              />
-            </Route>
+        <TooltipProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Auth routes */}
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/register" element={<RegisterForm />} />
+              </Route>
 
-            <Route path="/test" element={<TestPage />} />
-            
-            {/* Protected routes */}
-            <Route 
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<HomePage />} />
-              <Route path="/groups" element={<GroupsPage />} />
-              <Route path="/groups/:groupId" element={<GroupDetailsPage />} />
-              <Route path="/members" element={<MembersPage />} />
-              <Route path="/forums" element={<ForumsPage />} />
-              <Route path="/forums/:groupId" element={<ForumGroupPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/account" element={<AccountPage />} />
-              <Route path="/timeline" element={<Timeline />} />
-              <Route path="/notifications" element={<NotificationPage />} />
-              <Route path="/connections" element={<ConnectionsPage />} />
-              <Route path="/shop" element={<div>Shop Page (Coming Soon)</div>} />
-              <Route path="/blog" element={<div>Blog Page (Coming Soon)</div>} />
-              <Route path="/messages" element={<div>Messages Page (Coming Soon)</div>} />
-              <Route path="/cart" element={<div>Cart Page (Coming Soon)</div>} />
-            </Route>
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+              {/* Protected routes */}
+              <Route element={<Layout />}>
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile/:username" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/account" element={
+                  <ProtectedRoute>
+                    <AccountPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/timeline" element={
+                  <ProtectedRoute>
+                    <Timeline />
+                  </ProtectedRoute>
+                } />
+                <Route path="/connections" element={
+                  <ProtectedRoute>
+                    <ConnectionsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/groups" element={
+                  <ProtectedRoute>
+                    <GroupsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/groups/:id" element={
+                  <ProtectedRoute>
+                    <GroupDetailsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/photos" element={
+                  <ProtectedRoute>
+                    <PhotosPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/videos" element={
+                  <ProtectedRoute>
+                    <VideosPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/forums" element={
+                  <ProtectedRoute>
+                    <ForumsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/forums/:id" element={
+                  <ProtectedRoute>
+                    <ForumGroupPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/members" element={
+                  <ProtectedRoute>
+                    <MembersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/notifications" element={
+                  <ProtectedRoute>
+                    <NotificationPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/test" element={
+                  <ProtectedRoute>
+                    <TestPage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+          <Toaster />
+          <Sonner />
+        </TooltipProvider>
       </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-// Public route component to prevent authenticated users from accessing login/register
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
-};
+    </QueryClientProvider>
+  );
+}
 
 export default App;

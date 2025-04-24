@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut } from 'lucide-react';
+import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, useNavigate } from 'react-router-dom';
@@ -150,14 +150,6 @@ const Navbar = () => {
             
             <DropdownMenuItem 
               className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/account')}
-            >
-              <User className="mr-3 h-4 w-4" />
-              <span>Account</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
               onClick={() => handleNavigation('/timeline')}
             >
               <Clock className="mr-3 h-4 w-4" />
@@ -166,25 +158,9 @@ const Navbar = () => {
             
             <DropdownMenuItem 
               className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/notifications')}
-            >
-              <Bell className="mr-3 h-4 w-4" />
-              <span>Notifications</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/messages')}
-            >
-              <MessageSquare className="mr-3 h-4 w-4" />
-              <span>Messages</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
               onClick={() => handleNavigation('/connections')}
             >
-              <UserPlus className="mr-3 h-4 w-4" />
+              <Users className="mr-3 h-4 w-4" />
               <span>Connections</span>
             </DropdownMenuItem>
             
@@ -192,16 +168,8 @@ const Navbar = () => {
               className="px-4 py-2.5 cursor-pointer"
               onClick={() => handleNavigation('/groups')}
             >
-              <Users className="mr-3 h-4 w-4" />
+              <Users2 className="mr-3 h-4 w-4" />
               <span>Groups</span>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/forums')}
-            >
-              <MessageSquare className="mr-3 h-4 w-4" />
-              <span>Forums</span>
             </DropdownMenuItem>
             
             <DropdownMenuItem 
@@ -222,20 +190,28 @@ const Navbar = () => {
             
             <DropdownMenuItem 
               className="px-4 py-2.5 cursor-pointer"
-              onClick={() => handleNavigation('/email-invites')}
+              onClick={() => handleNavigation('/forums')}
             >
-              <Mail className="mr-3 h-4 w-4" />
-              <span>Email Invites</span>
+              <MessageSquare className="mr-3 h-4 w-4" />
+              <span>Forums</span>
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
             
             <DropdownMenuItem 
-              className="px-4 py-2.5 cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="px-4 py-2.5 cursor-pointer"
+              onClick={() => handleNavigation('/account')}
+            >
+              <Settings className="mr-3 h-4 w-4" />
+              <span>Account Settings</span>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              className="px-4 py-2.5 cursor-pointer text-red-600 hover:text-red-700"
               onClick={handleLogout}
             >
               <LogOut className="mr-3 h-4 w-4" />
-              <span>Log Out</span>
+              <span>Logout</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

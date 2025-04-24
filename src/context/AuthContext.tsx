@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '@/config/firebaseConfig';
+import { auth, db } from '@/config/firebaseConfig';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -9,6 +9,15 @@ import {
   updateProfile,
   UserCredential
 } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+
+interface UserDetails {
+  firstName: string;
+  lastName: string;
+  nickname: string;
+  college: string;
+  role: string;
+}
 
 interface User extends FirebaseUser {
   displayName: string | null;
@@ -21,6 +30,7 @@ interface User extends FirebaseUser {
 
 interface AuthContextType {
   user: User | null;
+  userDetails: UserDetails | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<UserCredential>;
@@ -32,10 +42,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserDetails = async (uid: string) => {
+    try {
+      const userDocRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        setUserDetails(userDoc.data() as UserDetails);
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const extendedUser: User = {
           ...firebaseUser,
@@ -45,8 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           cartItems: 0,
         } as User;
         setUser(extendedUser);
+        await fetchUserDetails(firebaseUser.uid);
       } else {
         setUser(null);
+        setUserDetails(null);
       }
       setLoading(false);
     });
@@ -56,7 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await fetchUserDetails(userCredential.user.uid);
     } catch (error) {
       throw error;
     }
@@ -77,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       await signOut(auth);
+      setUserDetails(null);
     } catch (error) {
       throw error;
     }
@@ -96,6 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
+    userDetails,
     loading,
     login,
     register,
