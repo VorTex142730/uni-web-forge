@@ -1,77 +1,73 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, User, Lock, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const { login, loading } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage('');
+    setLoading(true);
     try {
       await login(email, password);
       navigate('/');
+      toast.success('Successfully signed in!');
     } catch (error: any) {
-      setErrorMessage(
-        error?.message || 'Login failed. Please check your credentials.'
-      );
+      toast.error('Failed to sign in. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 bg-white rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold text-center mb-4 text-blue-600">HotSpoT</h1>
-      <h2 className="text-xl font-medium text-center mb-6">Sign in</h2>
-
-      {errorMessage && (
-        <div className="bg-red-100 text-red-700 p-2 mb-4 rounded text-sm text-center">
-          {errorMessage}
-        </div>
-      )}
+    <div className="max-w-md w-full mx-auto p-6 space-y-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-semibold text-gray-900">HotSpoT</h1>
+        <h2 className="text-xl text-gray-900">Sign in</h2>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Email Field */}
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <User className="h-5 w-5 text-gray-400" />
           </div>
           <Input
             type="email"
-            placeholder="Email"
-            className="pl-10"
+            placeholder="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="pl-10"
           />
         </div>
 
-        {/* Password Field */}
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <Lock className="h-5 w-5 text-gray-400" />
           </div>
           <Input
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
-            className="pl-10 pr-10"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="pl-10 pr-10"
           />
           <button
             type="button"
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
-            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute inset-y-0 right-3 flex items-center"
+            onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
               <EyeOff className="h-5 w-5 text-gray-400" />
@@ -81,61 +77,41 @@ const LoginForm: React.FC = () => {
           </button>
         </div>
 
-        {/* Remember me & Forgot Password */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <Checkbox
               id="remember"
               checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(checked === true)}
             />
-            <label htmlFor="remember" className="cursor-pointer">
+            <label htmlFor="remember" className="text-sm text-gray-600">
               Remember Me
             </label>
           </div>
-          <Link to="/forgot-password" className="text-blue-600 hover:underline">
+          <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
             Forgot Password?
           </Link>
         </div>
 
-        {/* Login Button */}
         <Button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700"
         >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
-            </>
-          ) : (
-            'Log In'
-          )}
+          {loading ? 'Signing in...' : 'Log In'}
         </Button>
       </form>
 
-      {/* Terms and Links */}
-      <div className="mt-6 text-center text-sm text-gray-600">
-        <p>
-          <Link to="/terms" className="text-blue-600 hover:underline">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link to="/privacy" className="text-blue-600 hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
+      <div className="text-center">
+        <Link to="/register" className="text-sm text-gray-600 hover:text-gray-900">
+          Create an Account
+        </Link>
       </div>
 
-      {/* Register Link */}
-      <div className="mt-4 text-center text-sm text-gray-600">
-        <p>
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Create an Account
-          </Link>
-        </p>
+      <div className="text-center text-sm text-gray-500">
+        <Link to="/terms" className="text-gray-600 hover:underline">Terms of Service</Link>
+        {' and '}
+        <Link to="/privacy" className="text-gray-600 hover:underline">Privacy Policy</Link>
       </div>
     </div>
   );

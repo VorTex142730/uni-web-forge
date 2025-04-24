@@ -5,8 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import AuthLayout from "./components/auth/AuthLayout";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+import LoginForm from "./components/auth/LoginForm";
+import RegisterForm from "./components/auth/RegisterForm";
 import GroupsPage from "./pages/GroupsPage";
 import GroupDetailsPage from "./pages/GroupDetailsPage";
 import MembersPage from "./pages/MembersPage";
@@ -16,8 +16,11 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import TestPage from "./pages/TestPage";
 import HomePage from '@/pages/HomePage';
-import DevLogin from '@/components/DevLogin';
-
+import ProfilePage from '@/pages/ProfilePage';
+import AccountPage from '@/pages/AccountPage';
+import Timeline from '@/pages/Timeline';
+import NotificationPage from '@/pages/NotificationPage';
+import ConnectionsPage from '@/pages/ConnectionsPage';
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -46,7 +49,6 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
-        <DevLogin />
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
@@ -55,7 +57,7 @@ const App = () => (
                 path="/login" 
                 element={
                   <PublicRoute>
-                    <LoginPage />
+                    <LoginForm />
                   </PublicRoute>
                 } 
               />
@@ -63,7 +65,7 @@ const App = () => (
                 path="/register" 
                 element={
                   <PublicRoute>
-                    <RegisterPage />
+                    <RegisterForm />
                   </PublicRoute>
                 } 
               />
@@ -85,10 +87,13 @@ const App = () => (
               <Route path="/members" element={<MembersPage />} />
               <Route path="/forums" element={<ForumsPage />} />
               <Route path="/forums/:groupId" element={<ForumGroupPage />} />
-              <Route path="/profile" element={<div>Profile Page (Coming Soon)</div>} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="/timeline" element={<Timeline />} />
+              <Route path="/notifications" element={<NotificationPage />} />
+              <Route path="/connections" element={<ConnectionsPage />} />
               <Route path="/shop" element={<div>Shop Page (Coming Soon)</div>} />
               <Route path="/blog" element={<div>Blog Page (Coming Soon)</div>} />
-              <Route path="/notifications" element={<div>Notifications Page (Coming Soon)</div>} />
               <Route path="/messages" element={<div>Messages Page (Coming Soon)</div>} />
               <Route path="/cart" element={<div>Cart Page (Coming Soon)</div>} />
             </Route>

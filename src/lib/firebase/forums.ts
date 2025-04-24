@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   DocumentReference,
 } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { db, auth } from '@/config/firebaseConfig';
 
 export interface Forum {
   id: string;
