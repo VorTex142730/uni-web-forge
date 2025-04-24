@@ -10,6 +10,8 @@ import RegisterPage from "./pages/RegisterPage";
 import GroupsPage from "./pages/GroupsPage";
 import GroupDetailsPage from "./pages/GroupDetailsPage";
 import MembersPage from "./pages/MembersPage";
+import ForumsPage from "./pages/ForumsPage";
+import ForumGroupPage from "./pages/ForumGroupPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import TestPage from "./pages/TestPage";
@@ -81,8 +83,9 @@ const App = () => (
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/:groupId" element={<GroupDetailsPage />} />
               <Route path="/members" element={<MembersPage />} />
+              <Route path="/forums" element={<ForumsPage />} />
+              <Route path="/forums/:groupId" element={<ForumGroupPage />} />
               <Route path="/profile" element={<div>Profile Page (Coming Soon)</div>} />
-              <Route path="/forums" element={<div>Forums Page (Coming Soon)</div>} />
               <Route path="/shop" element={<div>Shop Page (Coming Soon)</div>} />
               <Route path="/blog" element={<div>Blog Page (Coming Soon)</div>} />
               <Route path="/notifications" element={<div>Notifications Page (Coming Soon)</div>} />
