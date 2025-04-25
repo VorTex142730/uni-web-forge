@@ -1,235 +1,231 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, Users, Clock, Lock, Globe, Plus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { getForums, createForum, type Forum } from '@/lib/firebase/forums';
-import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search } from 'lucide-react';
+
+// Mock data to replicate the screenshot
+const MOCK_FORUMS = [
+  {
+    id: '1',
+    title: 'Adventure and Thrill',
+    isPrivate: false,
+    description: '',
+    lastActivity: null,
+    memberCount: 0,
+    image: null
+  },
+  {
+    id: '2',
+    title: 'Private: Entrepreneurship Club',
+    isPrivate: true,
+    description: 'To meet the future entrepreneur in the campus.',
+    lastActivity: null,
+    memberCount: 0,
+    image: 'mission-unicorn.png'
+  },
+  {
+    id: '3',
+    title: 'Private: Game development Group',
+    isPrivate: true,
+    description: '',
+    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 - 1000 * 60 * 60 * 24 * 14), // 1 month, 2 weeks ago
+    memberCount: 0,
+    image: null
+  },
+  {
+    id: '4',
+    title: 'Nexora',
+    isPrivate: false,
+    description: '',
+    lastActivity: null,
+    memberCount: 0,
+    image: null
+  },
+  {
+    id: '5',
+    title: 'Testing club',
+    isPrivate: false,
+    description: 'Just to check if the website is working properly or not ?',
+    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 * 6 - 1000 * 60 * 60 * 24 * 14), // 6 months, 2 weeks ago
+    memberCount: 0,
+    image: 'hotspot.png'
+  },
+  {
+    id: '6',
+    title: 'Private: Travify',
+    isPrivate: true,
+    description: '',
+    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 - 1000 * 60 * 60 * 24 * 14), // 1 month, 2 weeks ago
+    memberCount: 0,
+    image: null
+  }
+];
+
+// Mock discussion data
+const DISCUSSIONS = [
+  {
+    id: '1',
+    title: 'Unreal or Unity ?',
+    author: 'Robert',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 - 1000 * 60 * 60 * 24 * 14), // 1 month, 2 weeks ago
+    memberCount: 2,
+    replyCount: 2,
+    group: 'Game development Group'
+  }
+];
 
 const ForumsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [forums, setForums] = useState<Forum[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newForumData, setNewForumData] = useState({
-    title: '',
-    description: '',
-    isPrivate: false,
-  });
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    loadForums();
-  }, []);
-
-  const loadForums = async () => {
-    try {
-      const forumsData = await getForums();
-      setForums(forumsData);
-    } catch (error) {
-      toast.error('Failed to load forums');
-      console.error('Error loading forums:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateForum = async () => {
-    try {
-      if (!newForumData.title.trim()) {
-        toast.error('Please enter a forum title');
-        return;
-      }
-
-      const forumRef = await createForum({
-        title: newForumData.title,
-        description: newForumData.description,
-        isPrivate: newForumData.isPrivate,
-      });
-
-      toast.success('Forum created successfully');
-      setIsCreateDialogOpen(false);
-      setNewForumData({ title: '', description: '', isPrivate: false });
-      
-      // Force a fresh load of forums
-      setForums([]); // Clear current forums
-      setLoading(true); // Show loading state
-      await loadForums(); // Reload forums from Firebase
-      
-      // Navigate to the newly created forum
-      navigate(`/forums/${forumRef.id}`);
-    } catch (error) {
-      console.error('Error creating forum:', error);
-      toast.error('Failed to create forum');
-    }
-  };
-
-  const filteredForums = forums.filter(forum =>
-    forum.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return 'No activity';
-    
-    // Convert Firestore timestamp to JS Date
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const formatDate = (date) => {
+    if (!date) return null;
     
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const weeks = Math.floor(days / 7);
     const months = Math.floor(days / 30);
-
-    if (days < 1) return 'Today';
-    if (days === 1) return 'Yesterday';
-    if (days < 7) return `${days} days ago`;
-    if (weeks < 4) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-    return `${months} month${months > 1 ? 's' : ''} ago`;
+    const weeks = Math.floor((days % 30) / 7);
+    
+    if (months >= 1) {
+      return `${months} month${months > 1 ? 's' : ''}, ${weeks} weeks ago`;
+    }
+    return `${weeks} weeks ago`;
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Forums</h1>
-        <div className="flex items-center gap-4">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="search"
+    <div className="bg-pink-50 min-h-screen">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-medium">Forums</h1>
+          <div className="relative">
+            <input
+              type="text"
               placeholder="Search forums..."
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white"
             />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
-          {user && (
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Forum
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Forum</DialogTitle>
-                  <DialogDescription>
-                    Create a new forum to start discussions with other members.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={newForumData.title}
-                      onChange={(e) =>
-                        setNewForumData({ ...newForumData, title: e.target.value })
-                      }
-                      placeholder="Enter forum title"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      value={newForumData.description}
-                      onChange={(e) =>
-                        setNewForumData({ ...newForumData, description: e.target.value })
-                      }
-                      placeholder="Enter forum description"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="private">Private Forum</Label>
-                    <Switch
-                      id="private"
-                      checked={newForumData.isPrivate}
-                      onCheckedChange={(checked) =>
-                        setNewForumData({ ...newForumData, isPrivate: checked })
-                      }
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateForum}>Create Forum</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
         </div>
-      </div>
 
-      {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-gray-500 mt-2">Loading forums...</p>
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {MOCK_FORUMS.map((forum) => (
+            <div key={forum.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
+              <div className="h-32 bg-slate-500 relative">
+                {forum.image && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black">
+                    <img 
+                      src={`/images/${forum.image}`} 
+                      alt={forum.title}
+                      className="max-h-full object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <h3 className="font-medium text-gray-900">{forum.title}</h3>
+                {forum.description && (
+                  <p className="text-gray-600 text-sm mt-1">
+                    {forum.description}
+                  </p>
+                )}
+                <div className="text-sm text-gray-500 mt-2">
+                  {forum.lastActivity ? (
+                    <span>{formatDate(forum.lastActivity)}</span>
+                  ) : (
+                    <span>No Discussions</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      ) : filteredForums.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No forums found</p>
+
+        <div className="text-sm text-gray-500 mb-6">
+          Viewing 1 - 6 of 6 forums
         </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredForums.map((forum) => (
-            <Link
-              key={forum.id}
-              to={`/forums/${forum.id}`}
-              className="block group"
-            >
-              <div className="bg-white rounded-lg p-4 hover:shadow-sm transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-gray-900 group-hover:text-blue-600">
-                        {forum.title}
-                      </h3>
-                      {forum.isPrivate ? (
-                        <Lock className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Globe className="h-4 w-4 text-gray-400" />
-                      )}
-                    </div>
-                    {forum.description && (
-                      <p className="text-gray-600 text-sm mt-1">
-                        {forum.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>{forum.memberCount} members</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>Active {formatDate(forum.updatedAt)}</span>
-                      </div>
-                    </div>
+
+        <div className="bg-white rounded-lg p-4">
+          <h2 className="text-lg font-medium mb-4">All Discussions</h2>
+          
+          {DISCUSSIONS.map(discussion => (
+            <div key={discussion.id} className="border-t border-gray-100 py-4 flex justify-between items-center">
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-gray-300 mr-4"></div>
+                <div>
+                  <h3 className="font-medium">{discussion.title}</h3>
+                  <div className="text-sm text-gray-500">
+                    <span>{discussion.author} replied {formatDate(discussion.date)}</span>
+                    <span className="mx-1">·</span>
+                    <span>{discussion.memberCount} Members</span>
+                    <span className="mx-1">·</span>
+                    <span>{discussion.replyCount} Replies</span>
                   </div>
                 </div>
               </div>
-            </Link>
+              <div className="bg-blue-500 text-white text-xs rounded-full px-3 py-1">
+                {discussion.group}
+              </div>
+            </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
 export default ForumsPage;
+
+/* 
+Firebase integration would go here:
+
+1. Import Firebase hooks and functions:
+import { useAuth } from '@/context/AuthContext';
+import { getForums, createForum } from '@/lib/firebase/forums';
+
+2. Add state for loading and forum data:
+const [forums, setForums] = useState([]);
+const [loading, setLoading] = useState(true);
+const { user } = useAuth();
+
+3. Load forums from Firebase on component mount:
+useEffect(() => {
+  const loadForums = async () => {
+    try {
+      const forumsData = await getForums();
+      setForums(forumsData);
+    } catch (error) {
+      console.error('Error loading forums:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  loadForums();
+}, []);
+
+4. For forum creation, you would need the Dialog component and related state:
+const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+const [newForumData, setNewForumData] = useState({
+  title: '',
+  description: '',
+  isPrivate: false,
+});
+
+const handleCreateForum = async () => {
+  try {
+    const forumRef = await createForum({
+      title: newForumData.title,
+      description: newForumData.description,
+      isPrivate: newForumData.isPrivate,
+    });
+    
+    // Reset form and reload data
+    setIsCreateDialogOpen(false);
+    setNewForumData({ title: '', description: '', isPrivate: false });
+    loadForums();
+  } catch (error) {
+    console.error('Error creating forum:', error);
+  }
+};
+*/
