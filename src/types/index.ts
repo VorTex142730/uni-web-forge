@@ -17,7 +17,11 @@ export interface Group {
   image?: string;
   memberCount: number;
   privacy: 'public' | 'private';
-  createdBy?: string;
+  createdBy: {
+    userId: string;
+    displayName?: string;
+    photoURL?: string;
+  };
   createdAt?: string;
   lastActive?: string;
 }

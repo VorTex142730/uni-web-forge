@@ -11,18 +11,7 @@ import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { createGroupJoinRequestNotification } from '@/components/notifications/NotificationService';
-
-interface Group {
-  id: string;
-  name: string;
-  description?: string;
-  privacy: 'public' | 'private';
-  coverImage?: string;
-  lastActive: string;
-  createdAt: string;
-  memberCount: number;
-  createdBy: string;
-}
+import { Group } from '@/types';
 
 const GroupsPage = () => {
   const navigate = useNavigate();
@@ -44,12 +33,20 @@ const GroupsPage = () => {
         orderBy('lastActive', 'desc')
       );
       const groupsSnapshot = await getDocs(groupsQuery);
-      const groupsData = groupsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        lastActive: doc.data().lastActive?.toDate?.().toISOString() || new Date().toISOString(),
-        createdAt: doc.data().createdAt?.toDate?.().toISOString() || new Date().toISOString()
-      })) as Group[];
+      const groupsData = groupsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          lastActive: data.lastActive?.toDate?.().toISOString() || new Date().toISOString(),
+          createdAt: data.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
+          createdBy: {
+            userId: data.createdBy?.userId || '',
+            displayName: data.createdBy?.displayName,
+            photoURL: data.createdBy?.photoURL
+          }
+        } as Group;
+      });
       setGroups(groupsData);
 
       // Fetch user's groups if logged in
@@ -113,14 +110,16 @@ const GroupsPage = () => {
         photoURL: user.photoURL
       });
 
-      // Create notification for group owner
-      await createGroupJoinRequestNotification(
-        groupData.createdBy.userId,
-        user.uid,
-        user.displayName || 'Anonymous',
-        groupId,
-        groupData.name
-      );
+      // Create notification for group owner if createdBy exists
+      if (groupData.createdBy?.userId) {
+        await createGroupJoinRequestNotification(
+          groupData.createdBy.userId,
+          user.uid,
+          user.displayName || 'Anonymous',
+          groupId,
+          groupData.name
+        );
+      }
 
       toast.success('Join request sent successfully');
     } catch (error) {
@@ -156,7 +155,23 @@ const GroupsPage = () => {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-8">
+      {/* Mobile Header */}
+      <div className="lg:hidden space-y-4">
+        <h1 className="text-2xl font-semibold">Groups</h1>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Input
+            type="search"
+            placeholder="Search Groups..."
+            className="pl-10 w-full bg-white"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden lg:flex justify-between items-center mb-8">
         <h1 className="text-2xl font-semibold">Groups</h1>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -170,7 +185,50 @@ const GroupsPage = () => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center border-b border-gray-200 mb-6">
+      {/* Mobile Tabs */}
+      <div className="lg:hidden border-b border-gray-200 mb-6 overflow-x-auto">
+        <div className="flex -mb-px min-w-max">
+          <button
+            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
+              activeTab === 'all'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500'
+            }`}
+            onClick={() => setActiveTab('all')}
+          >
+            All Groups
+            <span className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              {groups.length}
+            </span>
+          </button>
+          <button
+            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
+              activeTab === 'my'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500'
+            }`}
+            onClick={() => setActiveTab('my')}
+          >
+            My Groups
+            <span className="ml-2 bg-gray-200 text-gray-600 text-xs px-1.5 py-0.5 rounded-full">
+              {myGroups.length}
+            </span>
+          </button>
+          <button
+            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
+              activeTab === 'create'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500'
+            }`}
+            onClick={() => setActiveTab('create')}
+          >
+            Create a Group
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Tabs */}
+      <div className="hidden lg:flex border-b border-gray-200 mb-6">
         <div className="flex -mb-px">
           <button
             className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
@@ -209,33 +267,6 @@ const GroupsPage = () => {
             Create a Group
           </button>
         </div>
-
-        <div className="flex items-center gap-4">
-          <select
-            className="text-sm border rounded-lg py-2 px-3 bg-white"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="recently-active">Recently Active</option>
-            <option value="newest">Newest</option>
-            <option value="alphabetical">Alphabetical</option>
-          </select>
-
-          <div className="flex items-center border rounded-lg p-1 bg-white">
-            <button
-              className={`p-2 rounded transition-colors ${view === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-              onClick={() => setView('grid')}
-            >
-              <LayoutGrid size={18} />
-            </button>
-            <button
-              className={`p-2 rounded transition-colors ${view === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-              onClick={() => setView('list')}
-            >
-              <List size={18} />
-            </button>
-          </div>
-        </div>
       </div>
 
       <div className="min-h-[calc(100vh-240px)]">
@@ -246,13 +277,59 @@ const GroupsPage = () => {
           />
         ) : (
           <>
+            {/* Sort and View Controls */}
+            <div className="flex justify-between items-center mb-4">
+              <div className="relative">
+                <select
+                  className="text-sm border rounded-lg py-2 pl-4 pr-8 bg-white appearance-none cursor-pointer"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="recently-active">Recently Active</option>
+                  <option value="newest">Newest</option>
+                  <option value="alphabetical">Alphabetical</option>
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex items-center border rounded-lg p-1 bg-white">
+                <button
+                  className={`p-2 rounded transition-colors ${view === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                  onClick={() => setView('grid')}
+                >
+                  <LayoutGrid size={18} />
+                </button>
+                <button
+                  className={`p-2 rounded transition-colors ${view === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                  onClick={() => setView('list')}
+                >
+                  <List size={18} />
+                </button>
+              </div>
+            </div>
+
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : (
               <>
-                <div className={`grid gap-6 ${
+                {/* Mobile View */}
+                <div className={`lg:hidden ${view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}`}>
+                  {sortedGroups.map((group) => (
+                    <GroupCard
+                      key={group.id}
+                      group={group}
+                      variant={view === 'grid' ? 'grid' : 'mobile'}
+                    />
+                  ))}
+                </div>
+
+                {/* Desktop View */}
+                <div className={`hidden lg:grid gap-6 ${
                   view === 'grid' 
                     ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                     : 'grid-cols-1 max-w-3xl mx-auto'
@@ -261,6 +338,7 @@ const GroupsPage = () => {
                     <GroupCard
                       key={group.id}
                       group={group}
+                      variant={view}
                     />
                   ))}
                 </div>

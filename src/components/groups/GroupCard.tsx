@@ -8,14 +8,15 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Group } from '@/types';
 import { createGroupJoinRequestNotification } from '@/components/notifications/NotificationService';
-import { Settings } from 'lucide-react';
+import { Settings, Users } from 'lucide-react';
 
 interface GroupCardProps {
   group: Group;
   onClick?: () => void;
+  variant?: 'mobile' | 'grid' | 'list';
 }
 
-const GroupCard = ({ group, onClick }: GroupCardProps) => {
+const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [memberStatus, setMemberStatus] = useState<'creator' | 'member' | 'none' | 'pending'>('none');
@@ -25,7 +26,7 @@ const GroupCard = ({ group, onClick }: GroupCardProps) => {
       if (!user) return;
 
       // Check if user is creator
-      if (group.createdBy?.userId === user.uid) {
+      if (group.createdBy && group.createdBy.userId === user.uid) {
         setMemberStatus('creator');
         return;
       }
@@ -99,13 +100,15 @@ const GroupCard = ({ group, onClick }: GroupCardProps) => {
       });
 
       // Create notification for group owner
-      await createGroupJoinRequestNotification(
-        group.createdBy.userId,
-        user.uid,
-        user.displayName || 'Anonymous',
-        group.id,
-        group.name
-      );
+      if (group.createdBy) {
+        await createGroupJoinRequestNotification(
+          group.createdBy.userId,
+          user.uid,
+          user.displayName || 'Anonymous',
+          group.id,
+          group.name
+        );
+      }
 
       setMemberStatus('pending');
       toast.success('Join request sent successfully');
@@ -123,6 +126,58 @@ const GroupCard = ({ group, onClick }: GroupCardProps) => {
     e.stopPropagation();
     navigate(`/groups/${group.id}?tab=settings`);
   };
+
+  if (variant === 'mobile') {
+    return (
+      <div 
+        className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200" 
+        onClick={onClick || handleViewGroup}
+      >
+        <div className="flex items-center p-4">
+          <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${generateGradient(group.name)}`}>
+            <span className="text-white text-sm font-bold">
+              {getInitials(group.name)}
+            </span>
+          </div>
+          
+          <div className="ml-4 flex-1 min-w-0">
+            <h3 className="text-base font-medium text-gray-900 truncate">{group.name}</h3>
+            <div className="flex items-center mt-1 text-sm text-gray-500">
+              <Users className="w-4 h-4 mr-1" />
+              <span className="mr-2">{group.memberCount}</span>
+              <span className={`capitalize ${group.privacy === 'private' ? 'text-orange-500' : 'text-green-500'}`}>
+                • {group.privacy}
+              </span>
+            </div>
+            {group.description && (
+              <p className="text-sm text-gray-600 mt-1 truncate">
+                {group.description}
+              </p>
+            )}
+          </div>
+
+          {memberStatus === 'none' && (
+            <Button
+              size="sm"
+              onClick={handleJoinGroup}
+              className="ml-4 flex-shrink-0"
+            >
+              {group.privacy === 'private' ? 'Request' : 'Join'}
+            </Button>
+          )}
+          {memberStatus === 'pending' && (
+            <Button
+              size="sm"
+              disabled
+              className="ml-4 flex-shrink-0"
+            >
+              Pending
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
