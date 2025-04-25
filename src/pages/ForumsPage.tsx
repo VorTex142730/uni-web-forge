@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 
 // Mock data to replicate the screenshot
@@ -75,6 +75,7 @@ const DISCUSSIONS = [
 
 const ForumsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const formatDate = (date) => {
     if (!date) return null;
@@ -89,6 +90,10 @@ const ForumsPage = () => {
       return `${months} month${months > 1 ? 's' : ''}, ${weeks} weeks ago`;
     }
     return `${weeks} weeks ago`;
+  };
+
+  const handleForumClick = (forumId: string) => {
+    navigate(`/forums/${forumId}`);
   };
 
   return (
@@ -110,7 +115,11 @@ const ForumsPage = () => {
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           {MOCK_FORUMS.map((forum) => (
-            <div key={forum.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
+            <div
+              key={forum.id}
+              className="bg-white rounded-lg overflow-hidden shadow-sm cursor-pointer transition-shadow hover:shadow-md"
+              onClick={() => handleForumClick(forum.id)}
+            >
               <div className="h-32 bg-slate-500 relative">
                 {forum.image && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black">

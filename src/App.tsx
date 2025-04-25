@@ -11,7 +11,7 @@ import GroupsPage from "./pages/GroupsPage";
 // import GroupDetailsPage from "./pages/GroupDetailsPage";
 import MembersPage from "./pages/MembersPage";
 import ForumsPage from "./pages/ForumsPage";
-import ForumGroupPage from "./pages/ForumGroupPage";
+import ForumDetailsPage from "./pages/ForumDetailsPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { SidebarProvider } from "./context/SidebarContext";
@@ -127,7 +127,7 @@ function App() {
                       } />
                       <Route path="/forums/:id" element={
                         <ProtectedRoute>
-                          <ForumGroupPage />
+                          <ForumDetailsPage />
                         </ProtectedRoute>
                       } />
                       <Route path="/members" element={
