@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { onSnapshot } from 'firebase/firestore';
+import { onSnapshot, doc, updateDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MoreHorizontal, Heart, MessageCircle, Share2, Trash2, Edit } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { MoreHorizontal, Heart, MessageCircle, Share2, Trash2, Edit, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,7 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
   const [showComments, setShowComments] = useState<string | null>(null);
   const lastPostRef = useRef<any>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!groupId) return;
@@ -70,9 +72,12 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newPost.trim() || !isMember) return;
+    if (!user || !newPost.trim() || !isMember) {
+      toast.error('Please sign in to create a post');
+      return;
+    }
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       await FeedService.createPost({
         content: newPost.trim(),
@@ -90,7 +95,7 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
       console.error('Error creating post:', error);
       toast.error('Failed to create post');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -109,7 +114,10 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
   };
 
   const handleDeletePost = async (postId: string, createdByUserId: string) => {
-    if (!user || (!isOwner && user.uid !== createdByUserId)) return;
+    if (!user || (!isOwner && user.uid !== createdByUserId)) {
+      toast.error('You do not have permission to delete this post');
+      return;
+    }
 
     try {
       await FeedService.deletePost(postId, groupId);
@@ -121,7 +129,10 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
   };
 
   const handleLikePost = async (postId: string) => {
-    if (!user || !isMember) return;
+    if (!user || !isMember) {
+      toast.error('Please sign in to like posts');
+      return;
+    }
 
     try {
       await FeedService.toggleLike(postId, user.uid);
@@ -155,15 +166,36 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
     <div className="space-y-6">
       {/* Create Post Form */}
       <form onSubmit={handleCreatePost} className="space-y-4">
-        <Textarea
-          placeholder="What's on your mind?"
-          value={newPost}
-          onChange={(e) => setNewPost(e.target.value)}
-          className="min-h-[100px]"
-        />
-        <Button type="submit" disabled={loading || !newPost.trim()}>
-          Post
-        </Button>
+        <div className="flex space-x-3">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+            <AvatarFallback>{user?.displayName?.[0] || 'U'}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <Textarea
+              placeholder="What's on your mind?"
+              value={newPost}
+              onChange={(e) => setNewPost(e.target.value)}
+              className="min-h-[100px] resize-none"
+            />
+            <div className="flex justify-end mt-2">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || !newPost.trim()}
+                className="rounded-full"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  'Post'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
       </form>
 
       {/* Posts List */}
@@ -173,8 +205,8 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
             {/* Post Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Avatar>
-                  <AvatarImage src={post.createdBy.photoURL} alt={post.createdBy.displayName} />
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={post.createdBy.photoURL || ''} alt={post.createdBy.displayName} />
                   <AvatarFallback>{post.createdBy.displayName[0]}</AvatarFallback>
                 </Avatar>
                 <div>
@@ -250,40 +282,50 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
             )}
 
             {/* Post Actions */}
-            <div className="flex items-center space-x-6 pt-2">
-              <button
-                onClick={() => handleLikePost(post.id)}
+            <div className="flex items-center space-x-4 pt-2 border-t border-gray-100">
+              <Button
+                variant="ghost"
+                size="sm"
                 className={`flex items-center space-x-2 ${
-                  post.likes.includes(user?.uid || '') ? 'text-red-500' : 'text-gray-500'
-                } hover:text-red-500 transition-colors`}
+                  post.likes?.includes(user?.uid) ? 'text-red-500' : 'text-gray-500'
+                }`}
+                onClick={() => handleLikePost(post.id)}
               >
-                <Heart className="h-5 w-5" />
-                <span>{post.likes.length}</span>
-              </button>
-              
-              <button
+                <Heart className="h-4 w-4" />
+                <span>{post.likeCount || 0}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-2 text-gray-500"
                 onClick={() => setShowComments(showComments === post.id ? null : post.id)}
-                className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors"
               >
-                <MessageCircle className="h-5 w-5" />
-                <span>{post.comments}</span>
-              </button>
-              
-              <button className="flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors">
-                <Share2 className="h-5 w-5" />
-              </button>
+                <MessageCircle className="h-4 w-4" />
+                <span>{post.commentCount || 0}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-2 text-gray-500"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success('Link copied to clipboard');
+                }}
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
             </div>
 
             {/* Comments Section */}
             {showComments === post.id && (
-              <div className="mt-4 pt-4 border-t">
-                <GroupPostComments
-                  postId={post.id}
-                  groupId={groupId}
-                  isOwner={isOwner}
-                  isMember={isMember}
-                />
-              </div>
+              <GroupPostComments
+                postId={post.id}
+                groupId={groupId}
+                isOwner={isOwner}
+                isMember={isMember}
+              />
             )}
           </div>
         ))}
@@ -296,8 +338,19 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
 
         {hasMore && (
           <div className="text-center">
-            <Button variant="outline" onClick={loadMorePosts}>
-              Load More Posts
+            <Button
+              variant="outline"
+              onClick={loadMorePosts}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load More'
+              )}
             </Button>
           </div>
         )}

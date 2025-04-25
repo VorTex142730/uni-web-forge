@@ -15,7 +15,10 @@ import {
   increment,
   DocumentReference,
   DocumentData,
-  Query
+  Query,
+  arrayUnion,
+  arrayRemove,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 
@@ -29,7 +32,9 @@ export interface FeedPost {
     photoURL: string | null;
   };
   likes: string[];
+  likeCount: number;
   comments: number;
+  commentCount: number;
   groupId: string;
   media?: {
     type: 'image' | 'video';
@@ -54,12 +59,31 @@ export interface FeedComment {
   isEdited?: boolean;
 }
 
+export interface Comment {
+  id: string;
+  content: string;
+  createdAt: Timestamp;
+  createdBy: {
+    userId: string;
+    displayName: string;
+    photoURL: string | null;
+  };
+  postId: string;
+  groupId: string;
+  likes: string[];
+  likeCount: number;
+  replies: Comment[];
+  replyCount: number;
+  parentCommentId?: string;
+  isEdited?: boolean;
+}
+
 const POSTS_PER_PAGE = 10;
 const COMMENTS_PER_PAGE = 20;
 
 export class FeedService {
   // Posts
-  static async createPost(data: Omit<FeedPost, 'id' | 'createdAt' | 'comments' | 'likes'>): Promise<string> {
+  static async createPost(data: Omit<FeedPost, 'id' | 'createdAt' | 'comments' | 'likes' | 'likeCount' | 'commentCount'>): Promise<string> {
     try {
       const postRef = await addDoc(collection(db, 'groupPosts'), {
         ...data,
@@ -67,6 +91,8 @@ export class FeedService {
         lastActivity: serverTimestamp(),
         comments: 0,
         likes: [],
+        likeCount: 0,
+        commentCount: 0,
         isEdited: false
       });
 
@@ -119,39 +145,45 @@ export class FeedService {
     }
   }
 
-  static async toggleLike(postId: string, userId: string): Promise<void> {
+  static async toggleLike(postId: string, userId: string): Promise<boolean> {
     try {
       const postRef = doc(db, 'groupPosts', postId);
-      const postDoc = await getDocs(query(collection(db, 'groupPosts'), where('id', '==', postId)));
-      const post = postDoc.docs[0].data() as FeedPost;
+      const postDoc = await getDoc(postRef);
+      
+      if (!postDoc.exists()) {
+        throw new Error('Post not found');
+      }
+
+      const postData = postDoc.data();
+      const likes = postData.likes || [];
+      const isLiked = likes.includes(userId);
 
       await updateDoc(postRef, {
-        likes: post.likes.includes(userId)
-          ? post.likes.filter(id => id !== userId)
-          : [...post.likes, userId],
+        likes: isLiked ? arrayRemove(userId) : arrayUnion(userId),
+        likeCount: increment(isLiked ? -1 : 1),
         lastActivity: serverTimestamp()
       });
+
+      return !isLiked;
     } catch (error) {
       console.error('Error toggling like:', error);
       throw error;
     }
   }
 
-  static getPaginatedPosts(groupId: string, lastPost?: DocumentReference<DocumentData>): Query<DocumentData> {
-    return lastPost
-      ? query(
-          collection(db, 'groupPosts'),
-          where('groupId', '==', groupId),
-          orderBy('createdAt', 'desc'),
-          startAfter(lastPost),
-          limit(POSTS_PER_PAGE)
-        )
-      : query(
-          collection(db, 'groupPosts'),
-          where('groupId', '==', groupId),
-          orderBy('createdAt', 'desc'),
-          limit(POSTS_PER_PAGE)
-        );
+  static getPaginatedPosts(groupId: string, lastDoc?: any) {
+    let q = query(
+      collection(db, 'groupPosts'),
+      where('groupId', '==', groupId),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+
+    return q;
   }
 
   // Comments
@@ -230,5 +262,51 @@ export class FeedService {
           orderBy('createdAt', 'asc'),
           limit(COMMENTS_PER_PAGE)
         );
+  }
+
+  static async createReply(replyData: Omit<Comment, 'id' | 'createdAt' | 'likes' | 'likeCount' | 'replies' | 'replyCount'>) {
+    const replyRef = await collection(db, 'groupPostComments').add({
+      ...replyData,
+      createdAt: serverTimestamp(),
+      likes: [],
+      likeCount: 0,
+      replies: [],
+      replyCount: 0
+    });
+
+    // Update parent comment's reply count
+    if (replyData.parentCommentId) {
+      const parentCommentRef = doc(db, 'groupPostComments', replyData.parentCommentId);
+      await updateDoc(parentCommentRef, {
+        replyCount: increment(1)
+      });
+    }
+
+    return replyRef.id;
+  }
+
+  static async toggleCommentLike(commentId: string, userId: string): Promise<boolean> {
+    try {
+      const commentRef = doc(db, 'groupPostComments', commentId);
+      const commentDoc = await getDoc(commentRef);
+      
+      if (!commentDoc.exists()) {
+        throw new Error('Comment not found');
+      }
+
+      const commentData = commentDoc.data();
+      const likes = commentData.likes || [];
+      const isLiked = likes.includes(userId);
+
+      await updateDoc(commentRef, {
+        likes: isLiked ? arrayRemove(userId) : arrayUnion(userId),
+        likeCount: increment(isLiked ? -1 : 1)
+      });
+
+      return !isLiked;
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      throw error;
+    }
   }
 } 
