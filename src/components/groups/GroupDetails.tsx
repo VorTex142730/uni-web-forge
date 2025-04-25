@@ -40,6 +40,7 @@ interface GroupData {
     displayName: string;
     photoURL: string | null;
   };
+  memberCount?: number;
 }
 
 interface JoinRequest {
@@ -48,7 +49,10 @@ interface JoinRequest {
   displayName: string;
   photoURL: string | null;
   status: 'pending' | 'accepted' | 'rejected';
-  createdAt: Timestamp;
+  createdAt: {
+    toDate: () => Date;
+  } | string;
+  groupId: string;
 }
 
 const GroupDetails = () => {
@@ -68,23 +72,37 @@ const GroupDetails = () => {
       if (!id) return;
 
       try {
-        const groupDoc = await getDoc(doc(db, 'groups', id));
-        if (!groupDoc.exists()) {
-          navigate('/groups');
-          return;
-        }
+        // Listen to group document changes
+        const groupRef = doc(db, 'groups', id);
+        const unsubscribeGroup = onSnapshot(groupRef, async (groupDoc) => {
+          if (!groupDoc.exists()) {
+            navigate('/groups');
+            return;
+          }
 
-        const groupData = {
-          id: groupDoc.id,
-          ...groupDoc.data()
-        } as GroupData;
+          const groupData = {
+            id: groupDoc.id,
+            ...groupDoc.data()
+          } as GroupData;
 
-        setGroup(groupData);
-        setIsOwner(user?.uid === groupData.createdBy.userId);
+          // Listen to group members
+          const membersQuery = query(
+            collection(db, 'groupMembers'),
+            where('groupId', '==', id)
+          );
+
+          const membersSnapshot = await getDocs(membersQuery);
+          const members = membersSnapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
+          })) as GroupMember[];
+
+          setGroup({ ...groupData, members });
+          setIsOwner(user?.uid === groupData.createdBy.userId);
+        });
 
         // Check member status
         if (user) {
-          // Check if already a member
           const memberQuery = query(
             collection(db, 'groupMembers'),
             where('groupId', '==', id),
@@ -95,7 +113,6 @@ const GroupDetails = () => {
           if (!memberDocs.empty) {
             setMemberStatus('member');
           } else {
-            // Check if join request is pending
             const requestQuery = query(
               collection(db, 'groupJoinRequests'),
               where('groupId', '==', id),
@@ -110,7 +127,7 @@ const GroupDetails = () => {
           }
         }
 
-        // If user is owner, listen to join requests
+        // Listen to join requests if user is owner
         if (user?.uid === groupData.createdBy.userId) {
           const requestsQuery = query(
             collection(db, 'groupJoinRequests'),
@@ -118,16 +135,22 @@ const GroupDetails = () => {
             where('status', '==', 'pending')
           );
 
-          const unsubscribe = onSnapshot(requestsQuery, (snapshot) => {
+          const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
             const requests = snapshot.docs.map(doc => ({
               id: doc.id,
-              ...doc.data()
+              ...doc.data(),
+              createdAt: doc.data().createdAt
             })) as JoinRequest[];
             setJoinRequests(requests);
           });
 
-          return () => unsubscribe();
+          return () => {
+            unsubscribeGroup();
+            unsubscribeRequests();
+          };
         }
+
+        return () => unsubscribeGroup();
       } catch (error) {
         console.error('Error fetching group details:', error);
         toast.error('Failed to load group details');
@@ -137,35 +160,37 @@ const GroupDetails = () => {
     };
 
     fetchGroupDetails();
-  }, [id, user]);
+  }, [id, user, navigate]);
 
-  const handleJoinGroup = async () => {
+  const handleJoinRequest = async () => {
     if (!user || !group) return;
 
     try {
-      // Add join request
-      const joinRequest = await addDoc(collection(db, 'groupJoinRequests'), {
-        groupId: group.id,
+      const joinRequestRef = collection(db, 'groupJoinRequests');
+      await addDoc(joinRequestRef, {
+        groupId: id,
         userId: user.uid,
-        displayName: user.displayName || 'Anonymous',
+        displayName: user.displayName,
         photoURL: user.photoURL,
         status: 'pending',
         createdAt: serverTimestamp()
       });
 
-      // Create notification for group owner
-      await createGroupJoinRequestNotification(
-        group.createdBy.userId,
-        user.uid,
-        user.displayName || 'Anonymous',
-        group.id,
-        group.name
-      );
-
       setMemberStatus('pending');
       toast.success('Join request sent successfully');
+
+      // Create notification for group owner
+      await addDoc(collection(db, 'notifications'), {
+        userId: group.createdBy.userId,
+        type: 'JOIN_REQUEST',
+        message: `${user.displayName} has requested to join your group "${group.name}"`,
+        read: false,
+        createdAt: serverTimestamp(),
+        groupId: id,
+        requesterId: user.uid
+      });
     } catch (error) {
-      console.error('Error joining group:', error);
+      console.error('Error sending join request:', error);
       toast.error('Failed to send join request');
     }
   };
@@ -230,6 +255,38 @@ const GroupDetails = () => {
     }
   };
 
+  const handleRemoveMember = async (memberId: string) => {
+    if (!group || !user || !isOwner) return;
+
+    try {
+      // Find the member document
+      const memberQuery = query(
+        collection(db, 'groupMembers'),
+        where('groupId', '==', id),
+        where('userId', '==', memberId)
+      );
+      const memberDocs = await getDocs(memberQuery);
+
+      if (!memberDocs.empty) {
+        // Delete the member document
+        const memberDoc = memberDocs.docs[0];
+        await memberDoc.ref.delete();
+
+        // Update group member count
+        const groupRef = doc(db, 'groups', id);
+        await updateDoc(groupRef, {
+          memberCount: (group.memberCount || 0) - 1,
+          lastActive: serverTimestamp()
+        });
+
+        toast.success('Member removed successfully');
+      }
+    } catch (error) {
+      console.error('Error removing member:', error);
+      toast.error('Failed to remove member');
+    }
+  };
+
   const generateGradient = (text: string) => {
     let hash = 0;
     for (let i = 0; i < text.length; i++) {
@@ -247,6 +304,12 @@ const GroupDetails = () => {
       .map(part => part[0])
       .join('')
       .toUpperCase() || '?';
+  };
+
+  const formatDate = (timestamp: JoinRequest['createdAt']) => {
+    if (!timestamp) return 'Unknown date';
+    if (typeof timestamp === 'string') return new Date(timestamp).toLocaleDateString();
+    return timestamp.toDate().toLocaleDateString();
   };
 
   if (loading) {
@@ -296,7 +359,7 @@ const GroupDetails = () => {
                 <div>
                   {memberStatus === 'none' && (
                     <Button 
-                      onClick={handleJoinGroup} 
+                      onClick={handleJoinRequest} 
                       size="lg"
                       variant="secondary"
                       className="bg-white/10 hover:bg-white/20 text-white border-white/20"
@@ -429,28 +492,35 @@ const GroupDetails = () => {
                     <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg">
                       <Avatar src={member.photoURL} alt={member.displayName} />
                       <div className="flex-1">
-                        <p className="font-medium">{member.displayName}</p>
-                        <p className="text-sm text-gray-500">{member.email}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{member.displayName}</p>
+                          {member.role === 'admin' && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                              Admin
+                            </span>
+                          )}
+                          {member.role === 'moderator' && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                              Moderator
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Joined {member.joinedAt?.toDate().toLocaleDateString()}
+                        </p>
                       </div>
-                      {group.ownerId === user?.uid && member.userId !== user?.uid && (
-                        <button
+                      {isOwner && member.userId !== user?.uid && (
+                        <Button
                           onClick={() => handleRemoveMember(member.userId)}
-                          className="text-red-500 hover:text-red-600"
+                          variant="destructive"
+                          size="sm"
                         >
                           Remove
-                        </button>
+                        </Button>
                       )}
                     </div>
                   ))
                 )}
-                {[...Array(8)].map((_, index) => (
-                  <div
-                    key={`skeleton-${index}`}
-                    className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse"
-                  >
-                    <div className="h-10 bg-gray-200"></div>
-                  </div>
-                ))}
               </div>
             )}
 
@@ -473,7 +543,7 @@ const GroupDetails = () => {
                       <div className="flex-1">
                         <h3 className="font-medium">{request.displayName || 'Anonymous'}</h3>
                         <p className="text-sm text-gray-500">
-                          Requested {new Date(request.createdAt.toDate()).toLocaleDateString()}
+                          Requested {formatDate(request.createdAt)}
                         </p>
                       </div>
                       <div className="flex gap-2">

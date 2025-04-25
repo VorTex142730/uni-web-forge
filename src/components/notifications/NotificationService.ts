@@ -14,11 +14,14 @@ export interface NotificationData {
 
 export const createNotification = async (data: Omit<NotificationData, 'createdAt' | 'read'>) => {
   try {
-    await addDoc(collection(db, 'notifications'), {
+    console.log('Creating notification:', data);
+    const docRef = await addDoc(collection(db, 'notifications'), {
       ...data,
       read: false,
       createdAt: serverTimestamp()
     });
+    console.log('Notification created successfully with ID:', docRef.id);
+    return docRef.id;
   } catch (error) {
     console.error('Error creating notification:', error);
     throw error;
@@ -27,10 +30,13 @@ export const createNotification = async (data: Omit<NotificationData, 'createdAt
 
 export const markNotificationAsRead = async (notificationId: string) => {
   try {
+    console.log('Marking notification as read:', notificationId);
     const notificationRef = doc(db, 'notifications', notificationId);
     await updateDoc(notificationRef, {
-      read: true
+      read: true,
+      updatedAt: serverTimestamp()
     });
+    console.log('Notification marked as read successfully');
   } catch (error) {
     console.error('Error marking notification as read:', error);
     throw error;
@@ -39,7 +45,9 @@ export const markNotificationAsRead = async (notificationId: string) => {
 
 export const deleteNotification = async (notificationId: string) => {
   try {
+    console.log('Deleting notification:', notificationId);
     await deleteDoc(doc(db, 'notifications', notificationId));
+    console.log('Notification deleted successfully');
   } catch (error) {
     console.error('Error deleting notification:', error);
     throw error;
@@ -48,12 +56,14 @@ export const deleteNotification = async (notificationId: string) => {
 
 export const getUnreadNotificationsCount = async (userId: string) => {
   try {
+    console.log('Getting unread notifications count for user:', userId);
     const q = query(
       collection(db, 'notifications'),
       where('recipientId', '==', userId),
       where('read', '==', false)
     );
     const snapshot = await getDocs(q);
+    console.log('Unread notifications count:', snapshot.size);
     return snapshot.size;
   } catch (error) {
     console.error('Error getting unread notifications count:', error);
@@ -68,14 +78,27 @@ export const createGroupJoinRequestNotification = async (
   groupId: string,
   groupName: string
 ) => {
-  await createNotification({
-    recipientId: groupOwnerId,
-    senderId: requesterId,
-    type: 'GROUP_JOIN_REQUEST',
-    groupId,
-    groupName,
-    message: `${requesterName} wants to join your group "${groupName}"`
-  });
+  try {
+    console.log('Creating group join request notification:', {
+      groupOwnerId,
+      requesterId,
+      requesterName,
+      groupId,
+      groupName
+    });
+    await createNotification({
+      recipientId: groupOwnerId,
+      senderId: requesterId,
+      type: 'GROUP_JOIN_REQUEST',
+      groupId,
+      groupName,
+      message: `${requesterName} wants to join your group "${groupName}"`
+    });
+    console.log('Group join request notification created successfully');
+  } catch (error) {
+    console.error('Error creating group join request notification:', error);
+    throw error;
+  }
 };
 
 export const createGroupJoinResponseNotification = async (
@@ -85,12 +108,25 @@ export const createGroupJoinResponseNotification = async (
   groupName: string,
   accepted: boolean
 ) => {
-  await createNotification({
-    recipientId: requesterId,
-    senderId: groupOwnerId,
-    type: accepted ? 'GROUP_JOIN_ACCEPTED' : 'GROUP_JOIN_REJECTED',
-    groupId,
-    groupName,
-    message: `Your request to join "${groupName}" has been ${accepted ? 'accepted' : 'rejected'}`
-  });
+  try {
+    console.log('Creating group join response notification:', {
+      requesterId,
+      groupOwnerId,
+      groupId,
+      groupName,
+      accepted
+    });
+    await createNotification({
+      recipientId: requesterId,
+      senderId: groupOwnerId,
+      type: accepted ? 'GROUP_JOIN_ACCEPTED' : 'GROUP_JOIN_REJECTED',
+      groupId,
+      groupName,
+      message: `Your request to join "${groupName}" has been ${accepted ? 'accepted' : 'rejected'}`
+    });
+    console.log('Group join response notification created successfully');
+  } catch (error) {
+    console.error('Error creating group join response notification:', error);
+    throw error;
+  }
 }; 

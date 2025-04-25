@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, UserPlus, Check, X } from 'lucide-react';
-import { collection, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, Timestamp, limit } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -23,27 +23,43 @@ const NotificationBell = () => {
   useEffect(() => {
     if (!user) return;
 
-    const notificationsQuery = query(
+    // First, get unread notifications count
+    const unreadQuery = query(
       collection(db, 'notifications'),
       where('recipientId', '==', user.uid),
-      where('read', '==', false),
-      orderBy('createdAt', 'desc')
+      where('read', '==', false)
     );
 
-    const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+    const unreadUnsubscribe = onSnapshot(unreadQuery, (snapshot) => {
+      setUnreadCount(snapshot.size);
+    });
+
+    // Then, get recent notifications (limited to 5)
+    const recentQuery = query(
+      collection(db, 'notifications'),
+      where('recipientId', '==', user.uid),
+      orderBy('createdAt', 'desc'),
+      limit(5)
+    );
+
+    const recentUnsubscribe = onSnapshot(recentQuery, (snapshot) => {
       const notificationData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as (NotificationData & { id: string })[];
       setNotifications(notificationData);
-      setUnreadCount(notificationData.length);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unreadUnsubscribe();
+      recentUnsubscribe();
+    };
   }, [user]);
 
   const handleNotificationClick = async (notification: NotificationData & { id: string }) => {
-    await markNotificationAsRead(notification.id);
+    if (!notification.read) {
+      await markNotificationAsRead(notification.id);
+    }
     
     switch (notification.type) {
       case 'GROUP_JOIN_REQUEST':
@@ -101,13 +117,15 @@ const NotificationBell = () => {
         <div className="max-h-[400px] overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-gray-500">
-              No new notifications
+              No notifications
             </div>
           ) : (
-            notifications.slice(0, 5).map((notification) => (
+            notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                className="px-4 py-3 cursor-pointer flex items-start gap-3"
+                className={`px-4 py-3 cursor-pointer flex items-start gap-3 ${
+                  !notification.read ? 'bg-blue-50' : ''
+                }`}
                 onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex-shrink-0 mt-1">

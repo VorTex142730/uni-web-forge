@@ -3,10 +3,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Upload, Search, UserPlus } from 'lucide-react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
+import { useAuth } from '@/context/AuthContext';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { toast } from 'sonner';
 
 interface CreateGroupProps {
   onCancel: () => void;
@@ -23,6 +25,7 @@ const steps = [
 ];
 
 const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -64,27 +67,49 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast.error('You must be logged in to create a group');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const groupData = {
+      // Create the group document
+      const groupRef = await addDoc(collection(db, 'groups'), {
         name: formData.name,
         description: formData.description,
         privacy: formData.privacy,
         createdAt: serverTimestamp(),
         lastActive: serverTimestamp(),
-        members: formData.selectedMembers,
+        memberCount: 1, // Start with 1 member (the creator)
         hasForum: formData.hasForum,
         permissions: formData.permissions,
         photo: photoPreview || '/default-group-photo.jpg',
         coverPhoto: coverPhotoPreview || '/default-group-cover.jpg',
         coverImage: formData.coverImage,
-      };
+        createdBy: {
+          userId: user.uid,
+          displayName: user.displayName || 'Anonymous',
+          photoURL: user.photoURL
+        }
+      });
 
-      await addDoc(collection(db, 'groups'), groupData);
+      // Add creator as owner and member
+      await addDoc(collection(db, 'groupMembers'), {
+        groupId: groupRef.id,
+        userId: user.uid,
+        displayName: user.displayName || 'Anonymous',
+        photoURL: user.photoURL,
+        role: 'admin',
+        joinedAt: serverTimestamp()
+      });
+
+      toast.success('Group created successfully!');
       onSuccess();
     } catch (error) {
       console.error('Error creating group:', error);
+      toast.error('Failed to create group');
     } finally {
       setLoading(false);
     }

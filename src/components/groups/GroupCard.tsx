@@ -1,13 +1,14 @@
 // GroupCard.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Group } from '@/types';
 import { createGroupJoinRequestNotification } from '@/components/notifications/NotificationService';
+import { Settings } from 'lucide-react';
 
 interface GroupCardProps {
   group: Group;
@@ -17,6 +18,49 @@ interface GroupCardProps {
 const GroupCard = ({ group, onClick }: GroupCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [memberStatus, setMemberStatus] = useState<'creator' | 'member' | 'none' | 'pending'>('none');
+
+  useEffect(() => {
+    const checkMemberStatus = async () => {
+      if (!user) return;
+
+      // Check if user is creator
+      if (group.createdBy?.userId === user.uid) {
+        setMemberStatus('creator');
+        return;
+      }
+
+      // Check if user is already a member
+      const memberQuery = query(
+        collection(db, 'groupMembers'),
+        where('groupId', '==', group.id),
+        where('userId', '==', user.uid)
+      );
+      const memberDocs = await getDocs(memberQuery);
+      
+      if (!memberDocs.empty) {
+        setMemberStatus('member');
+        return;
+      }
+
+      // Check if join request is pending
+      const requestQuery = query(
+        collection(db, 'groupJoinRequests'),
+        where('groupId', '==', group.id),
+        where('userId', '==', user.uid),
+        where('status', '==', 'pending')
+      );
+      const requestDocs = await getDocs(requestQuery);
+      
+      if (!requestDocs.empty) {
+        setMemberStatus('pending');
+      } else {
+        setMemberStatus('none');
+      }
+    };
+
+    checkMemberStatus();
+  }, [user, group.id, group.createdBy]);
 
   const generateGradient = (text: string) => {
     let hash = 0;
@@ -63,6 +107,7 @@ const GroupCard = ({ group, onClick }: GroupCardProps) => {
         group.name
       );
 
+      setMemberStatus('pending');
       toast.success('Join request sent successfully');
     } catch (error) {
       console.error('Error joining group:', error);
@@ -72,6 +117,11 @@ const GroupCard = ({ group, onClick }: GroupCardProps) => {
 
   const handleViewGroup = () => {
     navigate(`/groups/${group.id}`);
+  };
+
+  const handleManageGroup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/groups/${group.id}?tab=settings`);
   };
 
   return (
@@ -103,24 +153,70 @@ const GroupCard = ({ group, onClick }: GroupCardProps) => {
         </div>
 
         <div className="flex justify-between items-center gap-2 mt-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewGroup();
-            }}
-            className="flex-1"
-          >
-            View Group
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleJoinGroup}
-            className="flex-1"
-          >
-            {group.privacy === 'private' ? 'Request Access' : 'Join Group'}
-          </Button>
+          {memberStatus === 'creator' ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewGroup();
+                }}
+                className="flex-1"
+              >
+                View Group
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleManageGroup}
+                className="flex-1"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Manage
+              </Button>
+            </>
+          ) : memberStatus === 'member' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewGroup();
+              }}
+              className="w-full"
+            >
+              View Group
+            </Button>
+          ) : memberStatus === 'pending' ? (
+            <Button
+              size="sm"
+              disabled
+              className="w-full"
+            >
+              Request Pending
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewGroup();
+                }}
+                className="flex-1"
+              >
+                View Group
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleJoinGroup}
+                className="flex-1"
+              >
+                {group.privacy === 'private' ? 'Request Access' : 'Join Group'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
