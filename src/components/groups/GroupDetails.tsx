@@ -471,19 +471,21 @@ const GroupDetails = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 bg-white rounded-lg shadow">
-          <div className="p-4 border-b">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input
-                type="search"
-                placeholder={activeTab === 'requests' ? "Search Requests..." : "Search Members..."}
-                className="pl-10 w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <div className="flex-1">
+          {activeTab === 'members' && (
+            <div className="p-4 border-b">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Input
+                  type="search"
+                  placeholder="Search Members..."
+                  className="pl-10 w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="p-4">
             {activeTab === 'feed' && (
@@ -499,38 +501,52 @@ const GroupDetails = () => {
                 {!group.members || group.members.length === 0 ? (
                   <p className="text-center text-gray-500 py-8">No members yet</p>
                 ) : (
-                  group.members.map((member) => (
-                    <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg">
-                      <Avatar src={member.photoURL} alt={member.displayName} />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{member.displayName}</p>
-                          {member.role === 'admin' && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                              Admin
-                            </span>
-                          )}
-                          {member.role === 'moderator' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                              Moderator
-                            </span>
-                          )}
+                  group.members
+                    .filter(member => 
+                      member.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .sort((a, b) => {
+                      // Always put owner (admin) first
+                      if (a.role === 'admin') return -1;
+                      if (b.role === 'admin') return 1;
+                      // Then sort by role (moderator before member)
+                      if (a.role === 'moderator' && b.role === 'member') return -1;
+                      if (a.role === 'member' && b.role === 'moderator') return 1;
+                      // Finally sort by name
+                      return a.displayName.localeCompare(b.displayName);
+                    })
+                    .map((member) => (
+                      <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg">
+                        <Avatar src={member.photoURL} alt={member.displayName} />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{member.displayName}</p>
+                            {member.role === 'admin' && (
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                Admin
+                              </span>
+                            )}
+                            {member.role === 'moderator' && (
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                Moderator
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Joined {member.joinedAt?.toDate().toLocaleDateString()}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-500">
-                          Joined {member.joinedAt?.toDate().toLocaleDateString()}
-                        </p>
+                        {isOwner && member.userId !== user?.uid && (
+                          <Button
+                            onClick={() => handleRemoveMember(member.userId)}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            Remove
+                          </Button>
+                        )}
                       </div>
-                      {isOwner && member.userId !== user?.uid && (
-                        <Button
-                          onClick={() => handleRemoveMember(member.userId)}
-                          variant="destructive"
-                          size="sm"
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
             )}
