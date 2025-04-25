@@ -9,6 +9,7 @@ import { Search, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createGroupJoinRequestNotification, createGroupJoinResponseNotification } from '@/components/notifications/NotificationService';
 import { Avatar } from '@/components/ui/avatar';
+import GroupFeed from './GroupFeed';
 
 interface GroupMember {
   userId: string;
@@ -99,58 +100,60 @@ const GroupDetails = () => {
 
           setGroup({ ...groupData, members });
           setIsOwner(user?.uid === groupData.createdBy.userId);
-        });
 
-        // Check member status
-        if (user) {
-          const memberQuery = query(
-            collection(db, 'groupMembers'),
-            where('groupId', '==', id),
-            where('userId', '==', user.uid)
-          );
-          const memberDocs = await getDocs(memberQuery);
-          
-          if (!memberDocs.empty) {
-            setMemberStatus('member');
-          } else {
-            const requestQuery = query(
-              collection(db, 'groupJoinRequests'),
+          // Check member status
+          if (user) {
+            const memberQuery = query(
+              collection(db, 'groupMembers'),
               where('groupId', '==', id),
-              where('userId', '==', user.uid),
-              where('status', '==', 'pending')
+              where('userId', '==', user.uid)
             );
-            const requestDocs = await getDocs(requestQuery);
+            const memberDocs = await getDocs(memberQuery);
             
-            if (!requestDocs.empty) {
-              setMemberStatus('pending');
+            if (!memberDocs.empty) {
+              setMemberStatus('member');
+            } else {
+              const requestQuery = query(
+                collection(db, 'groupJoinRequests'),
+                where('groupId', '==', id),
+                where('userId', '==', user.uid),
+                where('status', '==', 'pending')
+              );
+              const requestDocs = await getDocs(requestQuery);
+              
+              if (!requestDocs.empty) {
+                setMemberStatus('pending');
+              } else {
+                setMemberStatus('none');
+              }
             }
           }
-        }
 
-        // Listen to join requests if user is owner
-        if (user?.uid === groupData.createdBy.userId) {
-          const requestsQuery = query(
-            collection(db, 'groupJoinRequests'),
-            where('groupId', '==', id),
-            where('status', '==', 'pending')
-          );
+          // Listen to join requests if user is owner
+          if (user?.uid === groupData.createdBy.userId) {
+            const requestsQuery = query(
+              collection(db, 'groupJoinRequests'),
+              where('groupId', '==', id),
+              where('status', '==', 'pending')
+            );
 
-          const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
-            const requests = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-              createdAt: doc.data().createdAt
-            })) as JoinRequest[];
-            setJoinRequests(requests);
-          });
+            const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
+              const requests = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data().createdAt
+              })) as JoinRequest[];
+              setJoinRequests(requests);
+            });
 
-          return () => {
-            unsubscribeGroup();
-            unsubscribeRequests();
-          };
-        }
+            return () => {
+              unsubscribeGroup();
+              unsubscribeRequests();
+            };
+          }
 
-        return () => unsubscribeGroup();
+          return () => unsubscribeGroup();
+        });
       } catch (error) {
         console.error('Error fetching group details:', error);
         toast.error('Failed to load group details');
@@ -483,6 +486,14 @@ const GroupDetails = () => {
           </div>
 
           <div className="p-4">
+            {activeTab === 'feed' && (
+              <GroupFeed
+                groupId={id || ''}
+                isOwner={isOwner}
+                isMember={memberStatus === 'member'}
+              />
+            )}
+
             {activeTab === 'members' && (
               <div className="space-y-4">
                 {!group.members || group.members.length === 0 ? (
