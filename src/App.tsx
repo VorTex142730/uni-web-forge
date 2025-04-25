@@ -8,12 +8,13 @@ import AuthLayout from "./components/auth/AuthLayout";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
 import GroupsPage from "./pages/GroupsPage";
-import GroupDetailsPage from "./pages/GroupDetailsPage";
+// import GroupDetailsPage from "./pages/GroupDetailsPage";
 import MembersPage from "./pages/MembersPage";
 import ForumsPage from "./pages/ForumsPage";
 import ForumGroupPage from "./pages/ForumGroupPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { SidebarProvider } from "./context/SidebarContext";
 import TestPage from "./pages/TestPage";
 import HomePage from '@/pages/HomePage';
 import ProfilePage from '@/pages/ProfilePage';
@@ -24,6 +25,10 @@ import ConnectionsPage from '@/pages/ConnectionsPage';
 import PhotosPage from '@/pages/PhotosPage';
 import VideosPage from '@/pages/VideosPage';
 import SearchPage from '@/pages/SearchPage';
+import GroupDetails from '@/components/groups/GroupDetails';
+import Navbar from '@/components/layout/Navbar';
+import NotificationList from '@/components/notifications/NotificationList';
+// import MessagesPage from '@/pages/MessagesPage';
 
 const queryClient = new QueryClient();
 
@@ -51,104 +56,111 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Auth routes */}
-              <Route element={<AuthLayout />}>
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/register" element={<RegisterForm />} />
-              </Route>
+          <SidebarProvider>
+            <BrowserRouter>
+              <div className="min-h-screen bg-gray-50">
+                <Navbar />
+                <main>
+                  <Routes>
+                    {/* Auth routes */}
+                    <Route element={<AuthLayout />}>
+                      <Route path="/login" element={<LoginForm />} />
+                      <Route path="/register" element={<RegisterForm />} />
+                    </Route>
 
-              {/* Protected routes */}
-              <Route element={<Layout />}>
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <HomePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile/:username" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/account" element={
-                  <ProtectedRoute>
-                    <AccountPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/timeline" element={
-                  <ProtectedRoute>
-                    <Timeline />
-                  </ProtectedRoute>
-                } />
-                <Route path="/connections" element={
-                  <ProtectedRoute>
-                    <ConnectionsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/groups" element={
-                  <ProtectedRoute>
-                    <GroupsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/groups/:id" element={
-                  <ProtectedRoute>
-                    <GroupDetailsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/photos" element={
-                  <ProtectedRoute>
-                    <PhotosPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/videos" element={
-                  <ProtectedRoute>
-                    <VideosPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/forums" element={
-                  <ProtectedRoute>
-                    <ForumsPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/forums/:id" element={
-                  <ProtectedRoute>
-                    <ForumGroupPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/members" element={
-                  <ProtectedRoute>
-                    <MembersPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/notifications" element={
-                  <ProtectedRoute>
-                    <NotificationPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/test" element={
-                  <ProtectedRoute>
-                    <TestPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/search" element={
-                  <ProtectedRoute>
-                    <SearchPage />
-                  </ProtectedRoute>
-                } />
-              </Route>
+                    {/* Protected routes */}
+                    <Route element={<Layout />}>
+                      <Route path="/" element={
+                        <ProtectedRoute>
+                          <HomePage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile/:username" element={
+                        <ProtectedRoute>
+                          <ProfilePage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/account" element={
+                        <ProtectedRoute>
+                          <AccountPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/timeline" element={
+                        <ProtectedRoute>
+                          <Timeline />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/connections" element={
+                        <ProtectedRoute>
+                          <ConnectionsPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/groups" element={
+                        <ProtectedRoute>
+                          <GroupsPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/groups/:id" element={
+                        <ProtectedRoute>
+                          <GroupDetails />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/photos" element={
+                        <ProtectedRoute>
+                          <PhotosPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/videos" element={
+                        <ProtectedRoute>
+                          <VideosPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/forums" element={
+                        <ProtectedRoute>
+                          <ForumsPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/forums/:id" element={
+                        <ProtectedRoute>
+                          <ForumGroupPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/members" element={
+                        <ProtectedRoute>
+                          <MembersPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/notifications" element={
+                        <ProtectedRoute>
+                          <NotificationList />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/test" element={
+                        <ProtectedRoute>
+                          <TestPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/search" element={
+                        <ProtectedRoute>
+                          <SearchPage />
+                        </ProtectedRoute>
+                      } />
+                    </Route>
 
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          <Toaster />
-          <Sonner />
+                    {/* Catch-all route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
+              <Toaster />
+              <Sonner />
+            </BrowserRouter>
+          </SidebarProvider>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -5,6 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Upload, Search, UserPlus } from 'lucide-react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface CreateGroupProps {
   onCancel: () => void;
@@ -25,7 +27,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    privacy: 'public',
+    privacy: 'public' as 'public' | 'private',
     photo: null as File | null,
     coverPhoto: null as File | null,
     hasForum: false,
@@ -36,7 +38,8 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
       photos: 'all',
       events: 'all',
       messages: 'all'
-    }
+    },
+    coverImage: '',
   });
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -59,8 +62,10 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+
     try {
       const groupData = {
         name: formData.name,
@@ -73,6 +78,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
         permissions: formData.permissions,
         photo: photoPreview || '/default-group-photo.jpg',
         coverPhoto: coverPhotoPreview || '/default-group-cover.jpg',
+        coverImage: formData.coverImage,
       };
 
       await addDoc(collection(db, 'groups'), groupData);
@@ -88,7 +94,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleSubmit();
+      handleSubmit(new Event('submit'));
     }
   };
 
@@ -127,19 +133,14 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-gray-700">Privacy</h3>
               <div className="flex space-x-4">
-                {['public', 'private'].map((option) => (
-                  <label key={option} className="flex items-center space-x-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="privacy"
-                      value={option}
-                      checked={formData.privacy === option}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, privacy: e.target.value }))}
-                      className="form-radio text-blue-600"
-                    />
-                    <span className="capitalize text-sm">{option}</span>
-                  </label>
-                ))}
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="public" id="public" />
+                  <Label htmlFor="public">Public</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="private" id="private" />
+                  <Label htmlFor="private">Private</Label>
+                </div>
               </div>
             </div>
             <div className="space-y-4">
@@ -363,33 +364,35 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
           </div>
 
           <div className="p-6">
-            {renderStepContent()}
-            
-            <div className="flex justify-between mt-8">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-                size="sm"
-              >
-                {currentStep === 1 ? 'Cancel' : 'Back'}
-              </Button>
-              <Button
-                onClick={handleNext}
-                size="sm"
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    <span>Creating...</span>
-                  </div>
-                ) : currentStep === steps.length ? (
-                  'Create Group'
-                ) : (
-                  'Continue'
-                )}
-              </Button>
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {renderStepContent()}
+              
+              <div className="flex justify-between mt-8">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  size="sm"
+                >
+                  {currentStep === 1 ? 'Cancel' : 'Back'}
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      <span>Creating...</span>
+                    </div>
+                  ) : currentStep === steps.length ? (
+                    'Create Group'
+                  ) : (
+                    'Continue'
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

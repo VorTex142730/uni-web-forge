@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -16,7 +15,7 @@ export interface Group {
   name: string;
   description?: string;
   image?: string;
-  members: number;
+  memberCount: number;
   privacy: 'public' | 'private';
   createdBy?: string;
   createdAt?: string;

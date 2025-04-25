@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { collection, getDocs, query, where, limit, or } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useDebounce } from '@/hooks/useDebounce';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface QuickSearchResult {
   id: string;
