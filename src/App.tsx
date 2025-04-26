@@ -28,6 +28,8 @@ import SearchPage from '@/pages/SearchPage';
 import GroupDetails from '@/components/groups/GroupDetails';
 import Navbar from '@/components/layout/Navbar';
 import NotificationList from '@/components/notifications/NotificationList';
+import ShopPage from '@/pages/ShopPage';
+import ProductDetailsPage from '@/pages/ProductDetailsPage';
 // import MessagesPage from '@/pages/MessagesPage';
 
 const queryClient = new QueryClient();
@@ -148,6 +150,16 @@ function App() {
                       <Route path="/search" element={
                         <ProtectedRoute>
                           <SearchPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/shop" element={
+                        <ProtectedRoute>
+                          <ShopPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/booking/:id" element={
+                        <ProtectedRoute>
+                          <ProductDetailsPage />
                         </ProtectedRoute>
                       } />
                     </Route>

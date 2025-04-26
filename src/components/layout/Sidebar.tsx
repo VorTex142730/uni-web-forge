@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { BookOpen, Users, MessageSquare, LayoutGrid, Menu, X, LogOut } from 'lucide-react';
+import { BookOpen, Users, MessageSquare, LayoutGrid, Menu, X, LogOut, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -23,9 +23,10 @@ const Sidebar = () => {
 
   const navItems = [
     { icon: <LayoutGrid size={20} />, label: 'Groups', path: '/groups' },
-    { icon: <BookOpen size={20} />, label: 'Blog page', path: '/blog' },
-    { icon: <MessageSquare size={20} />, label: 'Forums', path: '/forums' },
     { icon: <Users size={20} />, label: 'Members', path: '/members' },
+    { icon: <MessageSquare size={20} />, label: 'Forums', path: '/forums' },
+    { icon: <BookOpen size={20} />, label: 'Blog page', path: '/blog' },
+    { icon: <ShoppingBag size={20} />, label: 'Shop', path: '/shop' },
   ];
 
   return (

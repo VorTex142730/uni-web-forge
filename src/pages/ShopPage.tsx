@@ -1,77 +1,106 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import MidnightMasqueradeImage from '@/assets/midnight-masquerade.jpg';
 
-// import React, { useState } from 'react';
-// import { Input } from '@/components/ui/input';
-// import { 
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from '@/components/ui/select';
-// import { Search, ListFilter } from 'lucide-react';
-// import ProductCard from '@/components/shop/ProductCard';
-// import { products } from '@/data/mockData';
+const ShopPage = () => {
+  const [sortBy, setSortBy] = useState('popularity');
 
-// const ShopPage = () => {
-//   const [sortBy, setSortBy] = useState('default');
-//   const [searchQuery, setSearchQuery] = useState('');
-  
-//   return (
-//     <div>
-//       <div className="flex items-center mb-6">
-//         <nav className="text-sm breadcrumbs">
-//           <ul className="flex">
-//             <li><a href="/" className="text-gray-500 hover:text-blue-600">Home</a></li>
-//             <li className="mx-2 text-gray-400">/</li>
-//             <li className="font-medium">Shop</li>
-//           </ul>
-//         </nav>
-//       </div>
-      
-//       <h1 className="text-3xl font-bold mb-6">Shop</h1>
-      
-//       <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-//         <div className="flex flex-col md:flex-row gap-4">
-//           <div className="flex-1 relative">
-//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-//             <Input
-//               placeholder="Search products..."
-//               className="pl-10"
-//               value={searchQuery}
-//               onChange={(e) => setSearchQuery(e.target.value)}
-//             />
-//           </div>
+  const product = {
+    id: 1,
+    name: 'MIDNIGHT MASQUERADE',
+    image: MidnightMasqueradeImage,
+    minPrice: 700.00,
+    maxPrice: 1649.00,
+    rating: 0,
+    onSale: true
+  };
+
+  return (
+    <div className="container mx-auto px-4">
+      {/* Breadcrumb */}
+      <div className="flex items-center space-x-2 text-sm mb-6">
+        <Link to="/" className="text-gray-500 hover:text-blue-600">Home</Link>
+        <span className="text-gray-500">/</span>
+        <span>Shop</span>
+      </div>
+
+      {/* Page Title */}
+      <h1 className="text-3xl font-bold mb-8">Shop</h1>
+
+      {/* Shop Header */}
+      <div className="flex justify-between items-center mb-8">
+        <p className="text-sm text-gray-500">Showing the single result</p>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Sort by popularity" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="popularity">Sort by popularity</SelectItem>
+            <SelectItem value="rating">Sort by average rating</SelectItem>
+            <SelectItem value="date">Sort by latest</SelectItem>
+            <SelectItem value="price-low">Sort by price: low to high</SelectItem>
+            <SelectItem value="price-high">Sort by price: high to low</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Product Card */}
+        <div className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200">
+          {/* Sale Badge */}
+          {product.onSale && (
+            <div className="bg-red-500 text-white px-3 py-1 absolute">
+              SALE!
+            </div>
+          )}
           
-//           <div className="flex items-center gap-2">
-//             <span className="text-sm">Sort by:</span>
-//             <Select value={sortBy} onValueChange={setSortBy}>
-//               <SelectTrigger className="w-[180px]">
-//                 <SelectValue placeholder="Default sorting" />
-//               </SelectTrigger>
-//               <SelectContent>
-//                 <SelectItem value="default">Default sorting</SelectItem>
-//                 <SelectItem value="popularity">Sort by popularity</SelectItem>
-//                 <SelectItem value="rating">Sort by average rating</SelectItem>
-//                 <SelectItem value="date">Sort by latest</SelectItem>
-//                 <SelectItem value="price-asc">Sort by price: low to high</SelectItem>
-//                 <SelectItem value="price-desc">Sort by price: high to low</SelectItem>
-//               </SelectContent>
-//             </Select>
-//           </div>
-//         </div>
-//       </div>
-      
-//       <div className="mb-4">
-//         <p className="text-sm text-gray-500">Showing the single result</p>
-//       </div>
-      
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-//         {products.map(product => (
-//           <ProductCard key={product.id} product={product} />
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
+          {/* Product Image */}
+          <div className="relative aspect-square">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
 
-// export default ShopPage;
+          {/* Product Info */}
+          <div className="p-4 text-center">
+            <h3 className="text-lg font-medium mb-2">{product.name}</h3>
+            
+            {/* Star Rating */}
+            <div className="flex justify-center space-x-1 mb-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span key={star} className="text-gray-300">★</span>
+              ))}
+            </div>
+
+            {/* Price */}
+            <div className="text-red-500 mb-4">
+              <span>₹{product.minPrice.toFixed(2)}</span>
+              <span> – </span>
+              <span>₹{product.maxPrice.toFixed(2)}</span>
+            </div>
+
+            {/* Select Options Button */}
+            <Link 
+              to="/booking/midnight-masquerade" 
+              className="w-full bg-white text-gray-800 border border-gray-300 px-4 py-2 rounded hover:bg-gray-50 transition-colors inline-block text-center"
+            >
+              SELECT OPTIONS
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ShopPage;
