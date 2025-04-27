@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, XCircle } from 'lucide-react'; // Import an icon for the delete button
 import { toast } from 'sonner';
 import { FeedService, FeedPost } from '@/services/feedService';
 
@@ -123,6 +123,20 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
     }
   };
 
+  // Add a function to handle post deletion
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+
+    try {
+      await FeedService.deletePost(postId); // Assuming `deletePost` is a method in FeedService
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+      toast.success('Post deleted successfully');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
+  };
+
   if (!isMember) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -225,6 +239,16 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
                   </p>
                 </div>
               </div>
+              {/* Delete button (visible only to the post creator or group owner) */}
+              {(post.createdBy.userId === user?.uid || isOwner) && (
+                <button
+                  onClick={() => handleDeletePost(post.id)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Delete Post"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              )}
             </div>
 
             <p className="text-gray-800 whitespace-pre-wrap">{post.content}</p>
