@@ -36,11 +36,7 @@ export interface FeedPost {
   comments: number;
   commentCount: number;
   groupId: string;
-  media?: {
-    type: 'image' | 'video';
-    url: string;
-    thumbnailUrl?: string;
-  }[];
+  imageData?: string; // Base64 string for image data
   lastActivity?: Timestamp;
   isEdited?: boolean;
 }
@@ -309,4 +305,4 @@ export class FeedService {
       throw error;
     }
   }
-} 
+}

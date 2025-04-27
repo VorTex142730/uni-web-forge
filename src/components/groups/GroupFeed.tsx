@@ -1,20 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { onSnapshot, doc, updateDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { onSnapshot } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MoreHorizontal, Heart, MessageCircle, Share2, Trash2, Edit, Loader2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { FeedService, FeedPost } from '@/services/feedService';
-import GroupPostComments from './GroupPostComments';
 
 interface GroupFeedProps {
   groupId: string;
@@ -26,13 +19,14 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
   const { user } = useAuth();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [newPost, setNewPost] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [editingPost, setEditingPost] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState('');
-  const [showComments, setShowComments] = useState<string | null>(null);
-  const lastPostRef = useRef<any>(null);
-  const [hasMore, setHasMore] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // State additions for image handling
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // State for full-screen image modal
+  const [selectedImageForView, setSelectedImageForView] = useState<string | null>(null);
 
   useEffect(() => {
     if (!groupId) return;
@@ -44,52 +38,82 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
         ...doc.data()
       })) as FeedPost[];
       setPosts(postsData);
-      setHasMore(snapshot.docs.length === 10);
-      if (snapshot.docs.length > 0) {
-        lastPostRef.current = snapshot.docs[snapshot.docs.length - 1];
-      }
     });
 
     return () => unsubscribe();
   }, [groupId]);
 
-  const loadMorePosts = async () => {
-    if (!hasMore || !lastPostRef.current) return;
-
-    const query = FeedService.getPaginatedPosts(groupId, lastPostRef.current);
-    const snapshot = await onSnapshot(query, (snapshot) => {
-      const newPosts = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as FeedPost[];
-      setPosts(prev => [...prev, ...newPosts]);
-      setHasMore(snapshot.docs.length === 10);
-      if (snapshot.docs.length > 0) {
-        lastPostRef.current = snapshot.docs[snapshot.docs.length - 1];
+  // Add ESC key handler
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedImageForView(null);
       }
-    });
+    };
+
+    if (selectedImageForView) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedImageForView]);
+
+  // Handle image selection and preview
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1000000) { // 1MB limit
+        toast.error('Image must be smaller than 1MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setSelectedImage(file);
+    }
   };
 
+  // Handle post creation
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newPost.trim() || !isMember) {
-      toast.error('Please sign in to create a post');
+    if (!user || (!newPost.trim() && !selectedImage)) {
+      toast.error('Please add content or select an image to post');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await FeedService.createPost({
+      let imageData = '';
+
+      if (selectedImage) {
+        imageData = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(selectedImage);
+        });
+      }
+
+      const postData = {
         content: newPost.trim(),
         groupId,
         createdBy: {
           userId: user.uid,
           displayName: user.displayName || 'Anonymous',
           photoURL: user.photoURL
-        }
-      });
+        },
+        ...(imageData && { imageData })
+      };
+
+      await FeedService.createPost(postData);
 
       setNewPost('');
+      setSelectedImage(null);
+      setImagePreview(null);
       toast.success('Post created successfully');
     } catch (error) {
       console.error('Error creating post:', error);
@@ -97,61 +121,6 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleUpdatePost = async (postId: string) => {
-    if (!editContent.trim()) return;
-
-    try {
-      await FeedService.updatePost(postId, editContent.trim());
-      setEditingPost(null);
-      setEditContent('');
-      toast.success('Post updated successfully');
-    } catch (error) {
-      console.error('Error updating post:', error);
-      toast.error('Failed to update post');
-    }
-  };
-
-  const handleDeletePost = async (postId: string, createdByUserId: string) => {
-    if (!user || (!isOwner && user.uid !== createdByUserId)) {
-      toast.error('You do not have permission to delete this post');
-      return;
-    }
-
-    try {
-      await FeedService.deletePost(postId, groupId);
-      toast.success('Post deleted successfully');
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      toast.error('Failed to delete post');
-    }
-  };
-
-  const handleLikePost = async (postId: string) => {
-    if (!user || !isMember) {
-      toast.error('Please sign in to like posts');
-      return;
-    }
-
-    try {
-      await FeedService.toggleLike(postId, user.uid);
-    } catch (error) {
-      console.error('Error updating like:', error);
-      toast.error('Failed to update like');
-    }
-  };
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate();
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric'
-    }).format(date);
   };
 
   if (!isMember) {
@@ -178,10 +147,51 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
               onChange={(e) => setNewPost(e.target.value)}
               className="min-h-[100px] resize-none"
             />
-            <div className="flex justify-end mt-2">
+
+            {/* Image preview */}
+            {imagePreview && (
+              <div className="mt-2 relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="rounded-lg max-h-48 object-cover w-full"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedImage(null);
+                    setImagePreview(null);
+                  }}
+                  className="absolute top-2 right-2 bg-white/80 rounded-full p-1 hover:bg-white"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </button>
+              </div>
+            )}
+
+            <div className="flex justify-between mt-2">
+              <div className="flex items-center space-x-2">
+                <label className="cursor-pointer text-gray-500 hover:text-gray-700">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </label>
+              </div>
               <Button 
                 type="submit" 
-                disabled={isSubmitting || !newPost.trim()}
+                disabled={isSubmitting || (!newPost.trim() && !selectedImage)}
                 className="rounded-full"
               >
                 {isSubmitting ? (
@@ -202,7 +212,6 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
       <div className="space-y-6">
         {posts.map((post) => (
           <div key={post.id} className="bg-white rounded-lg shadow p-4 space-y-4">
-            {/* Post Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Avatar className="h-10 w-10">
@@ -212,151 +221,61 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
                 <div>
                   <p className="font-medium">{post.createdBy.displayName}</p>
                   <p className="text-sm text-gray-500">
-                    {formatDate(post.createdAt)}
-                    {post.isEdited && <span className="ml-2 text-gray-400">(edited)</span>}
+                    {post.createdAt?.toDate().toLocaleString()}
                   </p>
                 </div>
               </div>
-              
-              {(isOwner || user?.uid === post.createdBy.userId) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {user?.uid === post.createdBy.userId && (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setEditingPost(post.id);
-                          setEditContent(post.content);
-                        }}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Post
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => handleDeletePost(post.id, post.createdBy.userId)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Post
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </div>
 
-            {/* Post Content */}
-            {editingPost === post.id ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="min-h-[100px]"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => handleUpdatePost(post.id)}
-                    disabled={!editContent.trim()}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingPost(null);
-                      setEditContent('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-800 whitespace-pre-wrap">{post.content}</p>
-            )}
+            <p className="text-gray-800 whitespace-pre-wrap">{post.content}</p>
 
-            {/* Post Actions */}
-            <div className="flex items-center space-x-4 pt-2 border-t border-gray-100">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`flex items-center space-x-2 ${
-                  post.likes?.includes(user?.uid) ? 'text-red-500' : 'text-gray-500'
-                }`}
-                onClick={() => handleLikePost(post.id)}
-              >
-                <Heart className="h-4 w-4" />
-                <span>{post.likeCount || 0}</span>
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center space-x-2 text-gray-500"
-                onClick={() => setShowComments(showComments === post.id ? null : post.id)}
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span>{post.commentCount || 0}</span>
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center space-x-2 text-gray-500"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success('Link copied to clipboard');
-                }}
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Comments Section */}
-            {showComments === post.id && (
-              <GroupPostComments
-                postId={post.id}
-                groupId={groupId}
-                isOwner={isOwner}
-                isMember={isMember}
+            {/* Display post image */}
+            {post.imageData && (
+              <img
+                src={post.imageData}
+                alt="Post content"
+                className="mt-2 rounded-lg w-full max-h-96 object-cover cursor-pointer"
+                onClick={() => setSelectedImageForView(post.imageData!)}
               />
             )}
           </div>
         ))}
-
-        {posts.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No posts yet. Be the first to post!
-          </div>
-        )}
-
-        {hasMore && (
-          <div className="text-center">
-            <Button
-              variant="outline"
-              onClick={loadMorePosts}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                'Load More'
-              )}
-            </Button>
-          </div>
-        )}
       </div>
+
+      {/* Full Screen Image Modal */}
+      {selectedImageForView && (
+        <div
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+          onClick={() => setSelectedImageForView(null)}
+        >
+          <div className="max-w-full max-h-full p-4 relative" onClick={(e) => e.stopPropagation()}>
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedImageForView(null)}
+              className="absolute -top-2 -right-2 bg-white rounded-full p-1.5 hover:bg-gray-100 transition-colors shadow-sm z-50"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-gray-800"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <img
+              src={selectedImageForView}
+              className="max-w-full max-h-full object-contain"
+              alt="Full screen content"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default GroupFeed; 
+export default GroupFeed;
