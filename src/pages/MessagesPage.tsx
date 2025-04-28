@@ -27,6 +27,7 @@ import { conversations, messages as initialMessages, users } from '@/data/messag
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: number;
@@ -276,13 +277,13 @@ const MessagesPage: React.FC = () => {
                   )}
                   <div className="max-w-[70%]">
                     <div 
-                      className={`p-3 rounded-lg ${
+                      className={`p-3 rounded-lg prose prose-sm break-words max-w-full ${
                         isOwn 
-                          ? 'bg-blue-500 text-white rounded-br-none' 
+                          ? 'bg-blue-500 text-white rounded-br-none prose-invert' 
                           : 'bg-gray-100 text-gray-900 rounded-bl-none'
                       }`}
                     >
-                      {message.text}
+                      <ReactMarkdown>{message.text}</ReactMarkdown>
                     </div>
                     <div 
                       className={`text-xs text-gray-500 mt-1 ${
