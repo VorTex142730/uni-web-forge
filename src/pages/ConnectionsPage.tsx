@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getConnections, getIncomingRequests, acceptConnectionRequest, rejectConnectionRequest } from '@/lib/firebase/connections';
+import { getConnections, getIncomingRequests, acceptConnectionRequest, rejectConnectionRequest, getUserDetailsById } from '@/lib/firebase/connections';
 import { createConnectionAcceptedNotification, createConnectionRejectedNotification } from '@/components/notifications/NotificationService';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ConnectionsPage: React.FC = () => {
   const [sortOption, setSortOption] = useState<string>("Recently Active");
@@ -12,24 +13,43 @@ const ConnectionsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'connections' | 'requests'>('connections');
   const [connections, setConnections] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
+  const [connectionUsers, setConnectionUsers] = useState<any[]>([]);
+  const [requestUsers, setRequestUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    getConnections(user.uid).then(setConnections);
-    getIncomingRequests(user.uid).then(setRequests);
+    getConnections(user.uid).then(async (conns) => {
+      setConnections(conns);
+      // Fetch user details for each connection
+      const users = await Promise.all(
+        conns.map(async (conn) => {
+          const otherId = conn.users.find((id: string) => id !== user.uid);
+          return await getUserDetailsById(otherId);
+        })
+      );
+      setConnectionUsers(users);
+    });
+    getIncomingRequests(user.uid).then(async (reqs) => {
+      setRequests(reqs);
+      // Fetch user details for each request
+      const users = await Promise.all(
+        reqs.map(async (req) => await getUserDetailsById(req.from))
+      );
+      setRequestUsers(users);
+    });
     setLoading(false);
   }, [user]);
 
   const handleAccept = async (request: any) => {
-    await acceptConnectionRequest(request.id);
+    await acceptConnectionRequest(user.uid, request.id);
     await createConnectionAcceptedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
     setRequests(requests.filter((r) => r.id !== request.id));
-    setConnections([...connections, { users: [user.uid, request.from], createdAt: new Date() }]);
+    setConnections([...connections, { otherUserId: request.from, createdAt: new Date() }]);
   };
   const handleReject = async (request: any) => {
-    await rejectConnectionRequest(request.id);
+    await rejectConnectionRequest(user.uid, request.id);
     await createConnectionRejectedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
     setRequests(requests.filter((r) => r.id !== request.id));
   };
@@ -172,10 +192,19 @@ const ConnectionsPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {connections.map((conn) => {
-                    const otherId = conn.users.find((id: string) => id !== user.uid);
-                    return <div key={conn.id} className="p-4 border rounded">Connected to: {otherId}</div>;
-                  })}
+                  {connectionUsers.map((user, idx) => user && (
+                    <div key={user.id} className="flex items-center gap-4 p-4 bg-white border rounded shadow hover:shadow-md transition">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={user.photoURL} alt={user.firstName || user.displayName} />
+                        <AvatarFallback>{(user.firstName?.[0] || user.displayName?.[0] || '?').toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="font-semibold text-lg">{user.firstName} {user.lastName}</div>
+                        <div className="text-sm text-gray-500">{user.role}</div>
+                      </div>
+                      <button className="ml-auto px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Message</button>
+                    </div>
+                  ))}
                 </div>
               )
             ) : (
@@ -192,11 +221,18 @@ const ConnectionsPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {requests.map((req) => (
-                    <div key={req.id} className="flex items-center gap-4 p-4 bg-white border rounded">
-                      <div className="flex-1">Request from: {req.from}</div>
-                      <button className="bg-green-500 text-white px-3 py-1 rounded mr-2" onClick={() => handleAccept(req)}>Accept</button>
-                      <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => handleReject(req)}>Reject</button>
+                  {requestUsers.map((user, idx) => user && (
+                    <div key={user.id} className="flex items-center gap-4 p-4 bg-white border-l-4 border-blue-500 rounded shadow hover:shadow-md transition">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={user.photoURL} alt={user.firstName || user.displayName} />
+                        <AvatarFallback>{(user.firstName?.[0] || user.displayName?.[0] || '?').toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="font-semibold text-lg">{user.firstName} {user.lastName}</div>
+                        <div className="text-sm text-gray-500">{user.role}</div>
+                      </div>
+                      <button className="bg-green-500 text-white px-3 py-1 rounded mr-2" onClick={() => handleAccept(requests[idx])}>Accept</button>
+                      <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => handleReject(requests[idx])}>Reject</button>
                     </div>
                   ))}
                 </div>
