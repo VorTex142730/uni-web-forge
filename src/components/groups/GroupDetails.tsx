@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { createGroupJoinRequestNotification, createGroupJoinResponseNotification } from '@/components/notifications/NotificationService';
 import { Avatar } from '@/components/ui/avatar';
 import GroupFeed from './GroupFeed';
+import GroupMediaGallery from './GroupMediaGallery';
 
 interface GroupMember {
   userId: string;
@@ -99,7 +100,7 @@ const GroupDetails = () => {
           })) as GroupMember[];
 
           setGroup({ ...groupData, members });
-          setIsOwner(user?.uid === groupData.createdBy.userId);
+          setIsOwner(user?.uid === groupData.createdBy?.userId);
 
           // Check member status
           if (user) {
@@ -130,7 +131,7 @@ const GroupDetails = () => {
           }
 
           // Listen to join requests if user is owner
-          if (user?.uid === groupData.createdBy.userId) {
+          if (user?.uid === groupData.createdBy?.userId) {
             const requestsQuery = query(
               collection(db, 'groupJoinRequests'),
               where('groupId', '==', id),
@@ -169,12 +170,11 @@ const GroupDetails = () => {
     if (!user || !group) return;
 
     try {
-      const joinRequestRef = collection(db, 'groupJoinRequests');
-      await addDoc(joinRequestRef, {
+      await addDoc(collection(db, 'groupJoinRequests'), {
         groupId: id,
-        userId: user.uid,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
+        userId: user?.uid || '',
+        displayName: user?.displayName || 'Anonymous',
+        photoURL: user?.photoURL || null,
         status: 'pending',
         createdAt: serverTimestamp()
       });
@@ -183,15 +183,13 @@ const GroupDetails = () => {
       toast.success('Join request sent successfully');
 
       // Create notification for group owner
-      await addDoc(collection(db, 'notifications'), {
-        userId: group.createdBy.userId,
-        type: 'JOIN_REQUEST',
-        message: `${user.displayName} has requested to join your group "${group.name}"`,
-        read: false,
-        createdAt: serverTimestamp(),
-        groupId: id,
-        requesterId: user.uid
-      });
+      await createGroupJoinRequestNotification(
+        group.createdBy?.userId || '',
+        user?.uid || '',
+        group.id,
+        group.name,
+        `${user?.displayName || 'Anonymous'} has requested to join your group "${group.name}"`
+      );
     } catch (error) {
       console.error('Error sending join request:', error);
       toast.error('Failed to send join request');
@@ -503,7 +501,7 @@ const GroupDetails = () => {
                 ) : (
                   group.members
                     .filter(member => 
-                      member.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+                      member.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
                     )
                     .sort((a, b) => {
                       // Always put owner (admin) first
@@ -592,6 +590,12 @@ const GroupDetails = () => {
                     </div>
                   ))
                 )}
+              </div>
+            )}
+
+            {activeTab === 'photos' && (
+              <div className="p-4">
+                <GroupMediaGallery groupId={id || ''} />
               </div>
             )}
           </div>

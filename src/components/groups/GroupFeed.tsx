@@ -128,7 +128,7 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
     if (!window.confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      await FeedService.deletePost(postId); // Assuming `deletePost` is a method in FeedService
+      await FeedService.deletePost(postId, groupId); // Pass both postId and groupId
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
       toast.success('Post deleted successfully');
     } catch (error) {
