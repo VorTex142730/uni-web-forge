@@ -3,36 +3,127 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getConnections, getIncomingRequests, acceptConnectionRequest, rejectConnectionRequest } from '@/lib/firebase/connections';
 import { createConnectionAcceptedNotification, createConnectionRejectedNotification } from '@/components/notifications/NotificationService';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
+import { db } from '@/config/firebaseConfig';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Search, Users, UserPlus, MessageSquare, MoreHorizontal } from 'lucide-react';
 
 const ConnectionsPage: React.FC = () => {
-  const [sortOption, setSortOption] = useState<string>("Recently Active");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, userDetails } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'connections' | 'requests'>('connections');
   const [connections, setConnections] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [connectionUsers, setConnectionUsers] = useState<any[]>([]);
+  const [requestUsers, setRequestUsers] = useState<any[]>([]);
+  const [mutualConnections, setMutualConnections] = useState<Record<string, number>>({});
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [removingRequestId, setRemovingRequestId] = useState<string | null>(null);
   
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    getConnections(user.uid).then(setConnections);
-    getIncomingRequests(user.uid).then(setRequests);
-    setLoading(false);
+    const fetchConnectionsAndUsers = async () => {
+      const connectionsData = await getConnections(user.uid);
+      setConnections(connectionsData);
+      
+      // Fetch user details for each connection
+      const userPromises = connectionsData.map(async (conn) => {
+        const otherUserId = conn.user1 === user.uid ? conn.user2 : conn.user1;
+        const userDoc = await getDoc(doc(db, 'users', otherUserId));
+        return { id: otherUserId, ...userDoc.data() };
+      });
+      
+      const users = await Promise.all(userPromises);
+      setConnectionUsers(users);
+
+      // Fetch mutual connections count for each user
+      const mutualPromises = users.map(async (connectedUser) => {
+        const userConnections = await getConnections(connectedUser.id);
+        const mutualCount = userConnections.filter((conn) =>
+          (conn.user1 === user.uid || conn.user2 === user.uid) &&
+          (conn.user1 === connectedUser.id || conn.user2 === connectedUser.id)
+        ).length;
+        return { userId: connectedUser.id, count: mutualCount };
+      });
+
+      const mutualCounts = await Promise.all(mutualPromises);
+      const mutualMap = mutualCounts.reduce((acc, { userId, count }) => {
+        acc[userId] = count;
+        return acc;
+      }, {});
+      setMutualConnections(mutualMap);
+      
+      // Fetch requests and their user details
+      const requestsData = await getIncomingRequests(user.uid);
+      setRequests(requestsData);
+      
+      const requestUserPromises = requestsData.map(async (req) => {
+        const userDoc = await getDoc(doc(db, 'users', req.from));
+        return { id: req.from, ...userDoc.data() };
+      });
+      
+      const requestUsers = await Promise.all(requestUserPromises);
+      setRequestUsers(requestUsers);
+    };
+    
+    fetchConnectionsAndUsers().finally(() => setLoading(false));
   }, [user]);
 
   const handleAccept = async (request: any) => {
-    await acceptConnectionRequest(request.id);
-    await createConnectionAcceptedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
-    setRequests(requests.filter((r) => r.id !== request.id));
-    setConnections([...connections, { users: [user.uid, request.from], createdAt: new Date() }]);
+    try {
+      await acceptConnectionRequest(request.id);
+      await createConnectionAcceptedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
+      setFeedback('Connection accepted!');
+      setRemovingRequestId(request.id);
+      setTimeout(async () => {
+        // Remove request from local state only
+        setRequests((prev) => prev.filter((r) => r.id !== request.id));
+        setRequestUsers((prev) => prev.filter((u) => u.id !== request.from));
+        setRemovingRequestId(null);
+        // Refetch connections to update UI
+        const connectionsData = await getConnections(user.uid);
+        setConnections(connectionsData);
+        const userPromises = connectionsData.map(async (conn) => {
+          const otherUserId = conn.user1 === user.uid ? conn.user2 : conn.user1;
+          const userDoc = await getDoc(doc(db, 'users', otherUserId));
+          return { id: otherUserId, ...userDoc.data() };
+        });
+        const users = await Promise.all(userPromises);
+        setConnectionUsers(users);
+      }, 400); // 400ms matches the animation duration
+    } catch (e) {
+      setFeedback('Failed to accept connection.');
+    }
+    setTimeout(() => setFeedback(null), 3000);
   };
+
   const handleReject = async (request: any) => {
-    await rejectConnectionRequest(request.id);
-    await createConnectionRejectedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
-    setRequests(requests.filter((r) => r.id !== request.id));
+    try {
+      await rejectConnectionRequest(request.id);
+      await createConnectionRejectedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
+      setFeedback('Connection request rejected.');
+      setRemovingRequestId(request.id);
+      setTimeout(() => {
+        // Remove request from local state only
+        setRequests((prev) => prev.filter((r) => r.id !== request.id));
+        setRequestUsers((prev) => prev.filter((u) => u.id !== request.from));
+        setRemovingRequestId(null);
+      }, 400); // 400ms matches the animation duration
+    } catch (e) {
+      setFeedback('Failed to reject connection.');
+    }
+    setTimeout(() => setFeedback(null), 3000);
   };
+
+  const filteredConnections = connectionUsers.filter(user => 
+    user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.college?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (!user || !userDetails) {
     return (
@@ -47,9 +138,7 @@ const ConnectionsPage: React.FC = () => {
       {/* Profile Header Banner */}
       <div className="relative">
         <div className="bg-slate-500 h-48 w-full relative">
-          {/* Background with faint image icons */}
           <div className="absolute inset-0 opacity-20">
-            {/* This would be the background pattern with image icons */}
           </div>
         </div>
         <div className="absolute left-8 -bottom-16">
@@ -66,7 +155,6 @@ const ConnectionsPage: React.FC = () => {
               </svg>
             )}
           </div>
-          {/* Online status indicator */}
           <div className="absolute top-0 right-0">
             <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
           </div>
@@ -103,108 +191,167 @@ const ConnectionsPage: React.FC = () => {
         
         {/* Main Content */}
         <div className="w-3/4">
-          {/* Tabs */}
-          <div className="border-b border-gray-200 mb-4">
-            <div className="flex">
-              <div className={`mr-6 pb-2 px-2 font-medium cursor-pointer ${activeTab === 'connections' ? 'border-b-2 border-red-500' : 'text-gray-500'}`}
-                onClick={() => setActiveTab('connections')}>My Connections</div>
-              <div className={`mr-6 pb-2 px-2 cursor-pointer ${activeTab === 'requests' ? 'border-b-2 border-red-500 font-medium' : 'text-gray-500'}`}
-                onClick={() => setActiveTab('requests')}>Requests</div>
+          {/* Search and Tabs */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search connections..."
+                  className="pl-10 pr-4 py-2 border rounded-full w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
-          
-          {/* Connections filters and view toggle */}
-          <div className="flex justify-between mb-4">
-            <div></div>
-            <div className="flex items-center">
-              {/* Sort dropdown */}
-              <div className="relative mr-2">
-                <select 
-                  className="bg-white border border-gray-300 rounded-md py-2 px-4 pr-8 appearance-none text-sm"
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value)}
-                >
-                  <option>Recently Active</option>
-                  <option>Newest</option>
-                  <option>Alphabetical</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
-              </div>
-              
-              {/* View mode toggle */}
-              <div className="flex border border-gray-300 rounded-md">
+            
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
                 <button
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100' : 'bg-white'}`}
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setActiveTab('connections')}
+                  className={`${
+                    activeTab === 'connections'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                 >
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                  </svg>
+                  Connections ({connectionUsers.length})
                 </button>
                 <button
-                  className={`p-2 ${viewMode === 'list' ? 'bg-gray-100' : 'bg-white'}`}
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setActiveTab('requests')}
+                  className={`${
+                    activeTab === 'requests'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                 >
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                  </svg>
+                  Pending Requests ({requestUsers.length})
                 </button>
-              </div>
+              </nav>
             </div>
           </div>
 
-          {loading ? <div>Loading...</div> : (
-            activeTab === 'connections' ? (
-              connections.length === 0 ? (
-                <div className="flex items-start p-4 bg-white border border-gray-200 rounded-md">
-                  <div className="p-2 bg-blue-100 rounded-full mr-4">
-                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {activeTab === 'connections' ? (
+                filteredConnections.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-lg shadow">
+                    <Users className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No connections found</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {searchQuery ? 'Try adjusting your search' : 'Start connecting with other members'}
+                    </p>
                   </div>
-                  <div>
-                    <p className="text-gray-700">You haven't connected with anyone yet. Start exploring members to make connections!</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {connections.map((conn) => {
-                    const otherId = conn.users.find((id: string) => id !== user.uid);
-                    return <div key={conn.id} className="p-4 border rounded">Connected to: {otherId}</div>;
-                  })}
-                </div>
-              )
-            ) : (
-              requests.length === 0 ? (
-                <div className="flex items-start p-4 bg-white border border-gray-200 rounded-md">
-                  <div className="p-2 bg-blue-100 rounded-full mr-4">
-                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-gray-700">No pending connection requests.</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {requests.map((req) => (
-                    <div key={req.id} className="flex items-center gap-4 p-4 bg-white border rounded">
-                      <div className="flex-1">Request from: {req.from}</div>
-                      <button className="bg-green-500 text-white px-3 py-1 rounded mr-2" onClick={() => handleAccept(req)}>Accept</button>
-                      <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => handleReject(req)}>Reject</button>
+                ) : (
+                  filteredConnections.map((member) => (
+                    <div key={member.id} className="bg-white rounded-lg shadow p-6">
+                      <div className="flex items-start">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={member.avatar} />
+                          <AvatarFallback>
+                            {member.firstName?.[0]}{member.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="ml-4 flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {member.firstName} {member.lastName}
+                              </h3>
+                              <p className="text-sm text-gray-500">{member.college}</p>
+                              <p className="text-sm text-gray-500">{member.role}</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button variant="outline" size="sm">
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Message
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          {mutualConnections[member.id] > 0 && (
+                            <p className="mt-2 text-sm text-gray-500">
+                              {mutualConnections[member.id]} mutual connection{mutualConnections[member.id] !== 1 ? 's' : ''}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )
-            )
+                  ))
+                )
+              ) : (
+                requestUsers.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-lg shadow">
+                    <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No pending requests</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      You're all caught up! No pending connection requests.
+                    </p>
+                  </div>
+                ) : (
+                  requestUsers.map((member) => {
+                    const request = requests.find(r => r.from === member.id);
+                    return (
+                      <div
+                        key={member.id}
+                        className={`bg-white rounded-lg shadow p-6 transition-opacity duration-400 ${removingRequestId === request?.id ? 'opacity-0' : 'opacity-100'}`}
+                      >
+                        <div className="flex items-start">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={member.avatar} />
+                            <AvatarFallback>
+                              {member.firstName?.[0]}{member.lastName?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="ml-4 flex-1">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="text-lg font-medium text-gray-900">
+                                  {member.firstName} {member.lastName}
+                                </h3>
+                                <p className="text-sm text-gray-500">{member.college}</p>
+                                <p className="text-sm text-gray-500">{member.role}</p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => handleAccept(request)}
+                                >
+                                  Accept
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleReject(request)}
+                                >
+                                  Ignore
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )
+              )}
+            </div>
           )}
         </div>
       </div>
+      {feedback && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-100 text-blue-800 px-4 py-2 rounded shadow z-50">
+          {feedback}
+        </div>
+      )}
     </div>
   );
 };
