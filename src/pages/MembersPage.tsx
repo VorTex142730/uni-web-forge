@@ -3,6 +3,8 @@ import { Search, LayoutGrid, List } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import MemberCard from '@/components/members/MemberCard';
+import { useAuth } from '@/context/AuthContext';
+import { getConnections, getOutgoingRequests } from '@/lib/firebase/connections';
 
 const MembersContent = () => {
   const [view, setView] = useState('grid');
@@ -11,6 +13,9 @@ const MembersContent = () => {
   const [allMembers, setAllMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const [connectedIds, setConnectedIds] = useState<string[]>([]);
+  const [pendingIds, setPendingIds] = useState<string[]>([]);
 
   // Fetch members from Firestore
   useEffect(() => {
@@ -35,6 +40,18 @@ const MembersContent = () => {
     fetchMembers();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    const fetchConnections = async () => {
+      const connections = await getConnections(user.uid);
+      const ids = connections.flatMap((c: any) => c.users.filter((id: string) => id !== user.uid));
+      setConnectedIds(ids);
+      const outgoing = await getOutgoingRequests(user.uid);
+      setPendingIds(outgoing.map((r: any) => r.to));
+    };
+    fetchConnections();
+  }, [user]);
+
   // Memoized filtering and sorting
   const filteredMembers = useMemo(() => {
     let result = [...allMembers];
@@ -47,6 +64,11 @@ const MembersContent = () => {
         (member.lastName?.toLowerCase() || '').includes(query) ||
         (member.role?.toLowerCase() || '').includes(query)
       );
+    }
+
+    // Hide already connected or pending
+    if (user) {
+      result = result.filter(m => m.id !== user.uid && !connectedIds.includes(m.id) && !pendingIds.includes(m.id));
     }
 
     // Sorting
@@ -68,7 +90,7 @@ const MembersContent = () => {
     }
 
     return result;
-  }, [searchQuery, sortBy, allMembers]);
+  }, [searchQuery, sortBy, allMembers, user, connectedIds, pendingIds]);
 
   return (
     <div className="bg-gray-50 p-6">

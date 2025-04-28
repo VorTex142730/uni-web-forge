@@ -4,6 +4,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { sendConnectionRequest, areUsersConnected, hasPendingRequest } from '@/lib/firebase/connections';
+import { createConnectionRequestNotification } from '@/components/notifications/NotificationService';
+import { useEffect, useState } from 'react';
 
 interface MemberCardProps {
   member: {
@@ -36,6 +40,40 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
 
   // Get role-based styles
   const roleStyle = roleStyles[member.role?.toLowerCase()] || roleStyles.default;
+
+  const { user, userDetails } = useAuth();
+  const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'connected'>('none');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user || isCurrentUser) return;
+    const checkStatus = async () => {
+      setLoading(true);
+      const connected = await areUsersConnected(user.uid, member.id);
+      if (connected) {
+        setConnectionStatus('connected');
+        setLoading(false);
+        return;
+      }
+      const pending = await hasPendingRequest(user.uid, member.id);
+      setConnectionStatus(pending ? 'pending' : 'none');
+      setLoading(false);
+    };
+    checkStatus();
+  }, [user, member.id, isCurrentUser]);
+
+  const handleConnect = async () => {
+    if (!user || !userDetails) return;
+    setLoading(true);
+    try {
+      await sendConnectionRequest(user.uid, member.id);
+      await createConnectionRequestNotification(member.id, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
+      setConnectionStatus('pending');
+    } catch (e) {
+      alert(e.message || 'Failed to send connection request');
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm relative">
@@ -97,8 +135,8 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
           <div className="text-center text-sm text-gray-500">This is you</div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="w-full">
-              Connect
+            <Button variant="outline" className="w-full" disabled={loading || connectionStatus !== 'none'} onClick={handleConnect}>
+              {connectionStatus === 'connected' ? 'Connected' : connectionStatus === 'pending' ? 'Pending' : 'Connect'}
             </Button>
             <Button variant="outline" className="w-full">
               <Mail className="h-4 w-4 mr-2" />

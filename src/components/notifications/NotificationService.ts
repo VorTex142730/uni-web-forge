@@ -4,7 +4,7 @@ import { db } from '@/config/firebaseConfig';
 export interface NotificationData {
   recipientId: string;
   senderId: string;
-  type: 'GROUP_JOIN_REQUEST' | 'GROUP_JOIN_ACCEPTED' | 'GROUP_JOIN_REJECTED' | 'GROUP_ROLE_UPDATED';
+  type: 'GROUP_JOIN_REQUEST' | 'GROUP_JOIN_ACCEPTED' | 'GROUP_JOIN_REJECTED' | 'GROUP_ROLE_UPDATED' | 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED' | 'CONNECTION_REJECTED';
   groupId?: string;
   groupName?: string;
   message: string;
@@ -129,4 +129,43 @@ export const createGroupJoinResponseNotification = async (
     console.error('Error creating group join response notification:', error);
     throw error;
   }
+};
+
+export const createConnectionRequestNotification = async (
+  recipientId: string,
+  senderId: string,
+  senderName: string
+) => {
+  await createNotification({
+    recipientId,
+    senderId,
+    type: 'CONNECTION_REQUEST',
+    message: `${senderName} sent you a connection request`,
+  });
+};
+
+export const createConnectionAcceptedNotification = async (
+  recipientId: string,
+  senderId: string,
+  senderName: string
+) => {
+  await createNotification({
+    recipientId,
+    senderId,
+    type: 'CONNECTION_ACCEPTED',
+    message: `${senderName} accepted your connection request`,
+  });
+};
+
+export const createConnectionRejectedNotification = async (
+  recipientId: string,
+  senderId: string,
+  senderName: string
+) => {
+  await createNotification({
+    recipientId,
+    senderId,
+    type: 'CONNECTION_REJECTED',
+    message: `${senderName} rejected your connection request`,
+  });
 }; 
