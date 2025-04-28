@@ -21,7 +21,11 @@ import {
   Link as LinkIcon,
   Code2,
   Type,
-  X
+  X,
+  Trash2,
+  Check,
+  CheckCheck,
+  Pencil
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -51,6 +55,11 @@ interface Message {
   text: string;
   timestamp: Timestamp;
   isRead: boolean;
+  edited?: boolean;
+  editTimestamp?: Timestamp;
+  deleted?: boolean;
+  deletedFor?: string[];
+  seenBy?: string[];
 }
 
 interface Conversation {
@@ -90,6 +99,12 @@ const MessagesPage: React.FC = () => {
   const [newConversationUser, setNewConversationUser] = useState<User | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   
   // Fetch conversations for the current user
   useEffect(() => {
@@ -124,13 +139,12 @@ const MessagesPage: React.FC = () => {
     return () => unsubscribe();
   }, [user]);
   
-  // Fetch users data
+  // Fetch users data for all conversation participants (robust)
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchUsers = async () => {
       const usersData: Record<string, User> = {};
-      
       // Get all unique user IDs from conversations
       const userIds = new Set<string>();
       conversations.forEach(conv => {
@@ -138,30 +152,25 @@ const MessagesPage: React.FC = () => {
           if (id !== user.uid) userIds.add(id);
         });
       });
-      
       // Fetch user data for each ID
-      for (const userId of userIds) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', userId));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            usersData[userId] = {
-              id: userId,
-              name: userData.displayName || 'Unknown User',
-              username: userData.username || userData.email?.split('@')[0] || 'unknown',
-              avatar: userData.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
-              status: userData.status || 'offline',
-              lastActive: userData.lastActive || 'Unknown'
-            };
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+      const userDocs = await Promise.all(
+        Array.from(userIds).map(userId => getDoc(doc(db, 'users', userId)))
+      );
+      userDocs.forEach(userDoc => {
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          usersData[userDoc.id] = {
+            id: userDoc.id,
+            name: userData.displayName || userData.username || userData.email?.split('@')[0] || 'Unknown User',
+            username: userData.username || userData.email?.split('@')[0] || 'unknown',
+            avatar: userData.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
+            status: userData.status || 'offline',
+            lastActive: userData.lastActive || 'Unknown'
+          };
         }
-      }
-      
+      });
       setUsers(usersData);
     };
-    
     fetchUsers();
   }, [conversations, user]);
   
@@ -207,7 +216,7 @@ const MessagesPage: React.FC = () => {
     return () => unsubscribe();
   }, [conversationId, user]);
   
-  // Fetch available users for new conversations (connections only)
+  // Fetch available users for new conversations (connections only, robust)
   useEffect(() => {
     if (!user) return;
 
@@ -240,22 +249,25 @@ const MessagesPage: React.FC = () => {
           setAvailableUsers([]);
           return;
         }
-        // 3. Fetch user details for these IDs
+        // 3. Fetch user details for these IDs in parallel
+        const userDocs = await Promise.all(
+          Array.from(connectedUserIds).map(userId => getDoc(doc(db, 'users', userId)))
+        );
         const usersData: User[] = [];
-        for (const userId of connectedUserIds) {
-          const userDoc = await getDoc(doc(db, 'users', userId));
+        userDocs.forEach((userDoc, idx) => {
           if (userDoc.exists()) {
             const userData = userDoc.data();
             usersData.push({
-              id: userId,
-              name: userData.displayName || 'Unknown User',
+              id: userDoc.id,
+              name: userData.displayName || userData.username || userData.email?.split('@')[0] || 'Unknown User',
               username: userData.username || userData.email?.split('@')[0] || 'unknown',
               avatar: userData.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
               status: userData.status || 'offline',
               lastActive: userData.lastActive || 'Unknown'
             });
           }
-        }
+          // If userDoc does not exist, skip this connection
+        });
         setAvailableUsers(usersData);
       } catch (error) {
         console.error('Error fetching connected users:', error);
@@ -426,6 +438,88 @@ const MessagesPage: React.FC = () => {
     }
   };
   
+  // Typing indicator logic
+  useEffect(() => {
+    if (!conversationId || !user) return;
+    const typingRef = doc(db, 'conversations', conversationId);
+    const unsubscribe = onSnapshot(typingRef, (docSnap) => {
+      const data = docSnap.data();
+      if (data && data.typing && data.typing !== user.uid) {
+        setOtherTyping(true);
+      } else {
+        setOtherTyping(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [conversationId, user]);
+
+  const handleTyping = () => {
+    if (!conversationId || !user) return;
+    setIsTyping(true);
+    updateDoc(doc(db, 'conversations', conversationId), { typing: user.uid });
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(() => {
+      setIsTyping(false);
+      updateDoc(doc(db, 'conversations', conversationId), { typing: '' });
+    }, 2000);
+  };
+
+  // Message edit/delete logic
+  const handleEditMessage = (msg: Message) => {
+    setEditingMessageId(msg.id);
+    setEditText(msg.text);
+  };
+
+  const handleEditSubmit = async (msg: Message) => {
+    if (!editText.trim()) return;
+    await updateDoc(doc(db, 'messages', msg.id), {
+      text: editText.trim(),
+      edited: true,
+      editTimestamp: serverTimestamp(),
+    });
+    setEditingMessageId(null);
+    setEditText('');
+  };
+
+  const handleDeleteMessage = async (msg: Message, forEveryone = false) => {
+    if (forEveryone) {
+      await updateDoc(doc(db, 'messages', msg.id), {
+        deleted: true,
+        text: '',
+      });
+    } else {
+      await updateDoc(doc(db, 'messages', msg.id), {
+        deletedFor: [...(msg.deletedFor || []), user.uid],
+      });
+    }
+  };
+
+  // Seen/Read receipts logic
+  useEffect(() => {
+    if (!conversationId || !user) return;
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.senderId !== user.uid && (!lastMsg.seenBy || !lastMsg.seenBy.includes(user.uid))) {
+      updateDoc(doc(db, 'messages', lastMsg.id), {
+        seenBy: [...(lastMsg.seenBy || []), user.uid],
+      });
+    }
+  }, [messages, conversationId, user]);
+  
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('.relative')) {
+        setOpenDropdownId(null);
+      }
+    };
+    if (openDropdownId) {
+      document.addEventListener('mousedown', handleClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [openDropdownId]);
+  
   return (
     <div className="flex h-[calc(100vh-80px)] -mt-4 -mx-4 overflow-hidden">
       {/* Conversation List */}
@@ -512,13 +606,13 @@ const MessagesPage: React.FC = () => {
           </div>
         )}
         
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-gray-50">
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : filteredConversations.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No conversations found</div>
+            <div className="p-4 text-center text-gray-400">No conversations found</div>
           ) : (
             filteredConversations.map(conversation => {
               const otherParticipantId = conversation.participants.find(id => id !== user?.uid);
@@ -529,30 +623,22 @@ const MessagesPage: React.FC = () => {
                 <Link
                   key={conversation.id}
                   to={`/messages/${conversation.id}`}
-                  className={`block p-4 hover:bg-gray-50 transition-colors ${
-                    isSelected ? 'bg-gray-100' : ''
-                  } ${!conversation.isRead ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
+                  className={`block p-4 rounded-xl shadow-sm mb-2 bg-white hover:bg-blue-50 transition-colors ${isSelected ? 'border border-blue-400' : 'border border-transparent'}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={otherParticipant?.avatar} />
-                        <AvatarFallback>{otherParticipant?.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      {otherParticipant?.status === 'online' && (
-                        <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
-                      )}
+                      <Avatar className="h-12 w-12" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
-                        <h3 className="font-semibold truncate">{otherParticipant?.name || 'Unknown User'}</h3>
-                        <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                        <h3 className="font-semibold truncate text-base">{otherParticipant?.name || 'Unknown User'}</h3>
+                        <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
                           {conversation.lastMessage?.timestamp ? 
                             formatTimestamp(conversation.lastMessage.timestamp) : 
                             'No messages'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 truncate">
+                      <p className="text-sm text-gray-500 truncate">
                         {conversation.lastMessage?.senderId === user?.uid ? 'You: ' : ''}
                         {conversation.lastMessage?.text || 'No messages yet'}
                       </p>
@@ -569,7 +655,7 @@ const MessagesPage: React.FC = () => {
       {currentConversation && otherUser ? (
         <div className={`bg-white flex flex-col ${conversationId ? 'w-full md:w-2/3' : 'hidden md:flex md:w-2/3'}`}>
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white shadow-sm">
             <div className="flex items-center gap-3">
               <Button 
                 variant="ghost" 
@@ -579,13 +665,10 @@ const MessagesPage: React.FC = () => {
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={otherUser.avatar} />
-                <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
-              </Avatar>
+              <Avatar className="h-10 w-10" />
               <div>
-                <h3 className="font-semibold">{otherUser.name}</h3>
-                <p className="text-xs text-gray-500">
+                <h3 className="font-semibold text-base">{otherUser.name}</h3>
+                <p className="text-xs text-gray-400">
                   {otherUser.status === 'online' 
                     ? 'Online' 
                     : `Last active ${otherUser.lastActive || 'unknown'}`}
@@ -601,59 +684,100 @@ const MessagesPage: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 messages-container">
             {messages.map(message => {
               const isOwn = message.senderId === user?.uid;
+              const isDeleted = message.deleted || (message.deletedFor && message.deletedFor.includes(user.uid));
               
               return (
-                <div 
-                  key={message.id} 
-                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                >
+                <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}>
                   {!isOwn && (
-                    <Avatar className="h-8 w-8 mr-2 mt-1">
-                      <AvatarImage src={otherUser.avatar} />
-                      <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
+                    <Avatar className="h-8 w-8 mr-2 mt-1" />
                   )}
-                  <div className="max-w-[70%]">
-                    <div 
-                      className={`p-3 rounded-lg prose prose-sm break-words max-w-full ${
-                        isOwn 
-                          ? 'bg-blue-500 text-white rounded-br-none prose-invert' 
-                          : 'bg-gray-100 text-gray-900 rounded-bl-none'
-                      }`}
-                    >
-                      <ReactMarkdown>{message.text}</ReactMarkdown>
+                  <div className="max-w-[70%] flex flex-col items-end">
+                    <div className={
+                      isOwn
+                        ? 'bg-blue-100 text-blue-900 rounded-2xl rounded-br-md shadow-sm px-4 py-2 transition-colors'
+                        : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md shadow-sm px-4 py-2 transition-colors'
+                    }>
+                      {isDeleted ? (
+                        <span className="italic text-gray-400">This message was deleted</span>
+                      ) : editingMessageId === message.id ? (
+                        <form onSubmit={e => { e.preventDefault(); handleEditSubmit(message); }} className="flex gap-2">
+                          <Input value={editText} onChange={e => setEditText(e.target.value)} className="flex-1 bg-white text-black border border-gray-300" />
+                          <Button type="submit" size="sm">Save</Button>
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setEditingMessageId(null)}>Cancel</Button>
+                        </form>
+                      ) : (
+                        <>
+                          <ReactMarkdown>{message.text}</ReactMarkdown>
+                          {message.edited && <span className="ml-2 text-xs italic text-gray-400">(edited)</span>}
+                        </>
+                      )}
                     </div>
-                    <div 
-                      className={`text-xs text-gray-500 mt-1 ${
-                        isOwn ? 'text-right' : 'text-left'
-                      }`}
-                    >
-                      {formatTimestamp(message.timestamp)}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-xs text-gray-400">{formatTimestamp(message.timestamp)}</span>
+                      {isOwn && !isDeleted && (
+                        <span className="inline-flex items-center">
+                          {message.seenBy && otherUserId && message.seenBy.includes(otherUserId) ? (
+                            <CheckCheck className="h-3 w-3 text-blue-400 ml-1" />
+                          ) : (
+                            <Check className="h-3 w-3 text-gray-300 ml-1" />
+                          )}
+                        </span>
+                      )}
                     </div>
+                    {isOwn && !isDeleted && editingMessageId !== message.id && (
+                      <div className="flex gap-2 mt-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        <Button size="sm" variant="ghost" onClick={() => handleEditMessage(message)}><Pencil className="h-4 w-4" /></Button>
+                        <div className="relative">
+                          <Button size="sm" variant="ghost" onClick={() => setOpenDropdownId(openDropdownId === message.id ? null : message.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          {openDropdownId === message.id && (
+                            <div className="absolute right-0 z-10 mt-2 w-40 bg-white border rounded shadow-lg">
+                              <button
+                                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                                onClick={() => { handleDeleteMessage(message, false); setOpenDropdownId(null); }}
+                              >
+                                Delete for me
+                              </button>
+                              <button
+                                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-red-600"
+                                onClick={() => { handleDeleteMessage(message, true); setOpenDropdownId(null); }}
+                              >
+                                Delete for everyone
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
             <div ref={messagesEndRef} />
+            {otherTyping && (
+              <div className="text-xs text-gray-500 mb-2">{otherUser.name} is typing...</div>
+            )}
           </div>
           
           {/* Input */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-100 bg-white shadow-sm">
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <Button type="button" size="icon" variant="ghost">
-                <Image className="h-5 w-5 text-gray-500" />
+                <Image className="h-5 w-5 text-gray-400" />
               </Button>
               <Input
                 ref={inputRef}
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
+                onInput={handleTyping}
                 placeholder="Write a message..."
-                className="flex-1"
+                className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
               <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                 <PopoverTrigger asChild>
                   <Button type="button" size="icon" variant="ghost" onClick={() => setShowEmojiPicker((v) => !v)}>
-                    <Smile className="h-5 w-5 text-gray-500" />
+                    <Smile className="h-5 w-5 text-gray-400" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 border-none shadow-none bg-transparent" align="end" sideOffset={8}>
@@ -663,7 +787,7 @@ const MessagesPage: React.FC = () => {
               <Popover open={showFormatToolbar} onOpenChange={setShowFormatToolbar}>
                 <PopoverTrigger asChild>
                   <Button type="button" size="icon" variant="ghost" onClick={() => setShowFormatToolbar((v) => !v)}>
-                    <Type className="h-5 w-5 text-gray-500" />
+                    <Type className="h-5 w-5 text-gray-400" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="flex gap-2 bg-gray-50 border rounded shadow p-2" align="end" sideOffset={8}>
@@ -676,11 +800,11 @@ const MessagesPage: React.FC = () => {
                   <Button type="button" size="icon" variant="ghost" title="Preformatted" onClick={() => handleFormat('code')}><Code2 className="h-4 w-4" /></Button>
                 </PopoverContent>
               </Popover>
-              <Button type="submit" size="icon" disabled={messageText.trim() === ''}>
+              <Button type="submit" size="icon" disabled={messageText.trim() === ''} className="bg-blue-500 hover:bg-blue-600 text-white rounded-full">
                 <Send className="h-5 w-5" />
               </Button>
             </form>
-            <div className="text-xs text-gray-500 mt-2 text-center">
+            <div className="text-xs text-gray-400 mt-2 text-center">
               Enter to Send • Shift+Enter to add a new line
             </div>
           </div>
