@@ -278,7 +278,7 @@ const MessagesPage: React.FC = () => {
       fetchConnectedUsers();
     }
   }, [user, showNewConversation]);
-  
+
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -314,13 +314,13 @@ const MessagesPage: React.FC = () => {
       console.error('Error sending message:', error);
     }
   };
-  
+
   const handleEmojiSelect = (emoji: any) => {
     setMessageText(prev => prev + (emoji.native || ''));
     setShowEmojiPicker(false);
     inputRef.current?.focus();
   };
-  
+
   // Helper to insert formatting at cursor
   const insertAtCursor = (before: string, after: string = '', placeholder: string = '') => {
     if (!inputRef.current) return;
@@ -336,7 +336,7 @@ const MessagesPage: React.FC = () => {
       input.setSelectionRange(start + before.length, start + before.length + selected.length);
     }, 0);
   };
-  
+
   const handleFormat = (type: string) => {
     switch (type) {
       case 'bold':
@@ -693,7 +693,7 @@ const MessagesPage: React.FC = () => {
                   )}
                   <div className="max-w-[70%] flex flex-col items-end">
                     <div className={
-                      isOwn
+                        isOwn 
                         ? 'bg-blue-100 text-blue-900 rounded-2xl rounded-br-md shadow-sm px-4 py-2 transition-colors'
                         : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md shadow-sm px-4 py-2 transition-colors'
                     }>
@@ -707,7 +707,7 @@ const MessagesPage: React.FC = () => {
                         </form>
                       ) : (
                         <>
-                          <ReactMarkdown>{message.text}</ReactMarkdown>
+                      <ReactMarkdown>{message.text}</ReactMarkdown>
                           {message.edited && <span className="ml-2 text-xs italic text-gray-400">(edited)</span>}
                         </>
                       )}
