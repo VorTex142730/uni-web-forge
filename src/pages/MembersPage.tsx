@@ -44,7 +44,7 @@ const MembersContent = () => {
     if (!user) return;
     const fetchConnections = async () => {
       const connections = await getConnections(user.uid);
-      const ids = connections.flatMap((c: any) => c.users.filter((id: string) => id !== user.uid));
+      const ids = connections.map((c: any) => c.otherUserId);
       setConnectedIds(ids);
       const outgoing = await getOutgoingRequests(user.uid);
       setPendingIds(outgoing.map((r: any) => r.to));
