@@ -20,99 +20,295 @@ import {
   Quote,
   Link as LinkIcon,
   Code2,
-  Type
+  Type,
+  X
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { conversations, messages as initialMessages, users } from '@/data/messagesData';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import ReactMarkdown from 'react-markdown';
+import { useAuth } from '@/context/AuthContext';
+import { db } from '@/config/firebaseConfig';
+import { 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  addDoc, 
+  serverTimestamp, 
+  onSnapshot, 
+  updateDoc, 
+  doc, 
+  getDoc, 
+  getDocs,
+  Timestamp
+} from 'firebase/firestore';
 
 interface Message {
-  id: number;
-  senderId: number;
+  id: string;
+  senderId: string;
   text: string;
-  timestamp: string;
+  timestamp: Timestamp;
+  isRead: boolean;
+}
+
+interface Conversation {
+  id: string;
+  participants: string[];
+  lastMessage: {
+    text: string;
+    timestamp: Timestamp;
+    senderId: string;
+  };
+  isRead: boolean;
+}
+
+interface User {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  status: 'online' | 'offline' | 'away';
+  lastActive?: string;
 }
 
 const MessagesPage: React.FC = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [messages, setMessages] = useState<{ [key: number]: Message[] }>(initialMessages);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [users, setUsers] = useState<Record<string, User>>({});
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showFormatToolbar, setShowFormatToolbar] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [newConversationUser, setNewConversationUser] = useState<User | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  const filteredConversations = conversations.filter(conversation =>
-    users.find(user => conversation.participants.includes(user.id) && user.id !== 1)?.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
-  
-  const currentConversation = conversationId 
-    ? conversations.find(c => c.id === parseInt(conversationId))
-    : null;
+  // Fetch conversations for the current user
+  useEffect(() => {
+    if (!user) return;
     
-  const otherUserId = currentConversation?.participants.find(id => id !== 1);
-  const otherUser = users.find(user => user.id === otherUserId);
-  const currentMessages = conversationId ? messages[parseInt(conversationId)] || [] : [];
-  
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (messageText.trim() === '') return;
+    // Simplified query to avoid index issues
+    const conversationsQuery = query(
+      collection(db, 'conversations'),
+      where('participants', 'array-contains', user.uid)
+    );
     
-    const newMessage: Message = {
-      id: Date.now(),
-      senderId: 1, // Current user's ID
-      text: messageText.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const unsubscribe = onSnapshot(conversationsQuery, (snapshot) => {
+      const conversationsData: Conversation[] = [];
+      snapshot.forEach((doc) => {
+        conversationsData.push({
+          id: doc.id,
+          ...doc.data()
+        } as Conversation);
+      });
+      
+      // Sort conversations client-side by timestamp
+      conversationsData.sort((a, b) => {
+        const timestampA = a.lastMessage?.timestamp?.toMillis() || 0;
+        const timestampB = b.lastMessage?.timestamp?.toMillis() || 0;
+        return timestampB - timestampA; // Descending order (newest first)
+      });
+      
+      setConversations(conversationsData);
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [user]);
+  
+  // Fetch users data
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchUsers = async () => {
+      const usersData: Record<string, User> = {};
+      
+      // Get all unique user IDs from conversations
+      const userIds = new Set<string>();
+      conversations.forEach(conv => {
+        conv.participants.forEach(id => {
+          if (id !== user.uid) userIds.add(id);
+        });
+      });
+      
+      // Fetch user data for each ID
+      for (const userId of userIds) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            usersData[userId] = {
+              id: userId,
+              name: userData.displayName || 'Unknown User',
+              username: userData.username || userData.email?.split('@')[0] || 'unknown',
+              avatar: userData.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
+              status: userData.status || 'offline',
+              lastActive: userData.lastActive || 'Unknown'
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+      
+      setUsers(usersData);
+    };
+    
+    fetchUsers();
+  }, [conversations, user]);
+  
+  // Fetch messages for the current conversation
+  useEffect(() => {
+    if (!conversationId || !user) return;
+    
+    const messagesQuery = query(
+      collection(db, 'messages'),
+      where('conversationId', '==', conversationId),
+      orderBy('timestamp', 'asc')
+    );
+    
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const messagesData: Message[] = [];
+      snapshot.forEach((doc) => {
+        messagesData.push({
+          id: doc.id,
+          ...doc.data()
+        } as Message);
+      });
+      setMessages(messagesData);
+      
+      // Mark messages as read
+      const unreadMessages = messagesData.filter(
+        msg => msg.senderId !== user.uid && !msg.isRead
+      );
+      
+      if (unreadMessages.length > 0) {
+        unreadMessages.forEach(async (msg) => {
+          await updateDoc(doc(db, 'messages', msg.id), {
+            isRead: true
+          });
+        });
+        
+        // Update conversation read status
+        updateDoc(doc(db, 'conversations', conversationId), {
+          isRead: true
+        });
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [conversationId, user]);
+  
+  // Fetch available users for new conversations (connections only)
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchConnectedUsers = async () => {
+      try {
+        // 1. Query connections where user1 or user2 is the current user
+        const connectionsQuery1 = query(
+          collection(db, 'connections'),
+          where('user1', '==', user.uid)
+        );
+        const connectionsQuery2 = query(
+          collection(db, 'connections'),
+          where('user2', '==', user.uid)
+        );
+        const [snapshot1, snapshot2] = await Promise.all([
+          getDocs(connectionsQuery1),
+          getDocs(connectionsQuery2)
+        ]);
+        // 2. Collect the other user IDs
+        const connectedUserIds = new Set<string>();
+        snapshot1.forEach(doc => {
+          const data = doc.data();
+          if (data.user2 && data.user2 !== user.uid) connectedUserIds.add(data.user2);
+        });
+        snapshot2.forEach(doc => {
+          const data = doc.data();
+          if (data.user1 && data.user1 !== user.uid) connectedUserIds.add(data.user1);
+        });
+        if (connectedUserIds.size === 0) {
+          setAvailableUsers([]);
+          return;
+        }
+        // 3. Fetch user details for these IDs
+        const usersData: User[] = [];
+        for (const userId of connectedUserIds) {
+          const userDoc = await getDoc(doc(db, 'users', userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            usersData.push({
+              id: userId,
+              name: userData.displayName || 'Unknown User',
+              username: userData.username || userData.email?.split('@')[0] || 'unknown',
+              avatar: userData.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
+              status: userData.status || 'offline',
+              lastActive: userData.lastActive || 'Unknown'
+            });
+          }
+        }
+        setAvailableUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching connected users:', error);
+      }
     };
 
-    if (conversationId) {
-      const conversationIdNum = parseInt(conversationId);
-      setMessages(prev => ({
-        ...prev,
-        [conversationIdNum]: [...(prev[conversationIdNum] || []), newMessage]
-      }));
-
-      // Update the last message in the conversation
-      const updatedConversations = conversations.map(conv => {
-        if (conv.id === conversationIdNum) {
-          return {
-            ...conv,
-            lastMessage: {
-              senderId: 1,
-              text: messageText.trim(),
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }
-          };
-        }
-        return conv;
-      });
+    if (showNewConversation) {
+      fetchConnectedUsers();
     }
-    
-    setMessageText('');
-  };
-
+  }, [user, showNewConversation]);
+  
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    if (conversationId) {
-      const messagesContainer = document.querySelector('.messages-container');
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+  
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (messageText.trim() === '' || !user || !conversationId) return;
+    
+    try {
+      // Add message to Firestore
+      const messageData = {
+        conversationId,
+        senderId: user.uid,
+        text: messageText.trim(),
+        timestamp: serverTimestamp(),
+        isRead: false
+      };
+      
+      await addDoc(collection(db, 'messages'), messageData);
+      
+      // Update conversation's last message
+      await updateDoc(doc(db, 'conversations', conversationId), {
+        lastMessage: {
+          text: messageText.trim(),
+          timestamp: serverTimestamp(),
+          senderId: user.uid
+        }
+      });
+      
+      setMessageText('');
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
-  }, [currentMessages, conversationId]);
-
+  };
+  
   const handleEmojiSelect = (emoji: any) => {
     setMessageText(prev => prev + (emoji.native || ''));
     setShowEmojiPicker(false);
     inputRef.current?.focus();
   };
-
+  
   // Helper to insert formatting at cursor
   const insertAtCursor = (before: string, after: string = '', placeholder: string = '') => {
     if (!inputRef.current) return;
@@ -128,7 +324,7 @@ const MessagesPage: React.FC = () => {
       input.setSelectionRange(start + before.length, start + before.length + selected.length);
     }, 0);
   };
-
+  
   const handleFormat = (type: string) => {
     switch (type) {
       case 'bold':
@@ -160,6 +356,76 @@ const MessagesPage: React.FC = () => {
     setShowFormatToolbar(false);
   };
   
+  const filteredConversations = conversations.filter(conversation => {
+    const otherUserId = conversation.participants.find(id => id !== user?.uid);
+    const otherUser = users[otherUserId || ''];
+    return otherUser?.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+  
+  const currentConversation = conversationId 
+    ? conversations.find(c => c.id === conversationId)
+    : null;
+    
+  const otherUserId = currentConversation?.participants.find(id => id !== user?.uid);
+  const otherUser = otherUserId ? users[otherUserId] : null;
+  
+  const formatTimestamp = (timestamp: Timestamp) => {
+    if (!timestamp) return '';
+    
+    const date = timestamp.toDate();
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (days === 1) {
+      return 'Yesterday ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (days < 7) {
+      return date.toLocaleDateString([], { weekday: 'long', hour: '2-digit', minute: '2-digit' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+  };
+  
+  // Start a new conversation with a selected user
+  const startNewConversation = async (selectedUser: User) => {
+    if (!user) return;
+    
+    try {
+      // Check if conversation already exists
+      const existingConversation = conversations.find(conv => 
+        conv.participants.includes(selectedUser.id) && 
+        conv.participants.includes(user.uid)
+      );
+      
+      if (existingConversation) {
+        navigate(`/messages/${existingConversation.id}`);
+        setShowNewConversation(false);
+        return;
+      }
+      
+      // Create new conversation
+      const conversationData = {
+        participants: [user.uid, selectedUser.id],
+        lastMessage: {
+          text: '',
+          timestamp: serverTimestamp(),
+          senderId: user.uid
+        },
+        isRead: true
+      };
+      
+      const conversationRef = await addDoc(collection(db, 'conversations'), conversationData);
+      
+      // Navigate to the new conversation
+      navigate(`/messages/${conversationRef.id}`);
+      setShowNewConversation(false);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+  };
+  
   return (
     <div className="flex h-[calc(100vh-80px)] -mt-4 -mx-4 overflow-hidden">
       {/* Conversation List */}
@@ -176,17 +442,88 @@ const MessagesPage: React.FC = () => {
                 className="pl-10"
               />
             </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowNewConversation(true)}
+              className="whitespace-nowrap"
+            >
+              New Chat
+            </Button>
           </div>
         </div>
         
+        {/* New Conversation Modal */}
+        {showNewConversation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-hidden">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Start a New Conversation</h2>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setShowNewConversation(false)}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <div className="p-4 border-b">
+                <Input
+                  placeholder="Search users..."
+                  className="w-full"
+                  onChange={(e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const filteredUsers = availableUsers.filter(user => 
+                      user.name.toLowerCase().includes(searchTerm) || 
+                      user.username.toLowerCase().includes(searchTerm)
+                    );
+                    setAvailableUsers(filteredUsers);
+                  }}
+                />
+              </div>
+              
+              <div className="overflow-y-auto max-h-[50vh]">
+                {availableUsers.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">No users found</div>
+                ) : (
+                  availableUsers.map(user => (
+                    <div 
+                      key={user.id}
+                      className="p-4 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
+                      onClick={() => startNewConversation(user)}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.avatar} />
+                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-medium">{user.name}</h3>
+                        <p className="text-sm text-gray-500">@{user.username}</p>
+                      </div>
+                      {user.status === 'online' && (
+                        <span className="ml-auto h-3 w-3 rounded-full bg-green-500"></span>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="flex-1 overflow-y-auto">
-          {filteredConversations.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : filteredConversations.length === 0 ? (
             <div className="p-4 text-center text-gray-500">No conversations found</div>
           ) : (
             filteredConversations.map(conversation => {
-              const otherParticipantId = conversation.participants.find(id => id !== 1);
-              const otherParticipant = users.find(user => user.id === otherParticipantId);
-              const isSelected = conversationId === conversation.id.toString();
+              const otherParticipantId = conversation.participants.find(id => id !== user?.uid);
+              const otherParticipant = otherParticipantId ? users[otherParticipantId] : null;
+              const isSelected = conversationId === conversation.id;
               
               return (
                 <Link
@@ -208,14 +545,16 @@ const MessagesPage: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
-                        <h3 className="font-semibold truncate">{otherParticipant?.name}</h3>
+                        <h3 className="font-semibold truncate">{otherParticipant?.name || 'Unknown User'}</h3>
                         <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                          {conversation.lastMessage.timestamp}
+                          {conversation.lastMessage?.timestamp ? 
+                            formatTimestamp(conversation.lastMessage.timestamp) : 
+                            'No messages'}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 truncate">
-                        {conversation.lastMessage.senderId === 1 ? 'You: ' : ''}
-                        {conversation.lastMessage.text}
+                        {conversation.lastMessage?.senderId === user?.uid ? 'You: ' : ''}
+                        {conversation.lastMessage?.text || 'No messages yet'}
                       </p>
                     </div>
                   </div>
@@ -249,7 +588,7 @@ const MessagesPage: React.FC = () => {
                 <p className="text-xs text-gray-500">
                   {otherUser.status === 'online' 
                     ? 'Online' 
-                    : `Last active ${otherUser.lastActive}`}
+                    : `Last active ${otherUser.lastActive || 'unknown'}`}
                 </p>
               </div>
             </div>
@@ -260,9 +599,8 @@ const MessagesPage: React.FC = () => {
           
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 messages-container">
-            {currentMessages.map(message => {
-              const isOwn = message.senderId === 1;
-              const sender = users.find(u => u.id === message.senderId);
+            {messages.map(message => {
+              const isOwn = message.senderId === user?.uid;
               
               return (
                 <div 
@@ -271,8 +609,8 @@ const MessagesPage: React.FC = () => {
                 >
                   {!isOwn && (
                     <Avatar className="h-8 w-8 mr-2 mt-1">
-                      <AvatarImage src={sender?.avatar} />
-                      <AvatarFallback>{sender?.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={otherUser.avatar} />
+                      <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   )}
                   <div className="max-w-[70%]">
@@ -290,12 +628,13 @@ const MessagesPage: React.FC = () => {
                         isOwn ? 'text-right' : 'text-left'
                       }`}
                     >
-                      {message.timestamp}
+                      {formatTimestamp(message.timestamp)}
                     </div>
                   </div>
                 </div>
               );
             })}
+            <div ref={messagesEndRef} />
           </div>
           
           {/* Input */}
@@ -356,7 +695,12 @@ const MessagesPage: React.FC = () => {
             <p className="mt-1 text-sm text-gray-500">
               Select a conversation to start messaging
             </p>
-            <Button className="mt-4">Start a new conversation</Button>
+            <Button 
+              className="mt-4"
+              onClick={() => setShowNewConversation(true)}
+            >
+              Start a new conversation
+            </Button>
           </div>
         </div>
       )}
