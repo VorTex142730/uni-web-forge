@@ -329,23 +329,23 @@ const GroupDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with Gradient */}
+      {/* Header with Fixed Gradient */}
       <div className="bg-gradient-to-br from-blue-600 to-indigo-700">
         <div className="max-w-7xl mx-auto px-4">
           {/* Cover Photo Area */}
-          <div className="relative h-64">
-            <div className={`absolute inset-0 bg-gradient-to-br ${generateGradient(group.name)}`} />
-            <div className="absolute inset-0 bg-black/20" />
+          <div className="relative h-48">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600" />
+            <div className="absolute inset-0 bg-black/10" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-center gap-4">
-                <div className={`w-20 h-20 rounded-lg flex items-center justify-center bg-gradient-to-br ${generateGradient(group.name + '-logo')}`}>
-                  <span className="text-white text-2xl font-bold">
+                <div className={`w-16 h-16 rounded-lg flex items-center justify-center bg-gradient-to-br ${generateGradient(group.name + '-logo')}`}>
+                  <span className="text-white text-xl font-bold">
                     {getInitials(group.name)}
                   </span>
                 </div>
                 <div className="text-white flex-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-3xl font-bold">{group.name}</h1>
+                    <h1 className="text-2xl font-bold">{group.name}</h1>
                     {group.createdBy && (
                       <div className="flex items-center text-sm bg-white/10 px-3 py-1 rounded-full">
                         <Crown size={14} className="text-yellow-400 mr-1" />
@@ -353,7 +353,7 @@ const GroupDetails = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-sm mt-2">
+                  <div className="flex items-center gap-4 text-sm mt-1">
                     <span className="capitalize">{group.privacy} Group</span>
                     <span>•</span>
                     <span>{group.members?.length || 0} members</span>
@@ -363,7 +363,7 @@ const GroupDetails = () => {
                   {memberStatus === 'none' && (
                     <Button 
                       onClick={handleJoinRequest} 
-                      size="lg"
+                      size="default"
                       variant="secondary"
                       className="bg-white/10 hover:bg-white/20 text-white border-white/20"
                     >
@@ -373,7 +373,7 @@ const GroupDetails = () => {
                   {memberStatus === 'pending' && (
                     <Button 
                       variant="secondary" 
-                      size="lg" 
+                      size="default" 
                       disabled
                       className="bg-white/10 text-white border-white/20"
                     >
@@ -383,7 +383,7 @@ const GroupDetails = () => {
                   {memberStatus === 'member' && (
                     <Button 
                       variant="secondary" 
-                      size="lg"
+                      size="default"
                       className="bg-white/10 hover:bg-white/20 text-white border-white/20"
                     >
                       Member

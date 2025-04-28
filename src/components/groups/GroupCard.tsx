@@ -8,7 +8,12 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Group } from '@/types';
 import { createGroupJoinRequestNotification } from '@/components/notifications/NotificationService';
-import { Settings, Users } from 'lucide-react';
+import { Settings, Users, Lock, Globe, Clock, ChevronRight, MessageSquare } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { motion } from 'framer-motion';
 
 interface GroupCardProps {
   group: Group;
@@ -20,6 +25,7 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [memberStatus, setMemberStatus] = useState<'creator' | 'member' | 'none' | 'pending'>('none');
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const checkMemberStatus = async () => {
@@ -127,11 +133,26 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
     navigate(`/groups/${group.id}?tab=settings`);
   };
 
+  // Format date to relative time (e.g., "2 days ago")
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
   if (variant === 'mobile') {
     return (
-      <div 
+      <motion.div 
         className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200" 
         onClick={onClick || handleViewGroup}
+        whileHover={{ y: -2 }}
+        transition={{ duration: 0.2 }}
       >
         <div className="flex items-center p-4">
           <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${generateGradient(group.name)}`}>
@@ -175,23 +196,132 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
             </Button>
           )}
         </div>
-      </div>
+      </motion.div>
+    );
+  }
+
+  if (variant === 'list') {
+    return (
+      <motion.div 
+        className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200" 
+        onClick={onClick || handleViewGroup}
+        whileHover={{ x: 4 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="flex items-center p-4">
+          <div className={`w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 ${generateGradient(group.name)}`}>
+            <span className="text-white text-lg font-bold">
+              {getInitials(group.name)}
+            </span>
+          </div>
+          
+          <div className="ml-4 flex-1 min-w-0">
+            <div className="flex items-center">
+              <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>
+              <Badge variant={group.privacy === 'private' ? 'destructive' : 'default'} className="ml-2">
+                {group.privacy === 'private' ? <Lock className="h-3 w-3 mr-1" /> : <Globe className="h-3 w-3 mr-1" />}
+                {group.privacy}
+              </Badge>
+            </div>
+            
+            {group.description && (
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                {group.description}
+              </p>
+            )}
+            
+            <div className="flex items-center mt-2 text-sm text-gray-500">
+              <div className="flex items-center mr-4">
+                <Users className="w-4 h-4 mr-1" />
+                <span>{group.memberCount} members</span>
+              </div>
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-1" />
+                <span>Active {formatRelativeTime(group.lastActive)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="ml-4 flex-shrink-0">
+            {memberStatus === 'creator' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManageGroup}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Manage
+              </Button>
+            ) : memberStatus === 'member' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewGroup();
+                }}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                View
+              </Button>
+            ) : memberStatus === 'pending' ? (
+              <Button
+                size="sm"
+                disabled
+              >
+                Pending
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleJoinGroup}
+              >
+                {group.privacy === 'private' ? 'Request' : 'Join'}
+              </Button>
+            )}
+          </div>
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <div 
+    <motion.div 
       className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full cursor-pointer hover:shadow-lg transition-shadow duration-200" 
       onClick={onClick || handleViewGroup}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
     >
       <div className={`h-32 relative flex items-center justify-center ${generateGradient(group.name)}`}>
-        <span className="text-white text-2xl font-bold">
+        <motion.span 
+          className="text-white text-3xl font-bold"
+          animate={{ scale: isHovered ? 1.1 : 1 }}
+          transition={{ duration: 0.2 }}
+        >
           {getInitials(group.name)}
-        </span>
+        </motion.span>
       </div>
       
       <div className="p-4 flex-1 flex flex-col">
-        <h3 className="text-lg font-semibold mb-2">{group.name}</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">{group.name}</h3>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant={group.privacy === 'private' ? 'destructive' : 'default'} className="cursor-help">
+                  {group.privacy === 'private' ? <Lock className="h-3 w-3 mr-1" /> : <Globe className="h-3 w-3 mr-1" />}
+                  {group.privacy}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{group.privacy === 'private' ? 'Private group - requires approval to join' : 'Public group - anyone can join'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        
         {group.description && (
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">
             {group.description}
@@ -199,15 +329,17 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
         )}
         
         <div className="flex items-center text-sm text-gray-500 mt-auto mb-4">
-          <span className="mr-4">
-            {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
-          </span>
-          <span className={`${group.privacy === 'private' ? 'text-orange-500' : 'text-green-500'}`}>
-            {group.privacy}
-          </span>
+          <div className="flex items-center mr-4">
+            <Users className="h-4 w-4 mr-1" />
+            <span>{group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}</span>
+          </div>
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-1" />
+            <span>Active {formatRelativeTime(group.lastActive)}</span>
+          </div>
         </div>
 
-        <div className="flex justify-between items-center gap-2 mt-auto">
+        <div className="flex gap-2 mt-auto">
           {memberStatus === 'creator' ? (
             <>
               <Button
@@ -274,7 +406,7 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

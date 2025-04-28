@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LayoutGrid, List, Search } from 'lucide-react';
+import { LayoutGrid, List, Search, Plus, Users, Filter, ArrowUpDown } from 'lucide-react';
 import GroupCard from '@/components/groups/GroupCard';
 import CreateGroup from '@/components/groups/CreateGroup';
 import { collection, query, orderBy, getDocs, where, addDoc, getDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -12,6 +12,12 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { createGroupJoinRequestNotification } from '@/components/notifications/NotificationService';
 import { Group } from '@/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const GroupsPage = () => {
   const navigate = useNavigate();
@@ -23,6 +29,7 @@ const GroupsPage = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [myGroups, setMyGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchGroups = async () => {
     setLoading(true);
@@ -154,207 +161,238 @@ const GroupsPage = () => {
   });
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 py-6">
-      {/* Mobile Header */}
-      <div className="lg:hidden space-y-4">
-        <h1 className="text-2xl font-semibold">Groups</h1>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input
-            type="search"
-            placeholder="Search Groups..."
-            className="pl-10 w-full bg-white"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Desktop Header */}
-      <div className="hidden lg:flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold">Groups</h1>
-        <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Input
-            type="search"
-            placeholder="Search Groups..."
-            className="pl-10 w-full"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Mobile Tabs */}
-      <div className="lg:hidden border-b border-gray-200 mb-6 overflow-x-auto">
-        <div className="flex -mb-px min-w-max">
-          <button
-            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'all'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500'
-            }`}
-            onClick={() => setActiveTab('all')}
-          >
-            All Groups
-            <span className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-              {groups.length}
-            </span>
-          </button>
-          <button
-            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'my'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500'
-            }`}
-            onClick={() => setActiveTab('my')}
-          >
-            My Groups
-            <span className="ml-2 bg-gray-200 text-gray-600 text-xs px-1.5 py-0.5 rounded-full">
-              {myGroups.length}
-            </span>
-          </button>
-          <button
-            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'create'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500'
-            }`}
-            onClick={() => setActiveTab('create')}
-          >
-            Create a Group
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop Tabs */}
-      <div className="hidden lg:flex border-b border-gray-200 mb-6">
-        <div className="flex -mb-px">
-          <button
-            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'all'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('all')}
-          >
-            All Groups
-            <span className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-              {groups.length}
-            </span>
-          </button>
-          <button
-            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'my'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('my')}
-          >
-            My Groups
-            <span className="ml-2 bg-gray-200 text-gray-600 text-xs px-1.5 py-0.5 rounded-full">
-              {myGroups.length}
-            </span>
-          </button>
-          <button
-            className={`inline-flex items-center px-4 py-3 border-b-2 font-medium text-sm ${
-              activeTab === 'create'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => setActiveTab('create')}
-          >
-            Create a Group
-          </button>
-        </div>
-      </div>
-
-      <div className="min-h-[calc(100vh-240px)]">
-        {activeTab === 'create' ? (
-          <CreateGroup 
-            onSuccess={handleCreateSuccess} 
-            onCancel={() => setActiveTab('all')} 
-          />
-        ) : (
-          <>
-            {/* Sort and View Controls */}
-            <div className="flex justify-between items-center mb-4">
-              <div className="relative">
-                <select
-                  className="text-sm border rounded-lg py-2 pl-4 pr-8 bg-white appearance-none cursor-pointer"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="recently-active">Recently Active</option>
-                  <option value="newest">Newest</option>
-                  <option value="alphabetical">Alphabetical</option>
-                </select>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-              <div className="flex items-center border rounded-lg p-1 bg-white">
-                <button
-                  className={`p-2 rounded transition-colors ${view === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-                  onClick={() => setView('grid')}
-                >
-                  <LayoutGrid size={18} />
-                </button>
-                <button
-                  className={`p-2 rounded transition-colors ${view === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-                  onClick={() => setView('list')}
-                >
-                  <List size={18} />
-                </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Main Content */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          {/* Tabs */}
+          <Tabs defaultValue={activeTab} className="w-full" onValueChange={(value) => setActiveTab(value as 'all' | 'my' | 'create')}>
+            <div className="border-b">
+              <div className="px-4">
+                <TabsList className="w-full justify-start">
+                  <TabsTrigger value="all" className="flex items-center">
+                    All Groups
+                    <Badge variant="secondary" className="ml-2">{groups.length}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="my" className="flex items-center">
+                    My Groups
+                    <Badge variant="secondary" className="ml-2">{myGroups.length}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="create">Create a Group</TabsTrigger>
+                </TabsList>
               </div>
             </div>
 
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            ) : (
-              <>
-                {/* Mobile View */}
-                <div className={`lg:hidden ${view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-4'}`}>
-                  {sortedGroups.map((group) => (
-                    <GroupCard
-                      key={group.id}
-                      group={group}
-                      variant={view === 'grid' ? 'grid' : 'mobile'}
+            <TabsContent value="create" className="p-6">
+              <CreateGroup 
+                onSuccess={handleCreateSuccess} 
+                onCancel={() => setActiveTab('all')} 
+              />
+            </TabsContent>
+
+            <TabsContent value="all" className="p-0">
+              <div className="p-4 border-b">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Input
+                      type="search"
+                      placeholder="Search groups..."
+                      className="pl-10 w-full"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                  ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center"
+                      onClick={() => setShowFilters(!showFilters)}
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
+                    </Button>
+                    <div className="flex items-center border rounded-lg p-1 bg-white">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`p-2 rounded transition-colors ${view === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                        onClick={() => setView('grid')}
+                      >
+                        <LayoutGrid size={18} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`p-2 rounded transition-colors ${view === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                        onClick={() => setView('list')}
+                      >
+                        <List size={18} />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Desktop View */}
-                <div className={`hidden lg:grid gap-6 ${
-                  view === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                    : 'grid-cols-1 max-w-3xl mx-auto'
-                }`}>
-                  {sortedGroups.map((group) => (
-                    <GroupCard
-                      key={group.id}
-                      group={group}
-                      variant={view}
-                    />
-                  ))}
-                </div>
-
-                {sortedGroups.length === 0 && (
-                  <div className="text-center text-gray-500 py-12">
-                    No groups found matching your search.
+                {/* Filters Panel */}
+                {showFilters && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-medium">Sort By</h3>
+                      <Button variant="ghost" size="sm" className="h-8">
+                        <ArrowUpDown className="h-4 w-4 mr-1" />
+                        {sortBy === 'recently-active' ? 'Recently Active' : 
+                         sortBy === 'newest' ? 'Newest' : 'Alphabetical'}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button 
+                        variant={sortBy === 'recently-active' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => setSortBy('recently-active')}
+                      >
+                        Recently Active
+                      </Button>
+                      <Button 
+                        variant={sortBy === 'newest' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => setSortBy('newest')}
+                      >
+                        Newest
+                      </Button>
+                      <Button 
+                        variant={sortBy === 'alphabetical' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => setSortBy('alphabetical')}
+                      >
+                        Alphabetical
+                      </Button>
+                    </div>
                   </div>
                 )}
-              </>
-            )}
-          </>
-        )}
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : (
+                <div className="p-4">
+                  {sortedGroups.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Users className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">No groups found</h3>
+                      <p className="mt-2 text-sm text-gray-500">
+                        {searchQuery 
+                          ? "No groups match your search criteria. Try adjusting your search."
+                          : "There are no groups available at the moment."}
+                      </p>
+                      {searchQuery && (
+                        <Button 
+                          variant="outline" 
+                          className="mt-4"
+                          onClick={() => setSearchQuery('')}
+                        >
+                          Clear Search
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={view === 'grid' 
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
+                      : 'space-y-4'}>
+                      {sortedGroups.map((group) => (
+                        <GroupCard
+                          key={group.id}
+                          group={group}
+                          variant={view}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="my" className="p-0">
+              <div className="p-4 border-b">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Input
+                    type="search"
+                    placeholder="Search my groups..."
+                    className="pl-10 w-full"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : (
+                <div className="p-4">
+                  {myGroups.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Users className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">You haven't joined any groups yet</h3>
+                      <p className="mt-2 text-sm text-gray-500">
+                        Browse and join groups to connect with others who share your interests.
+                      </p>
+                      <Button 
+                        className="mt-4"
+                        onClick={() => setActiveTab('all')}
+                      >
+                        Browse Groups
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className={view === 'grid' 
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
+                      : 'space-y-4'}>
+                      {sortedGroups.map((group) => (
+                        <GroupCard
+                          key={group.id}
+                          group={group}
+                          variant={view}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
+};
+
+// Helper functions
+const generateGradient = (text: string) => {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = text.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const h1 = hash % 360;
+  const h2 = (h1 + 40) % 360;
+  return `from-[hsl(${h1},70%,60%)] to-[hsl(${h2},70%,50%)]`;
+};
+
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase();
 };
 
 export default GroupsPage;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, MessageSquare } from 'lucide-react';
 
 // Mock data to replicate the screenshot
 const MOCK_FORUMS = [
@@ -97,23 +97,47 @@ const ForumsPage = () => {
   };
 
   return (
-    <div className="bg-pink-50 min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-medium">Forums</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with Fixed Gradient */}
+      <div className="bg-gradient-to-br from-purple-600 to-indigo-700">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Cover Photo Area */}
+          <div className="relative h-32">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600" />
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-purple-400 to-indigo-500">
+                  <MessageSquare className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-white flex-1">
+                  <div className="flex items-center gap-4 text-sm">
+                    <span>{MOCK_FORUMS.length} total forums</span>
+                    <span>•</span>
+                    <span>{DISCUSSIONS.length} active discussions</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Search forums..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-200 pl-10 pr-4 py-2 rounded-lg w-60 text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {MOCK_FORUMS.map((forum) => (
             <div
               key={forum.id}
@@ -121,13 +145,17 @@ const ForumsPage = () => {
               onClick={() => handleForumClick(forum.id)}
             >
               <div className="h-32 bg-slate-500 relative">
-                {forum.image && (
+                {forum.image ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-black">
                     <img 
                       src={`/images/${forum.image}`} 
                       alt={forum.title}
                       className="max-h-full object-contain"
                     />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
+                    <MessageSquare className="h-8 w-8 text-white opacity-50" />
                   </div>
                 )}
               </div>
@@ -151,7 +179,7 @@ const ForumsPage = () => {
         </div>
 
         <div className="text-sm text-gray-500 mb-6">
-          Viewing 1 - 6 of 6 forums
+          Viewing 1 - {MOCK_FORUMS.length} of {MOCK_FORUMS.length} forums
         </div>
 
         <div className="bg-white rounded-lg p-4">
@@ -172,7 +200,7 @@ const ForumsPage = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-blue-500 text-white text-xs rounded-full px-3 py-1">
+              <div className="bg-purple-500 text-white text-xs rounded-full px-3 py-1">
                 {discussion.group}
               </div>
             </div>
