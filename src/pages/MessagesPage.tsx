@@ -83,7 +83,7 @@ interface User {
 }
 
 const MessagesPage: React.FC = () => {
-  const { conversationId } = useParams<{ conversationId: string }>();
+  const { conversationId, userId } = useParams<{ conversationId?: string; userId?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [messageText, setMessageText] = useState('');
@@ -525,6 +525,57 @@ const MessagesPage: React.FC = () => {
     };
   }, [openDropdownId]);
   
+  // Handle direct user navigation
+  useEffect(() => {
+    if (!user || !userId) return;
+
+    const findOrCreateConversation = async () => {
+      try {
+        // First, check if a conversation already exists with this user
+        const conversationsQuery1 = query(
+          collection(db, 'conversations'),
+          where('participants', 'array-contains', user.uid)
+        );
+        
+        const snapshot = await getDocs(conversationsQuery1);
+        let existingConversation = null;
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.participants.includes(userId)) {
+            existingConversation = { id: doc.id, ...data };
+          }
+        });
+
+        if (existingConversation) {
+          // If conversation exists, navigate to it
+          navigate(`/messages/${existingConversation.id}`);
+        } else {
+          // If no conversation exists, create one
+          const userDoc = await getDoc(doc(db, 'users', userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const newConversation = await addDoc(collection(db, 'conversations'), {
+              participants: [user.uid, userId],
+              createdAt: serverTimestamp(),
+              lastMessage: {
+                text: '',
+                timestamp: serverTimestamp(),
+                senderId: user.uid
+              },
+              isRead: true
+            });
+            navigate(`/messages/${newConversation.id}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error finding/creating conversation:', error);
+      }
+    };
+
+    findOrCreateConversation();
+  }, [user, userId, navigate]);
+
   return (
     <div className="flex h-[calc(100vh-80px)] -mt-4 -mx-4 overflow-hidden">
       {/* Conversation List */}
