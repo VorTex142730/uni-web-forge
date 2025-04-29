@@ -1,41 +1,47 @@
+// src/components/UserProfileDisplay.tsx
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/context/AuthContext'; // Import your useAuth hook
 
-const UserProfilePhoto = () => {
-  const { user, userDetails } = useAuth();
+const UserProfileDisplay: React.FC = () => {
+  const { user, loading, userDetails } = useAuth();
 
-  if (!user) {
-    return <div>Not logged in</div>;
+  if (loading) {
+    return <div>Loading user data...</div>;
   }
 
-  // Use photoURL from either userDetails or the auth user object
-  const photoURL = userDetails?.photoURL || user.photoURL;
+  if (!user) {
+    return <div>Please log in to see your profile.</div>;
+  }
 
-  // Get initials for fallback
-  const getInitials = () => {
-    if (userDetails?.firstName && userDetails?.lastName) {
-      return `${userDetails.firstName[0]}${userDetails.lastName[0]}`.toUpperCase();
-    }
-    return user.displayName 
-      ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase()
-      : 'U';
-  };
+  // Now you can access user.photoURL
+  const userPhoto = user.photoURL || (userDetails?.photoURL ? userDetails.photoURL : null);
+  const displayName = user.displayName || userDetails?.firstName || user.username;
 
   return (
-    <div className="flex items-center gap-4">
-      <Avatar className="h-16 w-16">
-        <AvatarImage src={photoURL} alt="Profile photo" />
-        <AvatarFallback>{getInitials()}</AvatarFallback>
-      </Avatar>
-      <div>
-        <h2 className="font-medium">
-          {userDetails?.firstName || user.displayName} {userDetails?.lastName}
-        </h2>
-        <p className="text-sm text-gray-500">@{userDetails?.username || user.email?.split('@')[0]}</p>
-      </div>
+    <div>
+      <h2>User Profile</h2>
+      {userPhoto ? (
+        <div>
+          <img src={userPhoto} alt={`${displayName}'s profile`} style={{ width: 100, height: 100, borderRadius: '50%' }} />
+          <p>Photo URL: {userPhoto}</p> {/* Display the URL */}
+        </div>
+      ) : (
+        <p>No profile photo available.</p>
+      )}
+      <p>Display Name: {displayName}</p>
+      <p>Username: {user.username}</p>
+      {userDetails && (
+          <>
+              <p>First Name: {userDetails.firstName}</p>
+              <p>Last Name: {userDetails.lastName}</p>
+              {/* Add other userDetails fields you want to display */}
+          </>
+      )}
+
+      {/* Example of how you might call updateProfile */}
+      {/* <button onClick={() => user && updateUserProfile({ photoURL: 'https://example.com/new-photo.jpg' })}>Update Photo</button> */}
     </div>
   );
 };
 
-export default UserProfilePhoto;
+export default UserProfileDisplay;

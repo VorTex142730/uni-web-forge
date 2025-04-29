@@ -68,7 +68,7 @@ const MembersContent = () => {
 
     // Hide already connected or pending
     if (user) {
-      result = result.filter(m => m.id !== user.uid && !connectedIds.includes(m.id) && !pendingIds.includes(m.id));
+      result = result.filter(m => m.id !== user.uid && !connectedIds.includes(m.id));
     }
 
     // Sorting

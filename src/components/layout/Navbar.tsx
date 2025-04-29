@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext'; // Assuming useAuth provides userDetails
 import { toast } from 'sonner';
 import { collection, getDocs, query, where, limit, or } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
@@ -27,6 +27,7 @@ interface QuickSearchResult {
 }
 
 const Navbar = () => {
+  console.log('Navbar component rendering');
   const { isExpanded, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,26 +36,39 @@ const Navbar = () => {
   const [loading, setLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const { user, logout } = useAuth();
+
+  // Destructure userDetails from useAuth
+  const { user, userDetails, logout } = useAuth();
+  console.log("Navbar: user state", user);
+  console.log("Navbar: userDetails state", userDetails);
+
 
   useEffect(() => {
+    console.log('Navbar useEffect: Setting up handleClickOutside');
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        console.log('handleClickOutside: Click outside search results, hiding results');
         setShowResults(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      console.log('Navbar useEffect: Cleaning up handleClickOutside');
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
+    console.log('Navbar useEffect: Debounced search term changed', debouncedSearch);
     const performQuickSearch = async () => {
       if (!debouncedSearch.trim()) {
+        console.log('performQuickSearch: Debounced search term is empty, clearing results');
         setQuickResults([]);
         return;
       }
 
+      console.log('performQuickSearch: Starting quick search for:', debouncedSearch);
       setLoading(true);
       try {
         const results: QuickSearchResult[] = [];
@@ -62,6 +76,7 @@ const Navbar = () => {
 
         // Search users
         try {
+          console.log('performQuickSearch: Searching users for:', searchTerm);
           const usersQuery = query(
             collection(db, 'users'),
             or(
@@ -72,8 +87,12 @@ const Navbar = () => {
             limit(3)
           );
           const usersSnapshot = await getDocs(usersQuery);
+          console.log('performQuickSearch: Users snapshot received', usersSnapshot.docs.length);
           usersSnapshot.forEach(doc => {
             const userData = doc.data();
+            if (userData.photoURL) {
+                console.log('performQuickSearch: Fetched User PhotoURL:', userData.photoURL);
+            }
             if (
               userData.firstName?.toLowerCase().includes(searchTerm) ||
               userData.lastName?.toLowerCase().includes(searchTerm) ||
@@ -83,45 +102,54 @@ const Navbar = () => {
                 id: doc.id,
                 type: 'user',
                 title: `${userData.firstName || ''} ${userData.lastName || ''}`,
-                imageUrl: userData.photoURL
+                imageUrl: userData.photoURL // Use photoURL from user document
               });
             }
           });
+          console.log('performQuickSearch: User results found:', results.filter(r => r.type === 'user').length);
         } catch (error) {
           console.error('Error searching users:', error);
         }
 
         // Search groups
         try {
+          console.log('performQuickSearch: Searching groups for:', searchTerm);
           const groupsQuery = query(
             collection(db, 'groups'),
             where('name', '>=', searchTerm),
             limit(3)
           );
           const groupsSnapshot = await getDocs(groupsQuery);
+          console.log('performQuickSearch: Groups snapshot received', groupsSnapshot.docs.length);
           groupsSnapshot.forEach(doc => {
             const groupData = doc.data();
+            if (groupData.photoURL) {
+                 console.log('performQuickSearch: Fetched Group PhotoURL:', groupData.photoURL);
+            }
             if (groupData.name?.toLowerCase().includes(searchTerm)) {
               results.push({
                 id: doc.id,
                 type: 'group',
                 title: groupData.name,
-                imageUrl: groupData.photoURL
+                imageUrl: groupData.photoURL // Use photoURL from group document
               });
             }
           });
+          console.log('performQuickSearch: Group results found:', results.filter(r => r.type === 'group').length);
         } catch (error) {
           console.error('Error searching groups:', error);
         }
 
         // Search forums
         try {
+          console.log('performQuickSearch: Searching forums for:', searchTerm);
           const forumsQuery = query(
             collection(db, 'forums'),
             where('title', '>=', searchTerm),
             limit(3)
           );
           const forumsSnapshot = await getDocs(forumsQuery);
+          console.log('performQuickSearch: Forums snapshot received', forumsSnapshot.docs.length);
           forumsSnapshot.forEach(doc => {
             const forumData = doc.data();
             if (forumData.title?.toLowerCase().includes(searchTerm)) {
@@ -129,18 +157,22 @@ const Navbar = () => {
                 id: doc.id,
                 type: 'forum',
                 title: forumData.title
+                // Forums don't seem to have imageUrl in the interface or current logic
               });
             }
           });
+          console.log('performQuickSearch: Forum results found:', results.filter(r => r.type === 'forum').length);
         } catch (error) {
           console.error('Error searching forums:', error);
         }
 
+        console.log('performQuickSearch: Setting quick search results:', results);
         setQuickResults(results);
       } catch (error) {
         console.error('Quick search error:', error);
         toast.error('Search failed. Please try again.');
       } finally {
+        console.log('performQuickSearch: Search loading finished');
         setLoading(false);
       }
     };
@@ -149,24 +181,32 @@ const Navbar = () => {
   }, [debouncedSearch]);
 
   const handleNavigation = (path: string) => {
+    console.log('handleNavigation: Navigating to', path);
     navigate(path);
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleSearch: Performing full search for', searchQuery);
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
       setShowResults(false);
+      console.log('handleSearch: Full search initiated, hiding results');
+    } else {
+      console.log('handleSearch: Search query is empty, not navigating');
     }
   };
 
   const handleResultClick = (result: QuickSearchResult) => {
+    console.log('handleResultClick: Navigating to result', result);
     navigate(`/${result.type}s/${result.id}`);
     setShowResults(false);
     setSearchQuery('');
+    console.log('handleResultClick: Navigated, hiding results and clearing search query');
   };
 
   const getResultIcon = (type: string) => {
+    console.log('getResultIcon: Getting icon for type', type);
     switch (type) {
       case 'user':
         return <Users className="h-4 w-4" />;
@@ -180,40 +220,60 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
+    console.log('handleLogout: Initiating logout');
     try {
       await logout();
+      console.log('handleLogout: Logout successful, navigating to login');
       navigate('/login');
       toast.success('Logged out successfully');
     } catch (error) {
+      console.error('handleLogout: Logout failed', error);
       toast.error('Failed to logout');
     }
   };
 
   const getInitials = (name: string) => {
-    return name
+    console.log('getInitials: Getting initials for name', name);
+    // Use display name or try userDetails names if displayName is null
+    const nameToUse = name || userDetails?.firstName || userDetails?.lastName || 'U';
+     if (typeof nameToUse !== 'string' || nameToUse.trim() === '') {
+        return 'U';
+     }
+    return nameToUse
       .split(' ')
       .map(part => part[0])
       .join('')
       .toUpperCase();
   };
 
+  // Calculate the photo URL to use, falling back from user.photoURL to userDetails.photoURL
+  const userPhotoUrl = user?.photoURL || (userDetails?.photoURL ? userDetails.photoURL : '');
+  console.log("Navbar: Calculated userPhotoUrl:", userPhotoUrl);
+  const userDisplayName = user?.displayName || userDetails?.firstName || user?.username || 'User';
+  console.log("Navbar: Calculated userDisplayName:", userDisplayName);
+
+
+  console.log('Navbar component rendering JSX');
   return (
     <div className={`h-16 bg-white flex items-center justify-between px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${
       isExpanded ? 'md:left-64' : 'md:left-16'
     } left-0 z-20 border-b border-gray-200`}>
       <div className="flex items-center">
         {/* Mobile Menu Button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="md:hidden mr-2"
-          onClick={toggleSidebar}
+          onClick={() => {
+            console.log('Mobile Menu Button clicked');
+            toggleSidebar();
+          }}
         >
           <Menu className="h-6 w-6" />
         </Button>
 
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center" onClick={() => console.log('Logo clicked, navigating to home')}>
           <h1 className="text-xl font-bold">HotSpoT</h1>
         </Link>
       </div>
@@ -228,10 +288,16 @@ const Navbar = () => {
               className="w-full bg-gray-100/80 border-none pl-10"
               value={searchQuery}
               onChange={(e) => {
+                console.log('Search input changed:', e.target.value);
                 setSearchQuery(e.target.value);
                 setShowResults(true);
+                console.log('Setting showResults to true on input change');
               }}
-              onFocus={() => setShowResults(true)}
+              onFocus={() => {
+                console.log('Search input focused');
+                setShowResults(true);
+                console.log('Setting showResults to true on input focus');
+              }}
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           </div>
@@ -253,7 +319,7 @@ const Navbar = () => {
                     className="w-full px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 text-left"
                     onClick={() => handleResultClick(result)}
                   >
-                    {result.imageUrl ? (
+                    {result.imageUrl ? ( // Use imageUrl from search result
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={result.imageUrl} alt={result.title} />
                         <AvatarFallback>{result.title[0]}</AvatarFallback>
@@ -290,13 +356,13 @@ const Navbar = () => {
       {/* Actions */}
       <div className="flex items-center space-x-2 md:space-x-4">
         {/* Mobile Search Button */}
-        <Button variant="ghost" size="icon" className="md:hidden">
+        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => console.log('Mobile Search Button clicked')}>
           <Search className="h-5 w-5" />
         </Button>
 
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="text-gray-600 relative"
           onClick={() => handleNavigation('/messages')}
         >
@@ -307,9 +373,9 @@ const Navbar = () => {
             </span>
           )}
         </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="text-gray-600 relative"
           onClick={() => handleNavigation('/notifications')}
         >
@@ -320,9 +386,9 @@ const Navbar = () => {
             </span>
           )}
         </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="text-gray-600 relative"
           onClick={() => handleNavigation('/cart')}
         >
@@ -333,17 +399,18 @@ const Navbar = () => {
             </span>
           )}
         </Button>
-        
+
         {/* User Profile Dropdown - Hide on mobile */}
         <div className="hidden md:block">
-          <DropdownMenu>
+          <DropdownMenu onOpenChange={(open) => console.log('User Profile Dropdown open state changed:', open)}>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 cursor-pointer">
-                <span className="font-medium">{user?.displayName}</span>
+                <span className="font-medium">{userDisplayName}</span> {/* Use calculated display name */}
                 <ChevronDown size={16} className="text-gray-500" />
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.photoURL || ''} alt="Profile" />
-                  <AvatarFallback>{user?.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
+                  {/* Use the calculated userPhotoUrl for the main avatar */}
+                  <AvatarImage src={userPhotoUrl || ''} alt="Profile" />
+                  <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback> {/* Use calculated display name for initials */}
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
@@ -351,83 +418,84 @@ const Navbar = () => {
               <div className="px-4 py-2 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={user?.photoURL || ''} alt="Profile" />
-                    <AvatarFallback>{user?.displayName ? getInitials(user.displayName) : 'U'}</AvatarFallback>
+                    {/* Use the calculated userPhotoUrl for the dropdown avatar */}
+                    <AvatarImage src={userPhotoUrl || ''} alt="Profile" />
+                    <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback> {/* Use calculated display name for initials */}
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-medium">{user?.displayName}</span>
+                    <span className="font-medium">{userDisplayName}</span> {/* Use calculated display name */}
                     <span className="text-sm text-gray-500">@{user?.username}</span>
                   </div>
                 </div>
               </div>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/profile')}
               >
                 <User className="mr-3 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/timeline')}
               >
                 <Clock className="mr-3 h-4 w-4" />
                 <span>Timeline</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/connections')}
               >
                 <Users className="mr-3 h-4 w-4" />
                 <span>Connections</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/groups')}
               >
                 <Users2 className="mr-3 h-4 w-4" />
                 <span>Groups</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/photos')}
               >
                 <Image className="mr-3 h-4 w-4" />
                 <span>Photos</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/videos')}
               >
                 <Video className="mr-3 h-4 w-4" />
                 <span>Videos</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/forums')}
               >
                 <MessageSquare className="mr-3 h-4 w-4" />
                 <span>Forums</span>
               </DropdownMenuItem>
-              
+
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer"
                 onClick={() => handleNavigation('/account')}
               >
                 <Settings className="mr-3 h-4 w-4" />
                 <span>Account Settings</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem 
+
+              <DropdownMenuItem
                 className="px-4 py-2.5 cursor-pointer text-red-600 hover:text-red-700"
                 onClick={handleLogout}
               >
@@ -442,4 +510,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar; 
+export default Navbar;
