@@ -145,17 +145,20 @@ const MessagesPage: React.FC = () => {
 
     const fetchUsers = async () => {
       const usersData: Record<string, User> = {};
-      // Get all unique user IDs from conversations
       const userIds = new Set<string>();
+
+      // Collect unique user IDs from conversations
       conversations.forEach(conv => {
         conv.participants.forEach(id => {
           if (id !== user.uid) userIds.add(id);
         });
       });
+
       // Fetch user data for each ID
       const userDocs = await Promise.all(
         Array.from(userIds).map(userId => getDoc(doc(db, 'users', userId)))
       );
+
       userDocs.forEach(userDoc => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
@@ -163,14 +166,16 @@ const MessagesPage: React.FC = () => {
             id: userDoc.id,
             name: userData.displayName || userData.username || userData.email?.split('@')[0] || 'Unknown User',
             username: userData.username || userData.email?.split('@')[0] || 'unknown',
-            avatar: userData.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
+            avatar: userData.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg', // Use photoURL
             status: userData.status || 'offline',
-            lastActive: userData.lastActive || 'Unknown'
+            lastActive: userData.lastActive || 'Unknown',
           };
         }
       });
+
       setUsers(usersData);
     };
+
     fetchUsers();
   }, [conversations, user]);
   
@@ -582,13 +587,13 @@ const MessagesPage: React.FC = () => {
                   <div className="p-4 text-center text-gray-500">No users found</div>
                 ) : (
                   availableUsers.map(user => (
-                    <div 
+                    <div
                       key={user.id}
                       className="p-4 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
                       onClick={() => startNewConversation(user)}
                     >
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.avatar} />
+                        <AvatarImage src={user.avatar} alt={`${user.name}'s avatar`} />
                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
@@ -618,7 +623,7 @@ const MessagesPage: React.FC = () => {
               const otherParticipantId = conversation.participants.find(id => id !== user?.uid);
               const otherParticipant = otherParticipantId ? users[otherParticipantId] : null;
               const isSelected = conversationId === conversation.id;
-              
+
               return (
                 <Link
                   key={conversation.id}
@@ -627,15 +632,18 @@ const MessagesPage: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="h-12 w-12" />
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={otherParticipant?.avatar} alt={`${otherParticipant?.name}'s avatar`} />
+                        <AvatarFallback>{otherParticipant?.name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
                         <h3 className="font-semibold truncate text-base">{otherParticipant?.name || 'Unknown User'}</h3>
                         <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
-                          {conversation.lastMessage?.timestamp ? 
-                            formatTimestamp(conversation.lastMessage.timestamp) : 
-                            'No messages'}
+                          {conversation.lastMessage?.timestamp
+                            ? formatTimestamp(conversation.lastMessage.timestamp)
+                            : 'No messages'}
                         </span>
                       </div>
                       <p className="text-sm text-gray-500 truncate">
@@ -657,21 +665,24 @@ const MessagesPage: React.FC = () => {
           {/* Header */}
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white shadow-sm">
             <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="md:hidden"
                 onClick={() => navigate('/messages')}
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-              <Avatar className="h-10 w-10" />
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={otherUser?.avatar} alt={`${otherUser?.name}'s avatar`} />
+                <AvatarFallback>{otherUser?.name?.charAt(0)}</AvatarFallback>
+              </Avatar>
               <div>
-                <h3 className="font-semibold text-base">{otherUser.name}</h3>
+                <h3 className="font-semibold text-base">{otherUser?.name}</h3>
                 <p className="text-xs text-gray-400">
-                  {otherUser.status === 'online' 
-                    ? 'Online' 
-                    : `Last active ${otherUser.lastActive || 'unknown'}`}
+                  {otherUser?.status === 'online'
+                    ? 'Online'
+                    : `Last active ${otherUser?.lastActive || 'unknown'}`}
                 </p>
               </div>
             </div>

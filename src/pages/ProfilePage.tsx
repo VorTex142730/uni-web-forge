@@ -2,12 +2,51 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
+import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 
 const ProfilePage: React.FC = () => {
   const { username } = useParams();
   const navigate = useNavigate();
   const { user, userDetails } = useAuth();
-  
+
+  // Add this function to handle file uploads
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    if (file.size > 1000000) { // 1MB limit
+      alert('Image must be smaller than 1MB');
+      return;
+    }
+
+    // Convert to Base64
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const base64String = reader.result as string;
+
+      try {
+        // Update user document in Firestore
+        const db = getFirestore();
+        await updateDoc(doc(db, 'users', user.uid), {
+          photoURL: base64String
+        });
+        alert('Profile picture updated successfully');
+      } catch (error) {
+        console.error('Error updating profile picture:', error);
+        alert('Error updating profile picture');
+      }
+    };
+    reader.onerror = () => {
+      alert('Error reading file');
+    };
+  };
+
   if (!user || !userDetails) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -32,20 +71,34 @@ const ProfilePage: React.FC = () => {
       <div className="relative">
         <div className="bg-gray-500 h-48 bg-opacity-50"></div>
         <div className="absolute left-8 -bottom-16">
-          <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white">
-            <div className="w-full h-full flex items-center justify-center">
-              {user.photoURL ? (
-                <img 
-                  src={user.photoURL} 
-                  alt={user.displayName} 
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              )}
-            </div>
+          {/* Avatar Section */}
+          <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white relative">
+            {userDetails?.photoURL ? (
+              <img 
+                src={userDetails.photoURL} 
+                alt={user.displayName} 
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
+            
+            {/* Add upload functionality */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="avatarUpload"
+            />
+            <label
+              htmlFor="avatarUpload"
+              className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer transition-opacity"
+            >
+              <span className="text-white text-sm">Upload</span>
+            </label>
           </div>
           <div className="absolute top-0 right-0">
             <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
