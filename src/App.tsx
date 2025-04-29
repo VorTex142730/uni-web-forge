@@ -172,6 +172,11 @@ function App() {
                           <MessagesPage />
                         </ProtectedRoute>
                       } />
+                      <Route path="/messages/user/:userId" element={
+                        <ProtectedRoute>
+                          <MessagesPage />
+                        </ProtectedRoute>
+                      } />
                     </Route>
 
                     {/* Catch-all route */}

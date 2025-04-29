@@ -9,16 +9,41 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Search, Users, UserPlus, MessageSquare, MoreHorizontal } from 'lucide-react';
 
+interface Connection {
+  id: string;
+  user1: string;
+  user2: string;
+  createdAt: any;
+}
+
+interface ConnectionRequest {
+  id: string;
+  from: string;
+  to: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: any;
+}
+
+interface UserDetails {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  college?: string;
+  role?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
 const ConnectionsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user, userDetails } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'connections' | 'requests'>('connections');
-  const [connections, setConnections] = useState<any[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [requests, setRequests] = useState<ConnectionRequest[]>([]);
   const [loading, setLoading] = useState(false);
-  const [connectionUsers, setConnectionUsers] = useState<any[]>([]);
-  const [requestUsers, setRequestUsers] = useState<any[]>([]);
+  const [connectionUsers, setConnectionUsers] = useState<UserDetails[]>([]);
+  const [requestUsers, setRequestUsers] = useState<UserDetails[]>([]);
   const [mutualConnections, setMutualConnections] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
   const [removingRequestId, setRemovingRequestId] = useState<string | null>(null);
@@ -28,13 +53,13 @@ const ConnectionsPage: React.FC = () => {
     setLoading(true);
     const fetchConnectionsAndUsers = async () => {
       const connectionsData = await getConnections(user.uid);
-      setConnections(connectionsData);
+      setConnections(connectionsData as Connection[]);
       
       // Fetch user details for each connection
-      const userPromises = connectionsData.map(async (conn) => {
+      const userPromises = connectionsData.map(async (conn: Connection) => {
         const otherUserId = conn.user1 === user.uid ? conn.user2 : conn.user1;
         const userDoc = await getDoc(doc(db, 'users', otherUserId));
-        return { id: otherUserId, ...userDoc.data() };
+        return { id: otherUserId, ...userDoc.data() } as UserDetails;
       });
       
       const users = await Promise.all(userPromises);
@@ -42,7 +67,7 @@ const ConnectionsPage: React.FC = () => {
 
       // Fetch mutual connections count for each user
       const mutualPromises = users.map(async (connectedUser) => {
-        const userConnections = await getConnections(connectedUser.id);
+        const userConnections = await getConnections(connectedUser.id) as Connection[];
         const mutualCount = userConnections.filter((conn) =>
           (conn.user1 === user.uid || conn.user2 === user.uid) &&
           (conn.user1 === connectedUser.id || conn.user2 === connectedUser.id)
@@ -54,16 +79,16 @@ const ConnectionsPage: React.FC = () => {
       const mutualMap = mutualCounts.reduce((acc, { userId, count }) => {
         acc[userId] = count;
         return acc;
-      }, {});
+      }, {} as Record<string, number>);
       setMutualConnections(mutualMap);
       
       // Fetch requests and their user details
       const requestsData = await getIncomingRequests(user.uid);
-      setRequests(requestsData);
+      setRequests(requestsData as ConnectionRequest[]);
       
-      const requestUserPromises = requestsData.map(async (req) => {
+      const requestUserPromises = requestsData.map(async (req: ConnectionRequest) => {
         const userDoc = await getDoc(doc(db, 'users', req.from));
-        return { id: req.from, ...userDoc.data() };
+        return { id: req.from, ...userDoc.data() } as UserDetails;
       });
       
       const requestUsers = await Promise.all(requestUserPromises);
@@ -73,7 +98,7 @@ const ConnectionsPage: React.FC = () => {
     fetchConnectionsAndUsers().finally(() => setLoading(false));
   }, [user]);
 
-  const handleAccept = async (request: any) => {
+  const handleAccept = async (request: ConnectionRequest) => {
     try {
       await acceptConnectionRequest(request.id);
       await createConnectionAcceptedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
@@ -85,12 +110,12 @@ const ConnectionsPage: React.FC = () => {
         setRequestUsers((prev) => prev.filter((u) => u.id !== request.from));
         setRemovingRequestId(null);
         // Refetch connections to update UI
-        const connectionsData = await getConnections(user.uid);
+        const connectionsData = await getConnections(user.uid) as Connection[];
         setConnections(connectionsData);
         const userPromises = connectionsData.map(async (conn) => {
           const otherUserId = conn.user1 === user.uid ? conn.user2 : conn.user1;
           const userDoc = await getDoc(doc(db, 'users', otherUserId));
-          return { id: otherUserId, ...userDoc.data() };
+          return { id: otherUserId, ...userDoc.data() } as UserDetails;
         });
         const users = await Promise.all(userPromises);
         setConnectionUsers(users);
@@ -101,7 +126,7 @@ const ConnectionsPage: React.FC = () => {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleReject = async (request: any) => {
+  const handleReject = async (request: ConnectionRequest) => {
     try {
       await rejectConnectionRequest(request.id);
       await createConnectionRejectedNotification(request.from, user.uid, userDetails.firstName + ' ' + userDetails.lastName);
@@ -267,7 +292,11 @@ const ConnectionsPage: React.FC = () => {
                               <p className="text-sm text-gray-500">{member.role}</p>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate(`/messages/user/${member.id}`)}
+                              >
                                 <MessageSquare className="h-4 w-4 mr-2" />
                                 Message
                               </Button>
