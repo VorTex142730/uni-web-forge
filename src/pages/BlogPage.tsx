@@ -16,11 +16,11 @@ const samplePosts: BlogPost[] = [
   {
     id: '1',
     title: 'How to Create Community',
-    excerpt: 'Building a thriving community starts with connection—here’s how to foster meaningful relationships and create a sense of belonging..',
+    excerpt: 'Building a thriving community starts with connection—here\'s how to foster meaningful relationships and create a sense of belonging.',
     category: 'Social Media',
     date: 'April 30, 2025',
     author: 'CRIMSONTHEMES',
-    imageUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-4.0.3'
+    imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3'
   },
   {
     id: '2',
@@ -29,16 +29,16 @@ const samplePosts: BlogPost[] = [
     category: 'Social Media',
     date: 'April 19, 2025',
     author: 'CRIMSONTHEMES',
-    imageUrl: 'https://images.unsplash.com/photo-1518457607834-6e8d80c183c5?ixlib=rb-4.0.3'
+    imageUrl: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3'
   },
   {
     id: '3',
     title: "How to Use Groups to Connect on a Social Media Platform",
-    excerpt: 'Groups on social media platforms are a powerful way to connect with like-minded people—here’s how to make the most of them..',
+    excerpt: 'Groups on social media platforms are a powerful way to connect with like-minded people—here\'s how to make the most of them.',
     category: 'Social Media',
     date: 'April 10, 2025',
     author: 'CRIMSONTHEMES',
-    imageUrl: 'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?ixlib=rb-4.0.3'
+    imageUrl: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?ixlib=rb-4.0.3'
   },
   {
     id: '4',
@@ -47,7 +47,7 @@ const samplePosts: BlogPost[] = [
     category: 'Social Media',
     date: 'FEBRUARY 14, 2025',
     author: 'CRIMSONTHEMES',
-    imageUrl: 'https://images.unsplash.com/photo-1545389336-cf090694435e?ixlib=rb-4.0.3'
+    imageUrl: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?ixlib=rb-4.0.3'
   }
 ];
 
@@ -81,11 +81,6 @@ const BlogPage: React.FC = () => {
                       alt={post.title}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-4 left-4">
-                      <span className="inline-block bg-orange-100 text-orange-500 px-3 py-1 rounded-full text-sm font-medium">
-                        {post.category}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
