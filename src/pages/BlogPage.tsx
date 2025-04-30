@@ -55,7 +55,7 @@ const BlogPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#fff4f4] py-8">
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header Section */}
         <div className="text-center mb-12">
