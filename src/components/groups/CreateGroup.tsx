@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Upload, Search, UserPlus } from 'lucide-react';
-import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
+import { getConnections } from '@/lib/firebase/connections';
+import { doc as firestoreDoc } from 'firebase/firestore';
 
 interface CreateGroupProps {
   onCancel: () => void;
@@ -48,6 +50,9 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [coverPhotoPreview, setCoverPhotoPreview] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [connections, setConnections] = useState<any[]>([]);
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
+  const [inviteWarning, setInviteWarning] = useState('');
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'coverPhoto') => {
     const file = e.target.files?.[0];
@@ -65,13 +70,42 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
     }
   };
 
+  useEffect(() => {
+    if (currentStep !== 6 || !user) return;
+    setConnectionsLoading(true);
+    (async () => {
+      try {
+        const conns = await getConnections(user.uid);
+        const userPromises = conns.map(async (conn: any) => {
+          const otherUserId = conn.user1 === user.uid ? conn.user2 : conn.user1;
+          const userDoc = await getDoc(firestoreDoc(db, 'users', otherUserId));
+          return userDoc.exists() ? { id: otherUserId, ...userDoc.data() } : null;
+        });
+        const users = (await Promise.all(userPromises)).filter(Boolean);
+        setConnections(users);
+      } catch (e) {
+        setConnections([]);
+      } finally {
+        setConnectionsLoading(false);
+      }
+    })();
+  }, [currentStep, user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error('You must be logged in to create a group');
       return;
     }
-
+    if (currentStep !== steps.length) {
+      return;
+    }
+    if (formData.selectedMembers.length === 0) {
+      setInviteWarning('Please select at least one member to invite.');
+      return;
+    } else {
+      setInviteWarning('');
+    }
     setLoading(true);
 
     try {
@@ -157,7 +191,11 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
           <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-gray-700">Privacy</h3>
-              <div className="flex space-x-4">
+              <RadioGroup
+                value={formData.privacy}
+                onValueChange={(val) => setFormData((prev) => ({ ...prev, privacy: val as 'public' | 'private' }))}
+                className="flex space-x-4"
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="public" id="public" />
                   <Label htmlFor="public">Public</Label>
@@ -166,7 +204,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
                   <RadioGroupItem value="private" id="private" />
                   <Label htmlFor="private">Private</Label>
                 </div>
-              </div>
+              </RadioGroup>
             </div>
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-gray-700">Permissions</h3>
@@ -284,30 +322,40 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
                 className="pl-10"
               />
             </div>
-            
-            <div className="border rounded-lg divide-y">
-              {['John Doe', 'Jane Smith', 'Mike Johnson'].map((member) => (
-                <div
-                  key={member}
-                  className="flex items-center justify-between p-3"
-                >
-                  <span className="text-sm">{member}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        selectedMembers: [...prev.selectedMembers, member],
-                      }))
-                    }
-                  >
-                    <UserPlus className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
+            {connectionsLoading ? (
+              <div className="p-4 text-center text-gray-500">Loading connections...</div>
+            ) : connections.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">No connections found</div>
+            ) : (
+              <div className="border rounded-lg divide-y">
+                {connections
+                  .filter((user) => {
+                    const name = (user.firstName || '') + ' ' + (user.lastName || '');
+                    return name.toLowerCase().includes(searchQuery.toLowerCase()) || (user.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+                  })
+                  .map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-3"
+                    >
+                      <span className="text-sm">{user.firstName || ''} {user.lastName || ''} {user.email ? <span className='text-xs text-gray-400'>({user.email})</span> : ''}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            selectedMembers: [...prev.selectedMembers, user.id],
+                          }))
+                        }
+                        disabled={formData.selectedMembers.includes(user.id)}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            )}
             {formData.selectedMembers.length > 0 && (
               <div className="space-y-3">
                 <Textarea
@@ -319,30 +367,33 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
                   className="w-full h-24 text-sm"
                 />
                 <div className="space-y-2">
-                  {formData.selectedMembers.map((member) => (
-                    <div
-                      key={member}
-                      className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded text-sm"
-                    >
-                      <span>{member}</span>
-                      <button
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            selectedMembers: prev.selectedMembers.filter(
-                              (m) => m !== member
-                            ),
-                          }))
-                        }
-                        className="text-gray-400 hover:text-gray-600"
+                  {formData.selectedMembers.map((memberId) => {
+                    const user = connections.find((u) => u.id === memberId);
+                    if (!user) return null;
+                    return (
+                      <div
+                        key={memberId}
+                        className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded text-sm"
                       >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                        <span>{user.firstName || ''} {user.lastName || ''} {user.email ? <span className='text-xs text-gray-400'>({user.email})</span> : ''}</span>
+                        <button
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              selectedMembers: prev.selectedMembers.filter((m) => m !== memberId),
+                            }))
+                          }
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
+            {inviteWarning && <div className="text-red-500 text-sm mt-2">{inviteWarning}</div>}
           </div>
         );
 
@@ -401,9 +452,10 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
                   {currentStep === 1 ? 'Cancel' : 'Back'}
                 </Button>
                 <Button
-                  type="submit"
+                  type={currentStep === steps.length ? "submit" : "button"}
                   size="sm"
                   disabled={loading}
+                  onClick={currentStep === steps.length ? undefined : handleNext}
                 >
                   {loading ? (
                     <div className="flex items-center space-x-2">

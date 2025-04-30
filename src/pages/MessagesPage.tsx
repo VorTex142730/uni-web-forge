@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Search, 
   Edit, 
@@ -60,6 +61,7 @@ interface Message {
   deleted?: boolean;
   deletedFor?: string[];
   seenBy?: string[];
+  replyTo?: string;
 }
 
 interface Conversation {
@@ -97,7 +99,7 @@ const MessagesPage: React.FC = () => {
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [newConversationUser, setNewConversationUser] = useState<User | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
@@ -105,6 +107,8 @@ const MessagesPage: React.FC = () => {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; message: Message } | null>(null);
   
   // Fetch conversations for the current user
   useEffect(() => {
@@ -295,14 +299,16 @@ const MessagesPage: React.FC = () => {
     
     try {
       // Add message to Firestore
-      const messageData = {
+      const messageData: any = {
         conversationId,
         senderId: user.uid,
         text: messageText.trim(),
         timestamp: serverTimestamp(),
         isRead: false
       };
-      
+      if (replyToMessage) {
+        messageData.replyTo = replyToMessage.id;
+      }
       await addDoc(collection(db, 'messages'), messageData);
       
       // Update conversation's last message
@@ -315,6 +321,7 @@ const MessagesPage: React.FC = () => {
       });
       
       setMessageText('');
+      setReplyToMessage(null);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -469,6 +476,30 @@ const MessagesPage: React.FC = () => {
     }, 2000);
   };
 
+  // Handle Shift+Enter for new line
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        // Allow the default behavior for Shift+Enter (new line)
+        return;
+      } else {
+        // Prevent form submission on Enter without Shift
+        e.preventDefault();
+        if (messageText.trim() !== '') {
+          handleSendMessage(e as any);
+        }
+      }
+    }
+  };
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
+    }
+  }, [messageText]);
+
   // Message edit/delete logic
   const handleEditMessage = (msg: Message) => {
     setEditingMessageId(msg.id);
@@ -575,6 +606,14 @@ const MessagesPage: React.FC = () => {
 
     findOrCreateConversation();
   }, [user, userId, navigate]);
+
+  // Add this effect to close context menu on outside click
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handleClick = () => setContextMenu(null);
+    window.addEventListener('mousedown', handleClick);
+    return () => window.removeEventListener('mousedown', handleClick);
+  }, [contextMenu]);
 
   return (
     <div className="flex h-[calc(100vh-80px)] -mt-4 -mx-4 overflow-hidden">
@@ -747,18 +786,33 @@ const MessagesPage: React.FC = () => {
             {messages.map(message => {
               const isOwn = message.senderId === user?.uid;
               const isDeleted = message.deleted || (message.deletedFor && message.deletedFor.includes(user.uid));
-              
+              // Find the replied-to message if any
+              const repliedMessage = message.replyTo ? messages.find(m => m.id === message.replyTo) : null;
+
               return (
                 <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}>
                   {!isOwn && (
                     <Avatar className="h-8 w-8 mr-2 mt-1" />
                   )}
                   <div className="max-w-[70%] flex flex-col items-end">
-                    <div className={
-                        isOwn 
-                        ? 'bg-blue-100 text-blue-900 rounded-2xl rounded-br-md shadow-sm px-4 py-2 transition-colors'
-                        : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md shadow-sm px-4 py-2 transition-colors'
-                    }>
+                    <div
+                      className={
+                        isOwn
+                          ? 'bg-blue-100 text-blue-900 rounded-2xl rounded-br-md shadow-sm px-4 py-2 transition-colors'
+                          : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md shadow-sm px-4 py-2 transition-colors'
+                      }
+                      onContextMenu={e => {
+                        e.preventDefault();
+                        setContextMenu({ x: e.clientX, y: e.clientY, message });
+                      }}
+                    >
+                      {/* Show replied-to message preview if any */}
+                      {repliedMessage && (
+                        <div className="mb-1 px-2 py-1 border-l-4 border-blue-400 bg-blue-50 text-xs text-gray-700 max-w-xs truncate">
+                          <span className="font-medium">{repliedMessage.senderId === user?.uid ? 'You' : users[repliedMessage.senderId]?.name || 'User'}: </span>
+                          {repliedMessage.text}
+                        </div>
+                      )}
                       {isDeleted ? (
                         <span className="italic text-gray-400">This message was deleted</span>
                       ) : editingMessageId === message.id ? (
@@ -769,7 +823,7 @@ const MessagesPage: React.FC = () => {
                         </form>
                       ) : (
                         <>
-                      <ReactMarkdown>{message.text}</ReactMarkdown>
+                          <ReactMarkdown>{message.text}</ReactMarkdown>
                           {message.edited && <span className="ml-2 text-xs italic text-gray-400">(edited)</span>}
                         </>
                       )}
@@ -820,21 +874,52 @@ const MessagesPage: React.FC = () => {
             {otherTyping && (
               <div className="text-xs text-gray-500 mb-2">{otherUser.name} is typing...</div>
             )}
+            {/* Context menu for reply */}
+            {contextMenu && (
+              <div
+                className="fixed z-50 bg-white border rounded shadow-lg py-1 text-sm"
+                style={{ left: contextMenu.x, top: contextMenu.y }}
+                onContextMenu={e => e.preventDefault()}
+              >
+                <button
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onMouseDown={() => {
+                    setReplyToMessage(contextMenu.message);
+                    setContextMenu(null);
+                  }}
+                >
+                  Reply
+                </button>
+              </div>
+            )}
           </div>
           
           {/* Input */}
           <div className="p-4 border-t border-gray-100 bg-white shadow-sm">
+            {replyToMessage && (
+              <div className="flex items-center bg-gray-100 px-3 py-2 mb-2 rounded border-l-4 border-blue-400">
+                <div className="flex-1">
+                  <div className="text-xs text-gray-500">Replying to {replyToMessage.senderId === user?.uid ? 'yourself' : users[replyToMessage.senderId]?.name || 'User'}</div>
+                  <div className="text-sm text-gray-700 truncate max-w-xs">{replyToMessage.text}</div>
+                </div>
+                <button className="ml-2 text-gray-400 hover:text-gray-600" onClick={() => setReplyToMessage(null)}>
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <Button type="button" size="icon" variant="ghost">
                 <Image className="h-5 w-5 text-gray-400" />
               </Button>
-              <Input
+              <Textarea
                 ref={inputRef}
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 onInput={handleTyping}
+                onKeyDown={handleKeyDown}
                 placeholder="Write a message..."
-                className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="flex-1 bg-gray-50 px-4 py-2 focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[120px] overflow-hidden"
+                rows={1}
               />
               <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                 <PopoverTrigger asChild>
