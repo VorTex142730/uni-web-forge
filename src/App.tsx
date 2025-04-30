@@ -33,6 +33,7 @@ import ProductDetailsPage from '@/pages/ProductDetailsPage';
 import MessagesPage from '@/pages/MessagesPage';
 import BlogPage from '@/pages/BlogPage';
 import BlogPostPage from '@/pages/BlogPostPage';
+import CreateBlogPostPage from '@/pages/CreateBlogPostPage';
 
 const queryClient = new QueryClient();
 
@@ -182,6 +183,11 @@ function App() {
                       <Route path="/blog" element={
                         <ProtectedRoute>
                           <BlogPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/blog/create" element={
+                        <ProtectedRoute>
+                          <CreateBlogPostPage />
                         </ProtectedRoute>
                       } />
                       <Route path="/blog/:id" element={
