@@ -62,7 +62,8 @@ const ProfilePage: React.FC = () => {
     { label: 'Groups', path: '/groups' },
     { label: 'Videos', path: '/videos' },
     { label: 'Photos', path: '/photos' },
-    { label: 'Forums', path: '/forums' }
+    { label: 'Forums', path: '/forums' },
+    { label: 'Blog', path: '/blog' }
   ];
 
   return (

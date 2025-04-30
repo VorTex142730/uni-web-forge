@@ -31,6 +31,7 @@ import NotificationList from '@/components/notifications/NotificationList';
 import ShopPage from '@/pages/ShopPage';
 import ProductDetailsPage from '@/pages/ProductDetailsPage';
 import MessagesPage from '@/pages/MessagesPage';
+import BlogPage from '@/pages/BlogPage';
 
 const queryClient = new QueryClient();
 
@@ -175,6 +176,16 @@ function App() {
                       <Route path="/messages/user/:userId" element={
                         <ProtectedRoute>
                           <MessagesPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/blog" element={
+                        <ProtectedRoute>
+                          <BlogPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/blog/:id" element={
+                        <ProtectedRoute>
+                          <BlogPage />
                         </ProtectedRoute>
                       } />
                     </Route>
