@@ -118,17 +118,17 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
   return (
     <div
       className={cn(
-        'bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 flex flex-col',
+        'bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200/50 flex flex-col hover:scale-[1.02]',
       )}
     >
       {!isCurrentUser && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="absolute top-2 right-2 p-1 text-gray-500 hover:text-gray-700"
+              className="absolute top-2 right-2 p-1.5 text-gray-500 hover:text-gray-700 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors duration-200"
               aria-label="Member options"
             >
-              <MoreVertical className="h-5 w-5" />
+              <MoreVertical className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -138,49 +138,64 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
         </DropdownMenu>
       )}
 
-      <div className="p-5 text-center flex-grow">
-        <div className="relative mx-auto w-20 h-20 mb-3">
-          <Avatar className="h-20 w-20 border-2 border-gray-200">
+      <div className="p-6 text-center flex-grow">
+        <div className="relative mx-auto w-24 h-24 mb-4">
+          <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
             <AvatarImage
               src={member.photoURL || undefined}
               alt={`${member.firstName || ''} ${member.lastName || ''}'s Profile`}
             />
-            <AvatarFallback className="text-xl bg-gray-100 text-gray-500">
+            <AvatarFallback className="text-2xl bg-gradient-to-br from-pink-100 to-rose-100 text-gray-600">
               {getInitials(member.firstName, member.lastName)}
             </AvatarFallback>
           </Avatar>
         </div>
 
-        <div className="text-base font-semibold truncate" title={`${member.firstName || ''} ${member.lastName || ''}`}>
+        <div className="text-lg font-semibold truncate mb-2" title={`${member.firstName || ''} ${member.lastName || ''}`}>
           {`${member.firstName || 'Member'} ${member.lastName || ''}`}
         </div>
 
         {member.role && (
-          <div className={cn('inline-block px-3 py-1 rounded-full text-xs', roleStyle)}>
+          <div className={cn('inline-block px-4 py-1.5 rounded-full text-sm font-medium shadow-sm', roleStyle)}>
             {member.role}
           </div>
         )}
 
-        <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-          {member.college && <div>{member.college}</div>}
-          <div>Joined: {getJoinedDate()}</div>
+        <div className="text-sm text-gray-500 mt-3 space-y-1">
+          {member.college && (
+            <div className="flex items-center justify-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              {member.college}
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Joined: {getJoinedDate()}
+          </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-100 p-3">
+      <div className="p-4 bg-gray-50/50 backdrop-blur-sm border-t border-gray-200/50">
         {isCurrentUser ? (
           <div className="text-center text-sm text-gray-500">This is you</div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-colors duration-200"
               disabled={sendingRequest || connectionStatus !== 'none'}
               onClick={handleConnect}
             >
               {connectionStatus === 'connected' ? 'Connected' : connectionStatus === 'pending' ? 'Pending' : 'Connect'}
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-colors duration-200"
+            >
               <Mail className="h-4 w-4 mr-2" />
               Message
             </Button>
