@@ -3,18 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BlogService, BlogPost } from '@/services/blogService';
 import { format } from 'date-fns';
+import { collection, getCountFromServer } from 'firebase/firestore';
+import { db } from '@/config/firebaseConfig';
 
 const BlogPage: React.FC = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [counts, setCounts] = useState<Record<string, { likes: number; comments: number }>>({});
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         const blogPosts = await BlogService.getPosts();
         setPosts(blogPosts);
+        // Fetch likes and comments count for each post
+        const countsObj: Record<string, { likes: number; comments: number }> = {};
+        await Promise.all(blogPosts.map(async (post) => {
+          const likesSnap = await getCountFromServer(collection(db, 'blogPosts', post.id, 'likes'));
+          const commentsSnap = await getCountFromServer(collection(db, 'blogPosts', post.id, 'comments'));
+          countsObj[post.id] = {
+            likes: likesSnap.data().count,
+            comments: commentsSnap.data().count,
+          };
+        }));
+        setCounts(countsObj);
       } catch (err) {
         setError('Failed to load blog posts');
         console.error('Error fetching blog posts:', err);
@@ -102,8 +116,8 @@ const BlogPage: React.FC = () => {
                       Read More →
                     </Button>
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>{post.likes} likes</span>
-                      <span>{post.comments} comments</span>
+                      <span>{counts[post.id]?.likes ?? 0} likes</span>
+                      <span>{counts[post.id]?.comments ?? 0} comments</span>
                     </div>
                   </div>
                 </div>

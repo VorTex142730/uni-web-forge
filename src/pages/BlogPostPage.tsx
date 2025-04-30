@@ -117,7 +117,7 @@ const BlogPostPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <article className="max-w-2xl mx-auto px-2 py-8">
+      <article className="max-w-4xl mx-auto px-6 py-12">
         {/* Back Button */}
         <Button
           variant="ghost"
