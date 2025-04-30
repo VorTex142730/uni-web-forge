@@ -15,37 +15,37 @@ interface BlogPost {
 const samplePosts: BlogPost[] = [
   {
     id: '1',
-    title: 'Processing Tips To Improve Your Photos',
-    excerpt: 'Learn the essential techniques and tools to enhance your photography with these professional processing tips.',
-    category: 'Lifestyle',
-    date: 'FEBRUARY 13, 2023',
+    title: 'How to Create Community',
+    excerpt: 'Building a thriving community starts with connection—here’s how to foster meaningful relationships and create a sense of belonging..',
+    category: 'Social Media',
+    date: 'April 30, 2025',
     author: 'CRIMSONTHEMES',
     imageUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-4.0.3'
   },
   {
     id: '2',
-    title: 'Pictures Of The Year – Real Life & Moments',
-    excerpt: 'A collection of breathtaking photographs capturing the most memorable moments of the year.',
-    category: 'Lifestyle / Travel',
-    date: 'FEBRUARY 13, 2023',
+    title: 'Tips for Growing Your Following on a Social Media Platform',
+    excerpt: 'Want to boost your presence on a social media platform? These practical tips will help you grow your following and increase engagement.',
+    category: 'Social Media',
+    date: 'April 19, 2025',
     author: 'CRIMSONTHEMES',
     imageUrl: 'https://images.unsplash.com/photo-1518457607834-6e8d80c183c5?ixlib=rb-4.0.3'
   },
   {
     id: '3',
-    title: "We Can't Get Enough Of These Hairstyles",
-    excerpt: 'Discover the latest trending hairstyles that are taking the fashion world by storm.',
-    category: 'Lifestyle',
-    date: 'FEBRUARY 13, 2023',
+    title: "How to Use Groups to Connect on a Social Media Platform",
+    excerpt: 'Groups on social media platforms are a powerful way to connect with like-minded people—here’s how to make the most of them..',
+    category: 'Social Media',
+    date: 'April 10, 2025',
     author: 'CRIMSONTHEMES',
     imageUrl: 'https://images.unsplash.com/photo-1522336572468-97b06e8ef143?ixlib=rb-4.0.3'
   },
   {
     id: '4',
-    title: 'The Art of Mindful Living',
-    excerpt: 'Explore ways to incorporate mindfulness into your daily routine for a more balanced life.',
-    category: 'Wellness',
-    date: 'FEBRUARY 14, 2023',
+    title: 'The Power of Stories on a Social Media Platform',
+    excerpt: 'Stories are a dynamic way to share moments on social media—learn how to use them to engage your audience effectively.',
+    category: 'Social Media',
+    date: 'FEBRUARY 14, 2025',
     author: 'CRIMSONTHEMES',
     imageUrl: 'https://images.unsplash.com/photo-1545389336-cf090694435e?ixlib=rb-4.0.3'
   }
