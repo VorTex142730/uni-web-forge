@@ -95,12 +95,12 @@ const MembersContent = () => {
   return (
     <div className="min-h-screen bg-[#fff4f4]">
       {/* Header with Fixed Gradient */}
-      <div className="bg-gradient-to-br from-pink-500 to-rose-500">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="w-full bg-gradient-to-r from-blue-400 to-blue-500">
+        <div className="w-full max-w-7xl mx-auto px-4">
           {/* Cover Photo Area */}
           <div className="relative h-40">
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-400 to-rose-400" />
-            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500" />
+            <div className="absolute inset-0 bg-black/5" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-center gap-4">
                 {userDetails?.photoURL ? (
@@ -135,14 +135,14 @@ const MembersContent = () => {
             <input
               type="text"
               placeholder="Search Members..."
-              className="border border-gray-200 pl-10 pr-4 py-2 rounded-lg w-full text-sm bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
+              className="border border-gray-200 pl-10 pr-4 py-2 rounded-lg w-full text-sm bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
 
           <select
-            className="border border-gray-200 px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
+            className="border border-gray-200 px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             value={sortBy}
             onChange={e => setSortBy(e.target.value)}
           >
@@ -152,13 +152,13 @@ const MembersContent = () => {
 
           <div className="flex border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
             <button
-              className={`p-2 ${view === 'grid' ? 'bg-pink-100 text-pink-600' : 'bg-white'}`}
+              className={`p-2 ${view === 'grid' ? 'bg-blue-100 text-blue-600' : 'bg-white'}`}
               onClick={() => setView('grid')}
             >
               <LayoutGrid className="h-5 w-5" />
             </button>
             <button
-              className={`p-2 ${view === 'list' ? 'bg-pink-100 text-pink-600' : 'bg-white'}`}
+              className={`p-2 ${view === 'list' ? 'bg-blue-100 text-blue-600' : 'bg-white'}`}
               onClick={() => setView('list')}
             >
               <List className="h-5 w-5" />

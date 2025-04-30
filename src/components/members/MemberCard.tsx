@@ -145,7 +145,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
               src={member.photoURL || undefined}
               alt={`${member.firstName || ''} ${member.lastName || ''}'s Profile`}
             />
-            <AvatarFallback className="text-2xl bg-gradient-to-br from-pink-100 to-rose-100 text-gray-600">
+            <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-100 to-blue-200 text-gray-600">
               {getInitials(member.firstName, member.lastName)}
             </AvatarFallback>
           </Avatar>
@@ -186,7 +186,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
-              className="w-full hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-colors duration-200"
+              className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
               disabled={sendingRequest || connectionStatus !== 'none'}
               onClick={handleConnect}
             >
@@ -194,7 +194,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
             </Button>
             <Button 
               variant="outline" 
-              className="w-full hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-colors duration-200"
+              className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
             >
               <Mail className="h-4 w-4 mr-2" />
               Message
