@@ -1,14 +1,15 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 
 const LayoutContent = () => {
   const { isExpanded } = useSidebar();
+  const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fff4f4]">
       <Sidebar />
       <div className={`transition-all duration-300 ${isExpanded ? 'pl-64' : 'pl-16'}`}>
         <Navbar />
