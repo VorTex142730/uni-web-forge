@@ -49,6 +49,7 @@ import {
   getDocs,
   Timestamp
 } from 'firebase/firestore';
+import remarkBreaks from 'remark-breaks';
 
 interface Message {
   id: string;
@@ -302,7 +303,7 @@ const MessagesPage: React.FC = () => {
       const messageData: any = {
         conversationId,
         senderId: user.uid,
-        text: messageText.trim(),
+        text: messageText.replace(/^\s+|\s+$/g, ''), // Only trim leading/trailing whitespace
         timestamp: serverTimestamp(),
         isRead: false
       };
@@ -314,7 +315,7 @@ const MessagesPage: React.FC = () => {
       // Update conversation's last message
       await updateDoc(doc(db, 'conversations', conversationId), {
         lastMessage: {
-          text: messageText.trim(),
+          text: messageText.replace(/^\s+|\s+$/g, ''), // Only trim leading/trailing whitespace
           timestamp: serverTimestamp(),
           senderId: user.uid
         }
@@ -823,7 +824,7 @@ const MessagesPage: React.FC = () => {
                         </form>
                       ) : (
                         <>
-                          <ReactMarkdown>{message.text}</ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkBreaks]}>{message.text}</ReactMarkdown>
                           {message.edited && <span className="ml-2 text-xs italic text-gray-400">(edited)</span>}
                         </>
                       )}
