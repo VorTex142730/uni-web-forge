@@ -7,9 +7,11 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   updateProfile,
-  UserCredential
+  UserCredential,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface UserDetails {
   firstName: string;
@@ -38,6 +40,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<UserCredential>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: { displayName?: string; photoURL?: string }) => Promise<void>;
 }
@@ -104,6 +107,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Check if user exists in Firestore
+      const userDocRef = doc(db, 'users', result.user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        // Create user document if it doesn't exist
+        await setDoc(userDocRef, {
+          firstName: result.user.displayName?.split(' ')[0] || '',
+          lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
+          email: result.user.email,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      
+      await fetchUserDetails(result.user.uid);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -131,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     login,
     register,
+    loginWithGoogle,
     logout,
     updateUserProfile,
   };

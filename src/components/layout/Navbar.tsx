@@ -246,10 +246,10 @@ const Navbar = () => {
       .toUpperCase();
   };
 
-  // Calculate the photo URL to use, falling back from user.photoURL to userDetails.photoURL
-  const userPhotoUrl = user?.photoURL || (userDetails?.photoURL ? userDetails.photoURL : '');
-  console.log("Navbar: Calculated userPhotoUrl:", userPhotoUrl);
+  // Calculate the photo URL to use, use only userDetails.photoURL, fallback to default
+  const userPhotoUrl = userDetails?.photoURL || '/default-avatar.png';
   const userDisplayName = user?.displayName || userDetails?.firstName || user?.username || 'User';
+  console.log("Navbar: Calculated userPhotoUrl:", userPhotoUrl);
   console.log("Navbar: Calculated userDisplayName:", userDisplayName);
 
 
@@ -408,9 +408,8 @@ const Navbar = () => {
                 <span className="font-medium">{userDisplayName}</span> {/* Use calculated display name */}
                 <ChevronDown size={16} className="text-gray-500" />
                 <Avatar className="h-8 w-8">
-                  {/* Use the calculated userPhotoUrl for the main avatar */}
-                  <AvatarImage src={userPhotoUrl || ''} alt="Profile" />
-                  <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback> {/* Use calculated display name for initials */}
+                  <AvatarImage src={userPhotoUrl} alt="Profile" />
+                  <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
@@ -418,9 +417,8 @@ const Navbar = () => {
               <div className="px-4 py-2 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    {/* Use the calculated userPhotoUrl for the dropdown avatar */}
-                    <AvatarImage src={userPhotoUrl || ''} alt="Profile" />
-                    <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback> {/* Use calculated display name for initials */}
+                    <AvatarImage src={userPhotoUrl} alt="Profile" />
+                    <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
                     <span className="font-medium">{userDisplayName}</span> {/* Use calculated display name */}

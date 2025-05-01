@@ -13,7 +13,7 @@ const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,11 +30,47 @@ const LoginForm: React.FC = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+      navigate('/');
+      toast.success('Successfully signed in with Google!');
+    } catch (error: any) {
+      toast.error('Failed to sign in with Google.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-md w-full mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-semibold text-gray-900">HotSpoT</h1>
-        <h2 className="text-xl text-gray-900">Sign in</h2>
+        <h2 className="text-xl text-gray-900">Welcome Back</h2>
+        <p className="text-sm text-gray-600">or <Link to="/register" className="text-blue-600 hover:underline">create an account</Link></p>
+      </div>
+
+      <Button
+        onClick={handleGoogleSignIn}
+        disabled={loading}
+        className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700"
+      >
+        <img
+          src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+          alt="Google"
+          className="w-5 h-5 mr-2"
+        />
+        Continue with Google
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

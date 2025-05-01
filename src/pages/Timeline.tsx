@@ -32,16 +32,18 @@ const Timeline: React.FC = () => {
         <div className="absolute left-8 -bottom-16">
           <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white">
             <div className="w-full h-full flex items-center justify-center">
-              {user.photoURL ? (
+              {userDetails.photoURL ? (
                 <img 
-                  src={user.photoURL} 
+                  src={userDetails.photoURL} 
                   alt={user.displayName} 
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <img 
+                  src={'/default-avatar.png'}
+                  alt="Default Avatar"
+                  className="w-full h-full rounded-full object-cover"
+                />
               )}
             </div>
           </div>
@@ -89,16 +91,18 @@ const Timeline: React.FC = () => {
           <div className="bg-white border rounded-md p-4 mb-4">
             <div className="flex items-start">
               <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 flex-shrink-0 flex items-center justify-center">
-                {user.photoURL ? (
+                {userDetails.photoURL ? (
                   <img 
-                    src={user.photoURL} 
-                    alt={user.displayName || ''} 
+                    src={userDetails.photoURL} 
+                    alt={user.displayName} 
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                  <img 
+                    src={'/default-avatar.png'}
+                    alt="Default Avatar"
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 )}
               </div>
               <textarea 

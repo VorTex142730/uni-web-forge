@@ -380,16 +380,18 @@ const AccountSettings = () => {
                     <div className="flex items-center space-x-4">
                       <div className="relative">
                         <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
-                          {photoURL ? (
+                          {userDetails.photoURL ? (
                             <img 
-                              src={photoURL} 
+                              src={userDetails.photoURL} 
                               alt="Profile" 
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                              <User size={40} className="text-gray-400" />
-                            </div>
+                            <img 
+                              src={'/default-avatar.png'}
+                              alt="Default Avatar"
+                              className="w-full h-full rounded-full object-cover"
+                            />
                           )}
                         </div>
                       </div>

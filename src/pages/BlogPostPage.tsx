@@ -12,7 +12,7 @@ const MAX_CLAPS = 50;
 const BlogPostPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userDetails } = useAuth();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,17 +206,19 @@ const BlogPostPage: React.FC = () => {
           {user && (
             <form onSubmit={handleAddComment} className="flex items-start space-x-2 mb-6">
               <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center border overflow-hidden">
-                {user.photoURL && user.photoURL.startsWith('data:image/') ? (
+                {userDetails?.photoURL ? (
                   <img
-                    src={user.photoURL}
+                    src={userDetails.photoURL}
                     alt={user.displayName || 'User'}
                     className="w-full h-full rounded-full object-cover"
                     onError={e => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }}
                   />
                 ) : (
-                  <span className="text-sm font-bold text-gray-500">
-                    {user.displayName?.[0]?.toUpperCase() || '?'}
-                  </span>
+                  <img
+                    src={'/default-avatar.png'}
+                    alt="Default Avatar"
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 )}
               </div>
               <textarea

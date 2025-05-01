@@ -7,6 +7,7 @@ import { db, auth } from '@/config/firebaseConfig';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '@/context/AuthContext';
 
 interface Update {
   id: string;
@@ -37,6 +38,7 @@ const HomePage = () => {
   const [postContent, setPostContent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const { userDetails } = useAuth();
 
   // Profile completion data
   const profileCompletion = {
@@ -274,9 +276,9 @@ const HomePage = () => {
             <div className="p-4">
               <div className="flex items-start space-x-3">
                 <Avatar className="hidden md:block">
-                  <AvatarImage src={auth.currentUser?.photoURL || undefined} />
+                  <AvatarImage src={userDetails?.photoURL || '/default-avatar.png'} />
                   <AvatarFallback>
-                    {auth.currentUser?.displayName?.charAt(0) || 'U'}
+                    {userDetails?.firstName?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
