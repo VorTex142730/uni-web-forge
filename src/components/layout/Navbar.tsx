@@ -18,6 +18,7 @@ import { collection, getDocs, query, where, limit, or } from 'firebase/firestore
 import { db } from '@/config/firebaseConfig';
 import { useDebounce } from '@/hooks/useDebounce';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import { useCart } from '@/context/CartContext';
 
 interface QuickSearchResult {
   id: string;
@@ -39,6 +40,7 @@ const Navbar = () => {
 
   // Destructure userDetails from useAuth
   const { user, userDetails, logout } = useAuth();
+  const { cartCount } = useCart();
   console.log("Navbar: user state", user);
   console.log("Navbar: userDetails state", userDetails);
 
@@ -393,9 +395,9 @@ const Navbar = () => {
           onClick={() => handleNavigation('/cart')}
         >
           <ShoppingCart size={20} />
-          {user?.cartItems > 0 && (
+          {cartCount > 0 && (
             <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
-              {user.cartItems}
+              {cartCount}
             </span>
           )}
         </Button>

@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Sidebar = () => {
   const { isExpanded, toggleSidebar } = useSidebar();
-  const { user, logout } = useAuth();
+  const { user, logout, userDetails } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -28,6 +28,11 @@ const Sidebar = () => {
     { icon: <BookOpen size={20} />, label: 'Blog page', path: '/blog' },
     { icon: <ShoppingBag size={20} />, label: 'Shop', path: '/shop' },
   ];
+
+  // Add admin link if user is admin
+  if (userDetails?.isAdmin) {
+    navItems.push({ icon: <ShoppingBag size={20} />, label: 'Admin Products', path: '/admin/products' });
+  }
 
   return (
     <>

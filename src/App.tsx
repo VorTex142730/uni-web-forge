@@ -34,6 +34,10 @@ import MessagesPage from '@/pages/MessagesPage';
 import BlogPage from '@/pages/BlogPage';
 import BlogPostPage from '@/pages/BlogPostPage';
 import CreateBlogPostPage from '@/pages/CreateBlogPostPage';
+import AdminProductPage from './pages/AdminProductPage';
+import { CartProvider } from './context/CartContext';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 
 const queryClient = new QueryClient();
 
@@ -60,153 +64,170 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <SidebarProvider>
-            <BrowserRouter>
-              <div className="min-h-screen bg-gray-50">
-                <Navbar />
-                <main>
-                  <Routes>
-                    {/* Auth routes */}
-                    <Route element={<AuthLayout />}>
-                      <Route path="/login" element={<LoginForm />} />
-                      <Route path="/register" element={<RegisterForm />} />
-                    </Route>
+        <CartProvider>
+          <TooltipProvider>
+            <SidebarProvider>
+              <BrowserRouter>
+                <div className="min-h-screen bg-gray-50">
+                  <Navbar />
+                  <main>
+                    <Routes>
+                      {/* Auth routes */}
+                      <Route element={<AuthLayout />}>
+                        <Route path="/login" element={<LoginForm />} />
+                        <Route path="/register" element={<RegisterForm />} />
+                      </Route>
 
-                    {/* Protected routes */}
-                    <Route element={<Layout />}>
-                      <Route path="/" element={
-                        <ProtectedRoute>
-                          <HomePage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/profile" element={
-                        <ProtectedRoute>
-                          <ProfilePage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/profile/:username" element={
-                        <ProtectedRoute>
-                          <ProfilePage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/account" element={
-                        <ProtectedRoute>
-                          <AccountPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/timeline" element={
-                        <ProtectedRoute>
-                          <Timeline />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/connections" element={
-                        <ProtectedRoute>
-                          <ConnectionsPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/groups" element={
-                        <ProtectedRoute>
-                          <GroupsPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/groups/:id" element={
-                        <ProtectedRoute>
-                          <GroupDetails />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/photos" element={
-                        <ProtectedRoute>
-                          <PhotosPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/videos" element={
-                        <ProtectedRoute>
-                          <VideosPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/forums" element={
-                        <ProtectedRoute>
-                          <ForumsPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/forums/:id" element={
-                        <ProtectedRoute>
-                          <ForumDetailsPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/members" element={
-                        <ProtectedRoute>
-                          <MembersPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/notifications" element={
-                        <ProtectedRoute>
-                          <NotificationList />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/test" element={
-                        <ProtectedRoute>
-                          <TestPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/search" element={
-                        <ProtectedRoute>
-                          <SearchPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/shop" element={
-                        <ProtectedRoute>
-                          <ShopPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/booking/:id" element={
-                        <ProtectedRoute>
-                          <ProductDetailsPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/messages" element={
-                        <ProtectedRoute>
-                          <MessagesPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/messages/:conversationId" element={
-                        <ProtectedRoute>
-                          <MessagesPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/messages/user/:userId" element={
-                        <ProtectedRoute>
-                          <MessagesPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/blog" element={
-                        <ProtectedRoute>
-                          <BlogPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/blog/create" element={
-                        <ProtectedRoute>
-                          <CreateBlogPostPage />
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/blog/:id" element={
-                        <ProtectedRoute>
-                          <BlogPostPage />
-                        </ProtectedRoute>
-                      } />
-                    </Route>
+                      {/* Protected routes */}
+                      <Route element={<Layout />}>
+                        <Route path="/" element={
+                          <ProtectedRoute>
+                            <HomePage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/profile" element={
+                          <ProtectedRoute>
+                            <ProfilePage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/profile/:username" element={
+                          <ProtectedRoute>
+                            <ProfilePage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/account" element={
+                          <ProtectedRoute>
+                            <AccountPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/timeline" element={
+                          <ProtectedRoute>
+                            <Timeline />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/connections" element={
+                          <ProtectedRoute>
+                            <ConnectionsPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/groups" element={
+                          <ProtectedRoute>
+                            <GroupsPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/groups/:id" element={
+                          <ProtectedRoute>
+                            <GroupDetails />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/photos" element={
+                          <ProtectedRoute>
+                            <PhotosPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/videos" element={
+                          <ProtectedRoute>
+                            <VideosPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/forums" element={
+                          <ProtectedRoute>
+                            <ForumsPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/forums/:id" element={
+                          <ProtectedRoute>
+                            <ForumDetailsPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/members" element={
+                          <ProtectedRoute>
+                            <MembersPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/notifications" element={
+                          <ProtectedRoute>
+                            <NotificationList />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/test" element={
+                          <ProtectedRoute>
+                            <TestPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/search" element={
+                          <ProtectedRoute>
+                            <SearchPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/shop" element={
+                          <ProtectedRoute>
+                            <ShopPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/booking/:id" element={
+                          <ProtectedRoute>
+                            <ProductDetailsPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/messages" element={
+                          <ProtectedRoute>
+                            <MessagesPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/messages/:conversationId" element={
+                          <ProtectedRoute>
+                            <MessagesPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/messages/user/:userId" element={
+                          <ProtectedRoute>
+                            <MessagesPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/blog" element={
+                          <ProtectedRoute>
+                            <BlogPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/blog/create" element={
+                          <ProtectedRoute>
+                            <CreateBlogPostPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/blog/:id" element={
+                          <ProtectedRoute>
+                            <BlogPostPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/admin/products" element={
+                          <ProtectedRoute>
+                            <AdminProductPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/cart" element={
+                          <ProtectedRoute>
+                            <CartPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/checkout" element={
+                          <ProtectedRoute>
+                            <CheckoutPage />
+                          </ProtectedRoute>
+                        } />
+                      </Route>
 
-                    {/* Catch-all route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-              </div>
-              <Toaster />
-              <Sonner />
-            </BrowserRouter>
-          </SidebarProvider>
-        </TooltipProvider>
+                      {/* Catch-all route */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                </div>
+                <Toaster />
+                <Sonner />
+              </BrowserRouter>
+            </SidebarProvider>
+          </TooltipProvider>
+        </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
