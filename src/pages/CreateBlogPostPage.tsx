@@ -11,11 +11,24 @@ import { doc, updateDoc } from 'firebase/firestore';
 
 const CreateBlogPostPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userDetails } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Restrict to admins only
+  if (!userDetails?.isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded shadow text-center">
+          <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+          <p className="text-gray-600">Only admins can create new blog posts.</p>
+          <Button className="mt-6" onClick={() => navigate('/blog')}>Back to Blog</Button>
+        </div>
+      </div>
+    );
+  }
 
   const [formData, setFormData] = useState({
     title: '',
