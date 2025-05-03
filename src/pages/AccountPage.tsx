@@ -8,9 +8,8 @@ import {
   updateEmail,
   updateProfile
 } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db, storage } from '@/config/firebaseConfig';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { db } from '@/config/firebaseConfig';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,7 +17,6 @@ const AccountSettings = () => {
   const { user, userDetails } = useAuth();
   const navigate = useNavigate();
   const profileFileInputRef = useRef<HTMLInputElement>(null);
-  const coverFileInputRef = useRef<HTMLInputElement>(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,8 +25,7 @@ const AccountSettings = () => {
   const [lastName, setLastName] = useState('');
   const [nickname, setNickname] = useState('');
   const [college, setCollege] = useState('');
-  const [photoURL, setPhotoURL] = useState('');
-  const [coverPhotoURL, setCoverPhotoURL] = useState('');
+  const [photoURL, setPhotoURL] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -43,149 +40,60 @@ const AccountSettings = () => {
       setLastName(userDetails.lastName || '');
       setNickname(userDetails.nickname || '');
       setCollege(userDetails.college || '');
-      setPhotoURL(userDetails.photoURL || '');
-      setCoverPhotoURL(userDetails.coverPhotoURL || '');
+      fetchProfilePhoto();
     }
   }, [user, userDetails]);
 
-  const validateImage = (file: File) => {
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-
-    if (!validTypes.includes(file.type)) {
-      throw new Error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
-    }
-
-    if (file.size > maxSize) {
-      throw new Error('Image size should be less than 5MB');
-    }
-
-    return true;
-  };
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) {
-      console.log('No file selected or user not logged in');
-      return;
-    }
-
+  const fetchProfilePhoto = async () => {
+    if (!user) return;
     try {
-      console.log('Starting photo upload...');
-      console.log('File details:', {
-        name: file.name,
-        type: file.type,
-        size: file.size
-      });
-
-      validateImage(file);
-      setUploading(true);
-
-      // Delete old photo if exists
-      if (photoURL) {
-        try {
-          console.log('Deleting old photo...');
-          const oldPhotoRef = ref(storage, `profile-photos/${user.uid}`);
-          await deleteObject(oldPhotoRef);
-          console.log('Old photo deleted successfully');
-        } catch (error) {
-          console.error('Error deleting old photo:', error);
-          // Continue with upload even if delete fails
-        }
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setPhotoURL(data.photoURL || null);
       }
-
-      // Upload new photo
-      console.log('Uploading new photo...');
-      const storageRef = ref(storage, `profile-photos/${user.uid}`);
-      const uploadResult = await uploadBytes(storageRef, file);
-      console.log('Upload successful:', uploadResult);
-
-      console.log('Getting download URL...');
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log('Download URL obtained:', downloadURL);
-      
-      // Update user profile in Firebase Auth
-      console.log('Updating Firebase Auth profile...');
-      await updateProfile(user, { photoURL: downloadURL });
-      console.log('Firebase Auth profile updated');
-      
-      // Update user details in Firestore
-      console.log('Updating Firestore user document...');
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        photoURL: downloadURL,
-        updatedAt: new Date().toISOString(),
-      });
-      console.log('Firestore document updated');
-
-      setPhotoURL(downloadURL);
-      toast.success('Profile photo updated successfully');
-    } catch (error: any) {
-      console.error('Detailed error:', error);
-      toast.error(error.message || 'Failed to upload photo');
-    } finally {
-      setUploading(false);
+    } catch (error) {
+      console.error('Error fetching profile photo:', error);
     }
   };
 
-  const handleCoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) {
-      console.log('No file selected or user not logged in');
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 1000000) {
+      toast.error('Image must be smaller than 1MB');
       return;
     }
 
-    try {
-      console.log('Starting cover photo upload...');
-      console.log('File details:', {
-        name: file.name,
-        type: file.type,
-        size: file.size
-      });
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const base64String = reader.result as string;
 
-      validateImage(file);
-      setUploading(true);
-
-      // Delete old cover photo if exists
-      if (coverPhotoURL) {
-        try {
-          console.log('Deleting old cover photo...');
-          const oldCoverRef = ref(storage, `cover-photos/${user.uid}`);
-          await deleteObject(oldCoverRef);
-          console.log('Old cover photo deleted successfully');
-        } catch (error) {
-          console.error('Error deleting old cover photo:', error);
-          // Continue with upload even if delete fails
-        }
+      try {
+        setUploading(true);
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          photoURL: base64String,
+          updatedAt: new Date().toISOString(),
+        });
+        setPhotoURL(base64String);
+        toast.success('Profile picture updated successfully');
+      } catch (error: any) {
+        console.error('Error updating profile picture:', error);
+        toast.error('Error updating profile picture');
+      } finally {
+        setUploading(false);
       }
-
-      // Upload new cover photo
-      console.log('Uploading new cover photo...');
-      const storageRef = ref(storage, `cover-photos/${user.uid}`);
-      const uploadResult = await uploadBytes(storageRef, file);
-      console.log('Upload successful:', uploadResult);
-
-      console.log('Getting download URL...');
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log('Download URL obtained:', downloadURL);
-      
-      // Update user details in Firestore
-      console.log('Updating Firestore user document...');
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        coverPhotoURL: downloadURL,
-        updatedAt: new Date().toISOString(),
-      });
-      console.log('Firestore document updated');
-
-      setCoverPhotoURL(downloadURL);
-      toast.success('Cover photo updated successfully');
-    } catch (error: any) {
-      console.error('Detailed error:', error);
-      toast.error(error.message || 'Failed to upload cover photo');
-    } finally {
-      setUploading(false);
-    }
+    };
+    reader.onerror = () => {
+      toast.error('Error reading file');
+    };
   };
 
   const handleReauthenticate = async (currentPassword: string) => {
@@ -210,7 +118,6 @@ const AccountSettings = () => {
         return;
       }
 
-      // If current password is provided, we need to update something sensitive
       if (currentPassword) {
         const isReauthenticated = await handleReauthenticate(currentPassword);
         if (!isReauthenticated) {
@@ -218,13 +125,11 @@ const AccountSettings = () => {
           return;
         }
 
-        // Update email if changed
         if (email !== user.email) {
           await updateEmail(user, email);
           toast.success('Email updated successfully');
         }
 
-        // Update password if provided
         if (newPassword) {
           if (newPassword !== confirmPassword) {
             toast.error('New passwords do not match');
@@ -237,7 +142,6 @@ const AccountSettings = () => {
         }
       }
 
-      // Update user details in Firestore
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         firstName,
@@ -259,7 +163,6 @@ const AccountSettings = () => {
   const tabs = [
     { id: 'edit-profile', label: 'Edit Profile', icon: <User size={18} /> },
     { id: 'profile-photo', label: 'Profile Photo', icon: <Camera size={18} /> },
-    { id: 'cover-photo', label: 'Cover Photo', icon: <Camera size={18} /> },
   ];
 
   if (!user || !userDetails) {
@@ -286,7 +189,6 @@ const AccountSettings = () => {
 
         <div className="bg-white rounded-lg shadow-sm">
           <div className="flex">
-            {/* Sidebar */}
             <div className="w-1/4 border-r border-gray-100">
               {tabs.map((tab) => (
                 <button
@@ -304,7 +206,6 @@ const AccountSettings = () => {
               ))}
             </div>
 
-            {/* Main content */}
             <div className="w-3/4 p-8">
               {activeTab === 'edit-profile' && (
                 <>
@@ -378,11 +279,11 @@ const AccountSettings = () => {
                   <h2 className="text-2xl font-semibold text-gray-800 mb-6">Profile Photo</h2>
                   <div className="mb-8">
                     <div className="flex items-center space-x-4">
-                      <div className="relative">
+                      <div className="relative group">
                         <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
-                          {userDetails.photoURL ? (
+                          {photoURL ? (
                             <img 
-                              src={userDetails.photoURL} 
+                              src={photoURL} 
                               alt="Profile" 
                               className="w-full h-full object-cover"
                             />
@@ -394,40 +295,33 @@ const AccountSettings = () => {
                             />
                           )}
                         </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="avatarUpload"
+                          ref={profileFileInputRef}
+                        />
+                        <label
+                          htmlFor="avatarUpload"
+                          className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <Camera className="w-6 h-6 text-white" />
+                        </label>
                       </div>
                       <div className="flex-1">
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <p className="text-blue-800">
-                            Profile photo upload feature is coming soon! We're working on implementing a free image hosting solution.
-                          </p>
-                        </div>
+                        {uploading ? (
+                          <p className="text-gray-600">Uploading...</p>
+                        ) : (
+                          <button
+                            onClick={() => profileFileInputRef.current?.click()}
+                            className="text-blue-600 hover:underline"
+                          >
+                            Upload New Photo
+                          </button>
+                        )}
                       </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {activeTab === 'cover-photo' && (
-                <>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-6">Cover Photo</h2>
-                  <div className="mb-8">
-                    <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
-                      {coverPhotoURL ? (
-                        <img 
-                          src={coverPhotoURL} 
-                          alt="Cover" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <p className="text-gray-500">No cover photo uploaded</p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-4 bg-blue-50 p-4 rounded-lg">
-                      <p className="text-blue-800">
-                        Cover photo upload feature is coming soon! We're working on implementing a free image hosting solution.
-                      </p>
                     </div>
                   </div>
                 </>

@@ -8,6 +8,7 @@ import AuthLayout from "./components/auth/AuthLayout";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
 import GroupsPage from "./pages/GroupsPage";
+import MyGroupsPage from "./pages/ProfileGroups";
 // import GroupDetailsPage from "./pages/GroupDetailsPage";
 import MembersPage from "./pages/MembersPage";
 import ForumsPage from "./pages/ForumsPage";
@@ -148,6 +149,11 @@ function App() {
                         <Route path="/notifications" element={
                           <ProtectedRoute>
                             <NotificationList />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/profilegroups" element={
+                          <ProtectedRoute>
+                            <MyGroupsPage />
                           </ProtectedRoute>
                         } />
                         <Route path="/test" element={

@@ -56,7 +56,6 @@ const ConnectionsPage: React.FC = () => {
       const connectionsData = await getConnections(user.uid);
       setConnections(connectionsData as Connection[]);
       
-      // Fetch user details for each connection
       const userPromises = connectionsData.map(async (conn: Connection) => {
         const otherUserId = conn.user1 === user.uid ? conn.user2 : conn.user1;
         const userDoc = await getDoc(doc(db, 'users', otherUserId));
@@ -66,7 +65,6 @@ const ConnectionsPage: React.FC = () => {
       const users = await Promise.all(userPromises);
       setConnectionUsers(users);
 
-      // Fetch mutual connections count for each user
       const mutualPromises = users.map(async (connectedUser) => {
         const userConnections = await getConnections(connectedUser.id) as Connection[];
         const mutualCount = userConnections.filter((conn) =>
@@ -83,7 +81,6 @@ const ConnectionsPage: React.FC = () => {
       }, {} as Record<string, number>);
       setMutualConnections(mutualMap);
       
-      // Fetch requests and their user details
       const requestsData = await getIncomingRequests(user.uid);
       setRequests(requestsData as ConnectionRequest[]);
       
@@ -106,11 +103,9 @@ const ConnectionsPage: React.FC = () => {
       setFeedback('Connection accepted!');
       setRemovingRequestId(request.id);
       setTimeout(async () => {
-        // Remove request from local state only
         setRequests((prev) => prev.filter((r) => r.id !== request.id));
         setRequestUsers((prev) => prev.filter((u) => u.id !== request.from));
         setRemovingRequestId(null);
-        // Refetch connections to update UI
         const connectionsData = await getConnections(user.uid) as Connection[];
         setConnections(connectionsData);
         const userPromises = connectionsData.map(async (conn) => {
@@ -120,7 +115,7 @@ const ConnectionsPage: React.FC = () => {
         });
         const users = await Promise.all(userPromises);
         setConnectionUsers(users);
-      }, 400); // 400ms matches the animation duration
+      }, 400);
     } catch (e) {
       setFeedback('Failed to accept connection.');
     }
@@ -134,11 +129,10 @@ const ConnectionsPage: React.FC = () => {
       setFeedback('Connection request rejected.');
       setRemovingRequestId(request.id);
       setTimeout(() => {
-        // Remove request from local state only
         setRequests((prev) => prev.filter((r) => r.id !== request.id));
         setRequestUsers((prev) => prev.filter((u) => u.id !== request.from));
         setRemovingRequestId(null);
-      }, 400); // 400ms matches the animation duration
+      }, 400);
     } catch (e) {
       setFeedback('Failed to reject connection.');
     }
@@ -153,188 +147,120 @@ const ConnectionsPage: React.FC = () => {
 
   if (!user || !userDetails) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white min-h-screen">
-      {/* Profile Header Banner */}
-      <div className="relative">
-        <div className="bg-slate-500 h-48 w-full relative">
-          <div className="absolute inset-0 opacity-20">
-          </div>
-        </div>
-        <div className="absolute left-8 -bottom-16">
-          <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white flex items-center justify-center overflow-hidden">
-            {userDetails.photoURL ? (
-              <img 
-                src={userDetails.photoURL} 
-                alt={user.displayName || ''} 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img 
-                src={'/default-avatar.png'}
-                alt="Default Avatar"
-                className="w-full h-full rounded-full object-cover"
-              />
-            )}
-          </div>
-          <div className="absolute top-0 right-0">
-            <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Profile Info */}
-      <div className="mt-20 px-8">
-        <div className="flex items-center">
-          <h2 className="text-2xl font-bold mr-2">{userDetails.firstName} {userDetails.lastName}</h2>
-          <span className="bg-blue-100 text-blue-500 text-xs px-2 py-1 rounded">
-            {userDetails.role}
-          </span>
-        </div>
-        <div className="text-gray-500 mt-1">
-          @{user.username || user.displayName?.toLowerCase().replace(/\s/g, '')} • Joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} • Active now
-        </div>
-      </div>
-      
-      {/* Profile Content */}
-      <div className="mt-8 px-8 flex">
-        {/* Sidebar */}
-        <div className="w-1/4 pr-4">
-          <nav className="space-y-1">
-            <button onClick={() => navigate('/profile')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Profile</button>
-            <button onClick={() => navigate('/timeline')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Timeline</button>
-            <button onClick={() => navigate('/connections')} className="w-full text-left px-4 py-2 text-blue-500 font-medium border-l-4 border-blue-500">Connections</button>
-            <button onClick={() => navigate('/groups')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Groups</button>
-            <button onClick={() => navigate('/videos')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Videos</button>
-            <button onClick={() => navigate('/photos')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Photos</button>
-            <button onClick={() => navigate('/forums')} className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50">Forums</button>
-          </nav>
-        </div>
-        
-        {/* Main Content */}
-        <div className="w-3/4">
-          {/* Search and Tabs */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search connections..."
-                  className="pl-10 pr-4 py-2 border rounded-full w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex space-x-8">
+        {/* Left Column: Profile Card and Sidebar */}
+        <div className="flex flex-col w-80">
+          {/* Profile Card */}
+          <div className="bg-white shadow-sm rounded-xl p-6 mb-4">
+            <div className="relative group">
+              <div className="w-16 h-16 rounded-full border-2 border-white shadow-md overflow-hidden relative mx-auto">
+                {userDetails?.photoURL ? (
+                  <img 
+                    src={userDetails.photoURL} 
+                    alt={user.displayName || ''} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img 
+                    src={'/default-avatar.png'}
+                    alt="Default Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
+              <div className="absolute bottom-0 right-8 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
             </div>
-            
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('connections')}
-                  className={`${
-                    activeTab === 'connections'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                >
-                  Connections ({connectionUsers.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('requests')}
-                  className={`${
-                    activeTab === 'requests'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                >
-                  Pending Requests ({requestUsers.length})
-                </button>
-              </nav>
+            <div className="mt-2 text-center">
+              <h1 className="text-lg font-bold text-gray-900">{userDetails.firstName} {userDetails.lastName}</h1>
+              <div className="mt-1 text-xs text-gray-500">
+                @{user.username || user.displayName?.toLowerCase().replace(/\s/g, '')} • Joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </div>
+              <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                {userDetails.role}
+              </span>
             </div>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          {/* Sidebar */}
+          <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
+            <button onClick={() => navigate('/profile')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Profile</button>
+            <button onClick={() => navigate('/connections')} className="block px-4 py-3 rounded-lg text-base font-medium bg-indigo-50 text-indigo-600 transition-colors duration-200">Connections</button>
+            <button onClick={() => navigate('/profilegroups')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Groups</button>
+            <button onClick={() => navigate('/forums')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Forums</button>
+            <button onClick={() => navigate('/blog')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Blog</button>
+          </nav>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="bg-white rounded-xl shadow-sm p-8">
+            {/* Search and Tabs */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="text"
+                    placeholder="Search connections..."
+                    className="pl-10 pr-4 py-2 border rounded-full w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8">
+                  <button
+                    onClick={() => setActiveTab('connections')}
+                    className={`${
+                      activeTab === 'connections'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    Connections ({connectionUsers.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('requests')}
+                    className={`${
+                      activeTab === 'requests'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  >
+                    Pending Requests ({requestUsers.length})
+                  </button>
+                </nav>
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {activeTab === 'connections' ? (
-                filteredConnections.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-lg shadow">
-                    <Users className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No connections found</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {searchQuery ? 'Try adjusting your search' : 'Start connecting with other members'}
-                    </p>
-                  </div>
-                ) : (
-                  filteredConnections.map((member) => (
-                    <div key={member.id} className="bg-white rounded-lg shadow p-6">
-                      <div className="flex items-start">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={member.avatar} />
-                          <AvatarFallback>
-                            {member.firstName?.[0]}{member.lastName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="ml-4 flex-1">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="text-lg font-medium text-gray-900">
-                                {member.firstName} {member.lastName}
-                              </h3>
-                              <p className="text-sm text-gray-500">{member.college}</p>
-                              <p className="text-sm text-gray-500">{member.role}</p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => navigate(`/messages/user/${member.id}`)}
-                              >
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Message
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          {mutualConnections[member.id] > 0 && (
-                            <p className="mt-2 text-sm text-gray-500">
-                              {mutualConnections[member.id]} mutual connection{mutualConnections[member.id] !== 1 ? 's' : ''}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {activeTab === 'connections' ? (
+                  filteredConnections.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-lg shadow">
+                      <Users className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No connections found</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {searchQuery ? 'Try adjusting your search' : 'Start connecting with other members'}
+                      </p>
                     </div>
-                  ))
-                )
-              ) : (
-                requestUsers.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-lg shadow">
-                    <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No pending requests</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      You're all caught up! No pending connection requests.
-                    </p>
-                  </div>
-                ) : (
-                  requestUsers.map((member) => {
-                    const request = requests.find(r => r.from === member.id);
-                    return (
-                      <div
-                        key={member.id}
-                        className={`bg-white rounded-lg shadow p-6 transition-opacity duration-400 ${removingRequestId === request?.id ? 'opacity-0' : 'opacity-100'}`}
-                      >
+                  ) : (
+                    filteredConnections.map((member) => (
+                      <div key={member.id} className="bg-white rounded-lg shadow p-6">
                         <div className="flex items-start">
                           <Avatar className="h-16 w-16">
                             <AvatarImage src={member.avatar} />
@@ -352,31 +278,89 @@ const ConnectionsPage: React.FC = () => {
                                 <p className="text-sm text-gray-500">{member.role}</p>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <Button
-                                  variant="default"
+                                <Button 
+                                  variant="outline" 
                                   size="sm"
-                                  onClick={() => handleAccept(request)}
+                                  onClick={() => navigate(`/messages/user/${member.id}`)}
                                 >
-                                  Accept
+                                  <MessageSquare className="h-4 w-4 mr-2" />
+                                  Message
                                 </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleReject(request)}
-                                >
-                                  Ignore
+                                <Button variant="outline" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
                                 </Button>
+                              </div>
+                            </div>
+                            {mutualConnections[member.id] > 0 && (
+                              <p className="mt-2 text-sm text-gray-500">
+                                {mutualConnections[member.id]} mutual connection{mutualConnections[member.id] !== 1 ? 's' : ''}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )
+                ) : (
+                  requestUsers.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-lg shadow">
+                      <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No pending requests</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        You're all caught up! No pending connection requests.
+                      </p>
+                    </div>
+                  ) : (
+                    requestUsers.map((member) => {
+                      const request = requests.find(r => r.from === member.id);
+                      return (
+                        <div
+                          key={member.id}
+                          className={`bg-white rounded-lg shadow p-6 transition-opacity duration-400 ${removingRequestId === request?.id ? 'opacity-0' : 'opacity-100'}`}
+                        >
+                          <div className="flex items-start">
+                            <Avatar className="h-16 w-16">
+                              <AvatarImage src={member.avatar} />
+                              <AvatarFallback>
+                                {member.firstName?.[0]}{member.lastName?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="ml-4 flex-1">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="text-lg font-medium text-gray-900">
+                                    {member.firstName} {member.lastName}
+                                  </h3>
+                                  <p className="text-sm text-gray-500">{member.college}</p>
+                                  <p className="text-sm text-gray-500">{member.role}</p>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => handleAccept(request)}
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleReject(request)}
+                                  >
+                                    Ignore
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
-                )
-              )}
-            </div>
-          )}
+                      );
+                    })
+                  )
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {feedback && (

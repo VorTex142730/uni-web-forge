@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LayoutGrid, List, Search, Users, Filter, ArrowUpDown } from 'lucide-react';
-import { collection, query, orderBy, getDocs, where, Timestamp } from 'firebase/firestore';
+import { LayoutGrid, List, Search, Users, Filter, ArrowUpDown, Camera } from 'lucide-react';
+import { collection, query, orderBy, getDocs, where, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { Group } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { getFirestore } from 'firebase/firestore';
 
 const safeTimestampToISO = (timestamp: any): string => {
   if (timestamp instanceof Timestamp) {
@@ -29,7 +30,7 @@ const safeTimestampToISO = (timestamp: any): string => {
   return new Date().toISOString();
 };
 
-const MyGroupsStandalonePage: React.FC = () => {
+const MyGroupsPage: React.FC = () => {
   const { user } = useAuth();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,6 +38,59 @@ const MyGroupsStandalonePage: React.FC = () => {
   const [myGroups, setMyGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [profilePhotoURL, setProfilePhotoURL] = useState<string | null>(null);
+
+  const fetchProfilePhoto = async () => {
+    if (!user) return;
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setProfilePhotoURL(data.photoURL || null);
+      }
+    } catch (error) {
+      console.error('Error fetching profile photo:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfilePhoto();
+  }, [user]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    if (file.size > 1000000) {
+      alert('Image must be smaller than 1MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const base64String = reader.result as string;
+
+      try {
+        const db = getFirestore();
+        await updateDoc(doc(db, 'users', user.uid), {
+          photoURL: base64String
+        });
+        setProfilePhotoURL(base64String);
+        alert('Profile picture updated successfully');
+      } catch (error) {
+        console.error('Error updating profile picture:', error);
+        alert('Error updating profile picture');
+      }
+    };
+    reader.onerror = () => {
+      alert('Error reading file');
+    };
+  };
 
   const fetchMyGroups = async () => {
     if (!user) {
@@ -115,20 +169,19 @@ const MyGroupsStandalonePage: React.FC = () => {
     }
   });
 
-  // Render function for Group Card, embedded directly in the page
   const renderGroupCard = (group: Group, variant: 'grid' | 'list') => {
     const isGrid = variant === 'grid';
 
     return (
       <div
         key={group.id}
-        className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md ${
-          isGrid ? 'flex flex-col' : 'flex flex-row items-center'
+        className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md w-full max-w-md mx-auto ${
+          isGrid ? 'flex flex-col' : 'flex flex-col sm:flex-row sm:items-center'
         }`}
       >
         {/* Banner Image */}
         <div
-          className={`relative ${isGrid ? 'h-32' : 'h-24 w-32'} rounded-t-xl overflow-hidden`}
+          className={`relative w-full ${isGrid ? 'h-32 sm:h-40' : 'h-32 sm:h-24 sm:w-32'} rounded-t-xl sm:rounded-tl-xl sm:rounded-tr-none overflow-hidden`}
         >
           {group.bannerUrl ? (
             <img
@@ -144,12 +197,16 @@ const MyGroupsStandalonePage: React.FC = () => {
         </div>
 
         {/* Card Content */}
-        <div className={`p-4 flex ${isGrid ? 'flex-col flex-1' : 'flex-row items-center flex-1'}`}>
+        <div
+          className={`p-4 flex flex-col w-full ${
+            isGrid ? 'flex-1' : 'sm:flex-row sm:items-center sm:flex-1'
+          }`}
+        >
           {/* Group Info */}
-          <div className={isGrid ? 'flex-1' : 'flex-1'}>
-            <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">{group.name}</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-800 truncate">{group.name}</h3>
             <p className="text-sm text-gray-500 mt-1 line-clamp-2">{group.description || 'No description available'}</p>
-            <div className="flex items-center mt-2 space-x-2">
+            <div className="flex flex-wrap items-center mt-2 gap-2">
               <Badge variant="secondary" className="text-xs">
                 {group.privacy}
               </Badge>
@@ -158,16 +215,17 @@ const MyGroupsStandalonePage: React.FC = () => {
                 {group.memberCount} members
               </span>
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 mt-1 truncate">
               Last active: {new Date(group.lastActive).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
 
           {/* Action Button */}
-          <div className={isGrid ? 'mt-4' : 'ml-4'}>
+          <div className={`${isGrid ? 'mt-4' : 'mt-4 sm:ml-4 sm:mt-0'} flex-shrink-0`}>
             <Button
               variant="outline"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => window.location.href = `/groups/${group.id}`}
             >
               View Group
@@ -188,16 +246,14 @@ const MyGroupsStandalonePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex space-x-8">
-        {/* Left Column: Profile Card and Sidebar */}
-        <div className="flex flex-col w-80">
-          {/* Profile Card */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row lg:space-x-8">
+        <div className="flex flex-col w-full lg:w-80">
           <div className="bg-white shadow-sm rounded-xl p-6 mb-4">
             <div className="relative group">
               <div className="w-16 h-16 rounded-full border-2 border-white shadow-md overflow-hidden relative mx-auto">
-                {user.photoURL ? (
+                {profilePhotoURL ? (
                   <img 
-                    src={user.photoURL} 
+                    src={profilePhotoURL} 
                     alt={user.displayName || ''} 
                     className="w-full h-full object-cover"
                   />
@@ -208,6 +264,19 @@ const MyGroupsStandalonePage: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                 )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="avatarUpload"
+                />
+                <label
+                  htmlFor="avatarUpload"
+                  className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <Camera className="w-4 h-4 text-white" />
+                </label>
               </div>
               <div className="absolute bottom-0 right-8 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
             </div>
@@ -222,24 +291,19 @@ const MyGroupsStandalonePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
             <button onClick={() => window.location.href = '/profile'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Profile</button>
-            <button onClick={() => window.location.href = '/timeline'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Timeline</button>
             <button onClick={() => window.location.href = '/connections'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Connections</button>
             <button onClick={() => window.location.href = '/groups'} className="block px-4 py-3 rounded-lg text-base font-medium bg-indigo-50 text-indigo-600 transition-colors duration-200">Groups</button>
-            <button onClick={() => window.location.href = '/videos'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Videos</button>
-            <button onClick={() => window.location.href = '/photos'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Photos</button>
             <button onClick={() => window.location.href = '/forums'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Forums</button>
+            <button onClick={() => window.location.href = '/blog'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Blog</button>
           </nav>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="bg-white rounded-xl shadow-sm p-8">
+        <div className="flex-1 mt-6 lg:mt-0">
+          <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8">
             <h1 className="text-2xl font-bold text-gray-800 mb-6">My Groups</h1>
 
-            {/* Controls: Search, Filters, View Toggle */}
             <div className="mb-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-lg">
@@ -353,8 +417,8 @@ const MyGroupsStandalonePage: React.FC = () => {
                   </div>
                 ) : (
                   <div className={view === 'grid'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                    : 'space-y-6'}
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
+                    : 'space-y-4 sm:space-y-6'}
                   >
                     {sortedGroups.map((group) => renderGroupCard(group, view))}
                   </div>
@@ -368,4 +432,4 @@ const MyGroupsStandalonePage: React.FC = () => {
   );
 };
 
-export default MyGroupsStandalonePage;
+export default MyGroupsPage;
