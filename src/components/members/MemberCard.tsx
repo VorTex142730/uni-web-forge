@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { sendConnectionRequest, areUsersConnected, hasPendingRequest } from '@/lib/firebase/connections';
 import { createConnectionRequestNotification } from '@/components/notifications/NotificationService';
+import { useNavigate } from 'react-router-dom';
 
 interface Member {
   id: string;
@@ -44,6 +45,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'connected'>('none');
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
+  const navigate = useNavigate();
 
   const getInitials = (firstName: string = '', lastName: string = '') => {
     const firstInitial = firstName?.charAt(0) || '';
@@ -115,6 +117,12 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
     }
   };
 
+  const handleMessage = () => {
+    if (connectionStatus === 'connected') {
+      navigate(`/messages?userId=${member.id}`);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -183,22 +191,26 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
         {isCurrentUser ? (
           <div className="text-center text-sm text-gray-500">This is you</div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
-              disabled={sendingRequest || connectionStatus !== 'none'}
-              onClick={handleConnect}
-            >
-              {connectionStatus === 'connected' ? 'Connected' : connectionStatus === 'pending' ? 'Pending' : 'Connect'}
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Message
-            </Button>
+          <div>
+            {connectionStatus === 'connected' ? (
+              <Button
+                variant="outline"
+                className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
+                onClick={handleMessage}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Message
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
+                disabled={sendingRequest || connectionStatus === 'pending'}
+                onClick={handleConnect}
+              >
+                {connectionStatus === 'pending' ? 'Pending' : 'Connect'}
+              </Button>
+            )}
           </div>
         )}
       </div>
