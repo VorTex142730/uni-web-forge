@@ -13,12 +13,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/co
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { GroupAvatar } from './GroupAvatar';
 
 interface GroupCardProps {
   group: Group;
   onClick?: () => void;
   variant?: 'mobile' | 'grid' | 'list';
+}
+
+const DEFAULT_GROUP_AVATAR = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f465.png'; // 👥 group icon
+
+function pickSticker(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return STICKER_URLS[Math.abs(hash) % STICKER_URLS.length];
 }
 
 const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
@@ -146,265 +157,70 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
     return date.toLocaleDateString();
   };
 
-  if (variant === 'mobile') {
-    return (
-      <motion.div 
-        className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200" 
-        onClick={onClick || handleViewGroup}
-        whileHover={{ y: -2 }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="flex items-center p-4">
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${generateGradient(group.name)}`}>
-            <span className="text-white text-sm font-bold">
-              {getInitials(group.name)}
-            </span>
-          </div>
-          
-          <div className="ml-4 flex-1 min-w-0">
-            <h3 className="text-base font-medium text-gray-900 truncate">{group.name}</h3>
-            <div className="flex items-center mt-1 text-sm text-gray-500">
-              <Users className="w-4 h-4 mr-1" />
-              <span className="mr-2">{group.memberCount}</span>
-              <span className={`capitalize ${group.privacy === 'private' ? 'text-orange-500' : 'text-green-500'}`}>
-                • {group.privacy}
-              </span>
-            </div>
-            {group.description && (
-              <p className="text-sm text-gray-600 mt-1 truncate">
-                {group.description}
-              </p>
-            )}
-          </div>
-
-          {memberStatus === 'none' && (
-            <Button
-              size="sm"
-              onClick={handleJoinGroup}
-              className="ml-4 flex-shrink-0"
-            >
-              {group.privacy === 'private' ? 'Request' : 'Join'}
-            </Button>
-          )}
-          {memberStatus === 'pending' && (
-            <Button
-              size="sm"
-              disabled
-              className="ml-4 flex-shrink-0"
-            >
-              Pending
-            </Button>
-          )}
-        </div>
-      </motion.div>
-    );
-  }
-
-  if (variant === 'list') {
-    return (
-      <motion.div 
-        className="bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200" 
-        onClick={onClick || handleViewGroup}
-        whileHover={{ x: 4 }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="flex items-center p-4">
-          <div className={`w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 ${generateGradient(group.name)}`}>
-            <span className="text-white text-lg font-bold">
-              {getInitials(group.name)}
-            </span>
-          </div>
-          
-          <div className="ml-4 flex-1 min-w-0">
-            <div className="flex items-center">
-              <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>
-              <Badge variant={group.privacy === 'private' ? 'destructive' : 'default'} className="ml-2">
-                {group.privacy === 'private' ? <Lock className="h-3 w-3 mr-1" /> : <Globe className="h-3 w-3 mr-1" />}
-                {group.privacy}
-              </Badge>
-            </div>
-            
-            {group.description && (
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                {group.description}
-              </p>
-            )}
-            
-            <div className="flex items-center mt-2 text-sm text-gray-500">
-              <div className="flex items-center mr-4">
-                <Users className="w-4 h-4 mr-1" />
-                <span>{group.memberCount} members</span>
-              </div>
-              <div className="flex items-center">
-                <Clock className="w-4 h-4 mr-1" />
-                <span>Active {formatRelativeTime(group.lastActive)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="ml-4 flex-shrink-0">
-            {memberStatus === 'creator' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleManageGroup}
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Manage
-              </Button>
-            ) : memberStatus === 'member' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewGroup();
-                }}
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                View
-              </Button>
-            ) : memberStatus === 'pending' ? (
-              <Button
-                size="sm"
-                disabled
-              >
-                Pending
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                onClick={handleJoinGroup}
-              >
-                {group.privacy === 'private' ? 'Request' : 'Join'}
-              </Button>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
+  // Minimalist meta info
+  const metaInfo = `${group.memberCount} member${group.memberCount !== 1 ? 's' : ''} • ${group.privacy} • Active ${formatRelativeTime(group.lastActive)}`;
 
   return (
-    <motion.div 
-      className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full cursor-pointer hover:shadow-lg transition-shadow duration-200" 
-      onClick={onClick || handleViewGroup}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
+    <motion.div
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col cursor-pointer group min-h-[320px]"
+      onClick={onClick || (() => navigate(`/groups/${group.id}`))}
+      whileHover={{ scale: 1.025, boxShadow: '0 8px 32px rgba(80, 63, 205, 0.08)' }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.25, type: 'spring', stiffness: 120 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`h-32 relative flex items-center justify-center ${generateGradient(group.name)}`}>
-        <motion.span 
-          className="text-white text-3xl font-bold"
-          animate={{ scale: isHovered ? 1.1 : 1 }}
-          transition={{ duration: 0.2 }}
-        >
-          {getInitials(group.name)}
-        </motion.span>
-      </div>
-      
-      <div className="p-4 flex-1 flex flex-col">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold">{group.name}</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant={group.privacy === 'private' ? 'destructive' : 'default'} className="cursor-help">
-                  {group.privacy === 'private' ? <Lock className="h-3 w-3 mr-1" /> : <Globe className="h-3 w-3 mr-1" />}
-                  {group.privacy}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{group.privacy === 'private' ? 'Private group - requires approval to join' : 'Public group - anyone can join'}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        
+      <div className="flex flex-col items-center pt-6 px-6">
+        <GroupAvatar photo={group.photo} name={group.name} size={80} />
+        <h3 className="text-lg font-semibold text-gray-900 text-center truncate w-full">{group.name}</h3>
         {group.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-            {group.description}
-          </p>
+          <p className="text-gray-500 text-sm text-center mt-1 line-clamp-2 w-full">{group.description}</p>
         )}
-        
-        <div className="flex items-center text-sm text-gray-500 mt-auto mb-4">
-          <div className="flex items-center mr-4">
-            <Users className="h-4 w-4 mr-1" />
-            <span>{group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}</span>
-          </div>
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-1" />
-            <span>Active {formatRelativeTime(group.lastActive)}</span>
-          </div>
-        </div>
-
-        <div className="flex gap-2 mt-auto">
-          {memberStatus === 'creator' ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewGroup();
-                }}
-                className="flex-1"
-              >
-                View Group
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleManageGroup}
-                className="flex-1"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Manage
-              </Button>
-            </>
-          ) : memberStatus === 'member' ? (
+        <div className="text-xs text-gray-400 mt-2 mb-1 text-center w-full">{metaInfo}</div>
+      </div>
+      <div className="flex-1" />
+      <div className="flex gap-2 px-6 pb-6 mt-4">
+        {memberStatus === 'creator' ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
+            className="flex-1"
+          >
+            View
+          </Button>
+        ) : memberStatus === 'member' ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
+            className="flex-1"
+          >
+            View
+          </Button>
+        ) : memberStatus === 'pending' ? (
+          <Button size="sm" disabled className="flex-1">Pending</Button>
+        ) : (
+          <>
             <Button
               variant="outline"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleViewGroup();
-              }}
-              className="w-full"
+              onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
+              className="flex-1"
             >
-              View Group
+              View
             </Button>
-          ) : memberStatus === 'pending' ? (
             <Button
               size="sm"
-              disabled
-              className="w-full"
+              onClick={e => { e.stopPropagation(); handleJoinGroup(e); }}
+              className="flex-1"
             >
-              Request Pending
+              {group.privacy === 'private' ? 'Request' : 'Join'}
             </Button>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewGroup();
-                }}
-                className="flex-1"
-              >
-                View Group
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleJoinGroup}
-                className="flex-1"
-              >
-                {group.privacy === 'private' ? 'Request Access' : 'Join Group'}
-              </Button>
-            </>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </motion.div>
   );

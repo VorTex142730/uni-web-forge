@@ -11,6 +11,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { getConnections } from '@/lib/firebase/connections';
 import { doc as firestoreDoc } from 'firebase/firestore';
+import ImageUpload from '@/components/ImageUpload';
+import { compressImage } from '@/lib/imageUtils';
 
 interface CreateGroupProps {
   onCancel: () => void;
@@ -22,8 +24,7 @@ const steps = [
   { id: 2, label: 'Settings' },
   { id: 3, label: 'Forum' },
   { id: 4, label: 'Photo' },
-  { id: 5, label: 'Cover Photo' },
-  { id: 6, label: 'Invites' }
+  { id: 5, label: 'Invites' }
 ];
 
 const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
@@ -33,8 +34,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
     name: '',
     description: '',
     privacy: 'public' as 'public' | 'private',
-    photo: null as File | null,
-    coverPhoto: null as File | null,
+    photo: '',
     hasForum: false,
     inviteMessage: '',
     selectedMembers: [] as string[],
@@ -43,35 +43,27 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
       photos: 'all',
       events: 'all',
       messages: 'all'
-    },
-    coverImage: '',
+    }
   });
   const [loading, setLoading] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [coverPhotoPreview, setCoverPhotoPreview] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [connections, setConnections] = useState<any[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [inviteWarning, setInviteWarning] = useState('');
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'coverPhoto') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, [type]: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'photo') {
-          setPhotoPreview(reader.result as string);
-        } else {
-          setCoverPhotoPreview(reader.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+  const handlePhotoUpload = async (base64Image: string) => {
+    try {
+      // Compress the image
+      const compressedImage = await compressImage(base64Image, 400);
+      setFormData(prev => ({ ...prev, photo: compressedImage }));
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast.error('Failed to process image. Please try a smaller image.');
     }
   };
 
   useEffect(() => {
-    if (currentStep !== 6 || !user) return;
+    if (currentStep !== 5 || !user) return;
     setConnectionsLoading(true);
     (async () => {
       try {
@@ -119,9 +111,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
         memberCount: 1, // Start with 1 member (the creator)
         hasForum: formData.hasForum,
         permissions: formData.permissions,
-        photo: photoPreview || '/default-group-photo.jpg',
-        coverPhoto: coverPhotoPreview || '/default-group-cover.jpg',
-        coverImage: formData.coverImage,
+        photo: formData.photo || '/default-group-photo.jpg',
         createdBy: {
           userId: user.uid,
           displayName: user.displayName || 'Anonymous',
@@ -252,64 +242,18 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
       case 4:
         return (
           <div className="space-y-4">
-            <div
-              className={`relative h-48 w-48 rounded-lg border ${
-                photoPreview ? 'border-transparent' : 'border-dashed border-gray-300'
-              } hover:border-gray-400 transition-colors`}
-            >
-              {photoPreview ? (
-                <img
-                  src={photoPreview}
-                  alt="Group photo preview"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Upload className="w-6 h-6 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">Group photo</p>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handlePhotoChange(e, 'photo')}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            <div className="w-48">
+              <ImageUpload
+                currentImage={formData.photo}
+                onImageUpload={handlePhotoUpload}
+                aspectRatio="square"
+                className="w-full"
               />
             </div>
           </div>
         );
 
       case 5:
-        return (
-          <div className="space-y-4">
-            <div
-              className={`relative h-48 w-full rounded-lg border ${
-                coverPhotoPreview ? 'border-transparent' : 'border-dashed border-gray-300'
-              } hover:border-gray-400 transition-colors`}
-            >
-              {coverPhotoPreview ? (
-                <img
-                  src={coverPhotoPreview}
-                  alt="Cover photo preview"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Upload className="w-6 h-6 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">Cover photo</p>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handlePhotoChange(e, 'coverPhoto')}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
-          </div>
-        );
-
-      case 6:
         return (
           <div className="space-y-6">
             <div className="relative">
@@ -421,7 +365,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
           <div className="border-b">
             <div className="flex">
               {steps.map((step, index) => (
-                <React.Fragment key={step.id}>
+                <div key={step.id} className="flex items-center">
                   <div
                     className={`py-3 px-4 text-sm ${
                       currentStep === step.id
@@ -434,7 +378,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
                   {index < steps.length - 1 && (
                     <div className="self-center w-8" />
                   )}
-                </React.Fragment>
+                </div>
               ))}
             </div>
           </div>

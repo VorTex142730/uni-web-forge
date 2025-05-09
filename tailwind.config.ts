@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -54,11 +53,11 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				hotspot: {
-					pink: '#FFC0CB',
-					lightpink: '#FFE4E1',
-					blue: '#4169E1',
-					primary: '#6366F1',
-					sidebar: '#FFF0F5',
+					pink: '#8B5CF6',
+					lightpink: '#DDD6FE',
+					blue: '#8B5CF6',
+					primary: '#8B5CF6',
+					sidebar: '#F5F3FF',
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
