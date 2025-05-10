@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, Timestamp, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, Timestamp, addDoc, serverTimestamp, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createGroupJoinRequestNotification, createGroupJoinResponseNotification } from '@/components/notifications/NotificationService';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import GroupFeed from './GroupFeed';
 import GroupMediaGallery from './GroupMediaGallery';
 
@@ -94,10 +94,17 @@ const GroupDetails = () => {
           );
 
           const membersSnapshot = await getDocs(membersQuery);
-          const members = membersSnapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id
-          })) as GroupMember[];
+          const members = membersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              userId: data.userId,
+              displayName: data.displayName,
+              photoURL: data.photoURL,
+              role: data.role,
+              joinedAt: data.joinedAt,
+              id: doc.id
+            };
+          }) as GroupMember[];
 
           setGroup({ ...groupData, members });
           setIsOwner(user?.uid === groupData.createdBy?.userId);
@@ -271,7 +278,7 @@ const GroupDetails = () => {
       if (!memberDocs.empty) {
         // Delete the member document
         const memberDoc = memberDocs.docs[0];
-        await memberDoc.ref.delete();
+        await deleteDoc(memberDoc.ref);
 
         // Update group member count
         const groupRef = doc(db, 'groups', id);
@@ -326,13 +333,13 @@ const GroupDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fff4f4]">
       {/* Header with Fixed Gradient */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700">
+      <div className="bg-purple-300">
         <div className="max-w-7xl mx-auto px-4">
           {/* Cover Photo Area */}
           <div className="relative h-48">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600" />
+            <div className="absolute inset-0 bg-purple-300" />
             <div className="absolute inset-0 bg-black/10" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-center gap-4">
@@ -402,8 +409,8 @@ const GroupDetails = () => {
               onClick={() => setActiveTab('feed')}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
                 activeTab === 'feed'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-purple-50 text-purple-600'
+                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
               }`}
             >
               Feed
@@ -412,8 +419,8 @@ const GroupDetails = () => {
               onClick={() => setActiveTab('members')}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
                 activeTab === 'members'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-purple-50 text-purple-600'
+                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
               }`}
             >
               Members
@@ -422,8 +429,8 @@ const GroupDetails = () => {
               onClick={() => setActiveTab('photos')}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
                 activeTab === 'photos'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-purple-50 text-purple-600'
+                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
               }`}
             >
               Photos
@@ -432,8 +439,8 @@ const GroupDetails = () => {
               onClick={() => setActiveTab('videos')}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
                 activeTab === 'videos'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-purple-50 text-purple-600'
+                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
               }`}
             >
               Videos
@@ -442,8 +449,8 @@ const GroupDetails = () => {
               onClick={() => setActiveTab('albums')}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
                 activeTab === 'albums'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-purple-50 text-purple-600'
+                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
               }`}
             >
               Albums
@@ -453,13 +460,13 @@ const GroupDetails = () => {
                 onClick={() => setActiveTab('requests')}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
                   activeTab === 'requests'
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-purple-50 text-purple-600'
+                    : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
                 }`}
               >
                 Join Requests
                 {joinRequests.length > 0 && (
-                  <span className="ml-2 bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full text-xs">
+                  <span className="ml-2 bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full text-xs">
                     {joinRequests.length}
                   </span>
                 )}
@@ -515,12 +522,18 @@ const GroupDetails = () => {
                     })
                     .map((member) => (
                       <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg">
-                        <Avatar src={member.photoURL} alt={member.displayName} />
+                        <Avatar>
+                          {member.photoURL ? (
+                            <AvatarImage src={member.photoURL} alt={member.displayName} />
+                          ) : (
+                            <AvatarFallback>{getInitials(member.displayName)}</AvatarFallback>
+                          )}
+                        </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <p className="font-medium">{member.displayName}</p>
                             {member.role === 'admin' && (
-                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                              <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
                                 Admin
                               </span>
                             )}

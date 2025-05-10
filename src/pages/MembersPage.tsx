@@ -95,11 +95,11 @@ const MembersContent = () => {
   return (
     <div className="min-h-screen bg-[#fff4f4]">
       {/* Header with Fixed Gradient */}
-      <div className="w-full bg-gradient-to-r from-purple-400 to-indigo-500">
+      <div className="w-full bg-purple-300">
         <div className="w-full max-w-7xl mx-auto px-4">
           {/* Cover Photo Area */}
           <div className="relative h-40">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500" />
+            <div className="absolute inset-0 bg-purple-300" />
             <div className="absolute inset-0 bg-black/5" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-center gap-4">
