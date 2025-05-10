@@ -64,13 +64,13 @@ const Sidebar = () => {
                 onClick={toggleSidebar}
                 className={({ isActive }) => cn(
                   "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-300",
-                  "text-gray-700 hover:bg-blue-50 hover:text-blue-600",
-                  isActive && "bg-blue-50 text-blue-600 font-medium",
+                  "text-gray-700 hover:bg-purple-50 hover:text-purple-600",
+                  isActive && "bg-purple-50 text-purple-600 font-medium",
                   "group"
                 )}
               >
                 <span className={cn(
-                  "text-gray-600 group-hover:text-blue-600 transition-colors duration-300",
+                  "text-gray-600 group-hover:text-purple-600 transition-colors duration-300",
                   "flex-shrink-0"
                 )}>{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
@@ -81,9 +81,9 @@ const Sidebar = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 group"
+            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all duration-300 group"
           >
-            <LogOut size={20} className="text-gray-600 group-hover:text-blue-600 transition-colors duration-300 flex-shrink-0" />
+            <LogOut size={20} className="text-gray-600 group-hover:text-purple-600 transition-colors duration-300 flex-shrink-0" />
             <span className="font-medium">Logout</span>
           </button>
         </div>
@@ -115,14 +115,14 @@ const Sidebar = () => {
                 to={item.path}
                 className={({ isActive }) => cn(
                   "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-300",
-                  "text-gray-700 hover:bg-blue-50 hover:text-blue-600",
-                  isActive && "bg-blue-50 text-blue-600 font-medium",
+                  "text-gray-700 hover:bg-purple-50 hover:text-purple-600",
+                  isActive && "bg-purple-50 text-purple-600 font-medium",
                   !isExpanded && "md:justify-center md:mx-0",
                   "group"
                 )}
               >
                 <span className={cn(
-                  "text-gray-600 group-hover:text-blue-600 transition-colors duration-300",
+                  "text-gray-600 group-hover:text-purple-600 transition-colors duration-300",
                   "flex-shrink-0"
                 )}>{item.icon}</span>
                 <span className={cn(
