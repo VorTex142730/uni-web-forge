@@ -161,7 +161,7 @@ const GroupsPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fff4f4]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Main Content */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -300,16 +300,18 @@ const GroupsPage = () => {
                       )}
                     </div>
                   ) : (
-                    <div className={view === 'grid' 
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
-                      : 'space-y-4'}>
-                      {sortedGroups.map((group) => (
-                        <GroupCard
-                          key={group.id}
-                          group={group}
-                          variant={view}
-                        />
-                      ))}
+                    <div className="bg-[#f3edf9] rounded-2xl p-6">
+                      <div className={view === 'grid' 
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
+                        : 'space-y-4'}>
+                        {sortedGroups.map((group) => (
+                          <GroupCard
+                            key={group.id}
+                            group={group}
+                            variant={view}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -353,16 +355,18 @@ const GroupsPage = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className={view === 'grid' 
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
-                      : 'space-y-4'}>
-                      {sortedGroups.map((group) => (
-                        <GroupCard
-                          key={group.id}
-                          group={group}
-                          variant={view}
-                        />
-                      ))}
+                    <div className="bg-[#f3edf9] rounded-2xl p-6">
+                      <div className={view === 'grid' 
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
+                        : 'space-y-4'}>
+                        {sortedGroups.map((group) => (
+                          <GroupCard
+                            key={group.id}
+                            group={group}
+                            variant={view}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
