@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings, Search, Menu } from 'lucide-react';
+import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings, Search, Menu, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, useNavigate } from 'react-router-dom';
@@ -25,12 +25,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useUniversalSearch } from '@/hooks/useUniversalSearch';
 
 interface QuickSearchResult {
   id: string;
-  type: 'user' | 'group' | 'forum';
+  type: 'user' | 'group' | 'forum' | 'post' | 'blog' | 'photo' | 'video';
   title: string;
   imageUrl?: string;
+  extra?: { username: string };
 }
 
 const Navbar = () => {
@@ -38,9 +40,7 @@ const Navbar = () => {
   const { isExpanded, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [quickResults, setQuickResults] = useState<QuickSearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [loading, setLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -50,6 +50,28 @@ const Navbar = () => {
   console.log("Navbar: user state", user);
   console.log("Navbar: userDetails state", userDetails);
 
+  // Use the universal search hook
+  const { results: quickResults, loading } = useUniversalSearch(debouncedSearch, 3);
+
+  // Group results by type
+  const groupedResults = quickResults.reduce((acc, result) => {
+    if (!acc[result.type]) acc[result.type] = [];
+    acc[result.type].push(result);
+    return acc;
+  }, {} as Record<string, typeof quickResults>);
+
+  const typeLabels: Record<string, string> = {
+    user: 'People',
+    group: 'Groups',
+    forum: 'Forums',
+    post: 'Posts',
+    blog: 'Blog Posts',
+    photo: 'Photos',
+    video: 'Videos',
+  };
+  const typeIcons: Record<string, JSX.Element> = {
+    user: <Users className="h-4 w-4" />, group: <Users2 className="h-4 w-4" />, forum: <MessageSquare className="h-4 w-4" />, post: <BookOpen className="h-4 w-4" />, blog: <BookOpen className="h-4 w-4" />, photo: <Image className="h-4 w-4" />, video: <Video className="h-4 w-4" />
+  };
 
   useEffect(() => {
     console.log('Navbar useEffect: Setting up handleClickOutside');
@@ -66,127 +88,6 @@ const Navbar = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  useEffect(() => {
-    console.log('Navbar useEffect: Debounced search term changed', debouncedSearch);
-    const performQuickSearch = async () => {
-      if (!debouncedSearch.trim()) {
-        console.log('performQuickSearch: Debounced search term is empty, clearing results');
-        setQuickResults([]);
-        return;
-      }
-
-      console.log('performQuickSearch: Starting quick search for:', debouncedSearch);
-      setLoading(true);
-      try {
-        const results: QuickSearchResult[] = [];
-        const searchTerm = debouncedSearch.toLowerCase();
-
-        // Search users
-        try {
-          console.log('performQuickSearch: Searching users for:', searchTerm);
-          const usersQuery = query(
-            collection(db, 'users'),
-            or(
-              where('firstName', '>=', searchTerm),
-              where('lastName', '>=', searchTerm),
-              where('nickname', '>=', searchTerm)
-            ),
-            limit(3)
-          );
-          const usersSnapshot = await getDocs(usersQuery);
-          console.log('performQuickSearch: Users snapshot received', usersSnapshot.docs.length);
-          usersSnapshot.forEach(doc => {
-            const userData = doc.data();
-            if (userData.photoURL) {
-                console.log('performQuickSearch: Fetched User PhotoURL:', userData.photoURL);
-            }
-            if (
-              userData.firstName?.toLowerCase().includes(searchTerm) ||
-              userData.lastName?.toLowerCase().includes(searchTerm) ||
-              userData.nickname?.toLowerCase().includes(searchTerm)
-            ) {
-              results.push({
-                id: doc.id,
-                type: 'user',
-                title: `${userData.firstName || ''} ${userData.lastName || ''}`,
-                imageUrl: userData.photoURL // Use photoURL from user document
-              });
-            }
-          });
-          console.log('performQuickSearch: User results found:', results.filter(r => r.type === 'user').length);
-        } catch (error) {
-          console.error('Error searching users:', error);
-        }
-
-        // Search groups
-        try {
-          console.log('performQuickSearch: Searching groups for:', searchTerm);
-          const groupsQuery = query(
-            collection(db, 'groups'),
-            where('name', '>=', searchTerm),
-            limit(3)
-          );
-          const groupsSnapshot = await getDocs(groupsQuery);
-          console.log('performQuickSearch: Groups snapshot received', groupsSnapshot.docs.length);
-          groupsSnapshot.forEach(doc => {
-            const groupData = doc.data();
-            if (groupData.photoURL) {
-                 console.log('performQuickSearch: Fetched Group PhotoURL:', groupData.photoURL);
-            }
-            if (groupData.name?.toLowerCase().includes(searchTerm)) {
-              results.push({
-                id: doc.id,
-                type: 'group',
-                title: groupData.name,
-                imageUrl: groupData.photoURL // Use photoURL from group document
-              });
-            }
-          });
-          console.log('performQuickSearch: Group results found:', results.filter(r => r.type === 'group').length);
-        } catch (error) {
-          console.error('Error searching groups:', error);
-        }
-
-        // Search forums
-        try {
-          console.log('performQuickSearch: Searching forums for:', searchTerm);
-          const forumsQuery = query(
-            collection(db, 'forums'),
-            where('title', '>=', searchTerm),
-            limit(3)
-          );
-          const forumsSnapshot = await getDocs(forumsQuery);
-          console.log('performQuickSearch: Forums snapshot received', forumsSnapshot.docs.length);
-          forumsSnapshot.forEach(doc => {
-            const forumData = doc.data();
-            if (forumData.title?.toLowerCase().includes(searchTerm)) {
-              results.push({
-                id: doc.id,
-                type: 'forum',
-                title: forumData.title
-                // Forums don't seem to have imageUrl in the interface or current logic
-              });
-            }
-          });
-          console.log('performQuickSearch: Forum results found:', results.filter(r => r.type === 'forum').length);
-        } catch (error) {
-          console.error('Error searching forums:', error);
-        }
-
-        console.log('performQuickSearch: Setting quick search results:', results);
-        setQuickResults(results);
-      } catch (error) {
-        console.error('Quick search error:', error);
-        toast.error('Search failed. Please try again.');
-      } finally {
-        console.log('performQuickSearch: Search loading finished');
-        setLoading(false);
-      }
-    };
-
-    performQuickSearch();
-  }, [debouncedSearch]);
 
   const handleNavigation = (path: string) => {
     console.log('handleNavigation: Navigating to', path);
@@ -206,11 +107,33 @@ const Navbar = () => {
   };
 
   const handleResultClick = (result: QuickSearchResult) => {
-    console.log('handleResultClick: Navigating to result', result);
-    navigate(`/${result.type}s/${result.id}`);
+    switch (result.type) {
+      case 'user':
+        navigate(`/profile/${result.extra?.username || result.id}`);
+        break;
+      case 'blog':
+        navigate(`/blog/${result.id}`);
+        break;
+      case 'forum':
+        navigate(`/forums/${result.id}`);
+        break;
+      case 'group':
+        navigate(`/groups/${result.id}`);
+        break;
+      case 'post':
+        navigate(`/posts/${result.id}`);
+        break;
+      case 'photo':
+        navigate(`/photos`);
+        break;
+      case 'video':
+        navigate(`/videos`);
+        break;
+      default:
+        break;
+    }
     setShowResults(false);
     setSearchQuery('');
-    console.log('handleResultClick: Navigated, hiding results and clearing search query');
   };
 
   const getResultIcon = (type: string) => {
@@ -288,7 +211,7 @@ const Navbar = () => {
 
       {/* Search */}
       <div className="flex-1 max-w-2xl mx-4 relative">
-        <form onSubmit={handleSearch}>
+        <form onSubmit={handleSearch} className="relative" ref={searchRef}>
           <div className="relative">
             <Input
               type="search"
@@ -296,69 +219,66 @@ const Navbar = () => {
               className="w-full bg-white/10 border-none pl-10 text-white placeholder:text-white/70 focus:bg-white/20 focus:ring-2 focus:ring-white/30"
               value={searchQuery}
               onChange={(e) => {
-                console.log('Search input changed:', e.target.value);
                 setSearchQuery(e.target.value);
                 setShowResults(true);
-                console.log('Setting showResults to true on input change');
               }}
-              onFocus={() => {
-                console.log('Search input focused');
-                setShowResults(true);
-                console.log('Setting showResults to true on input focus');
-              }}
+              onFocus={() => setShowResults(true)}
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 h-4 w-4" />
           </div>
-        </form>
-
-        {/* Quick Results Dropdown */}
-        {showResults && (searchQuery.trim() || loading) && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto">
-            {loading ? (
-              <div className="p-4 text-center text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2">Searching...</p>
-              </div>
-            ) : quickResults.length > 0 ? (
-              <div className="py-2">
-                {quickResults.map((result) => (
-                  <button
-                    key={`${result.type}-${result.id}`}
-                    className="w-full px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 text-left transition-colors duration-150"
-                    onClick={() => handleResultClick(result)}
-                  >
-                    {result.imageUrl ? (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={result.imageUrl} alt={result.title} />
-                        <AvatarFallback>{result.title[0]}</AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        {getResultIcon(result.type)}
+          {showResults && searchQuery && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50">
+              {loading ? (
+                <div className="p-4 text-center text-gray-500">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2">Searching...</p>
+                </div>
+              ) : quickResults.length > 0 ? (
+                <div className="py-2">
+                  {Object.entries(groupedResults).map(([type, items]) => (
+                    <div key={type}>
+                      <div className="px-4 py-1 text-xs font-semibold text-gray-500 flex items-center gap-2">
+                        {typeIcons[type]} {typeLabels[type]}
                       </div>
-                    )}
-                    <div>
-                      <p className="font-medium">{result.title}</p>
-                      <p className="text-sm text-gray-500 capitalize">{result.type}</p>
+                      {items.map((result) => (
+                        <button
+                          key={`${result.type}-${result.id}`}
+                          className="w-full px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 text-left transition-colors duration-150"
+                          onClick={() => handleResultClick(result)}
+                        >
+                          {result.imageUrl ? (
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={result.imageUrl} alt={result.title} />
+                              <AvatarFallback>{result.title[0]}</AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                              {typeIcons[result.type]}
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-medium">{result.title}</p>
+                            <p className="text-sm text-gray-500 capitalize">{typeLabels[result.type]}</p>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
-                <div className="px-4 py-2 border-t border-gray-100">
+                  ))}
                   <button
-                    className="w-full text-center text-blue-600 hover:text-blue-700 font-medium"
+                    className="w-full text-center text-blue-600 hover:text-blue-700 font-medium mt-2"
                     onClick={handleSearch}
                   >
-                    View all results
+                    View all results for "{searchQuery}"
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div className="p-4 text-center text-gray-500">
-                No results found
-              </div>
-            )}
-          </div>
-        )}
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  No results found
+                </div>
+              )}
+            </div>
+          )}
+        </form>
       </div>
 
       {/* Actions */}
