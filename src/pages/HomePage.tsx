@@ -11,6 +11,14 @@ import { useAuth } from '@/context/AuthContext';
 import ImageUpload from '@/components/ImageUpload';
 import { GroupAvatar } from '@/components/groups/GroupAvatar';
 
+type UserDetails = {
+  displayName?: string;
+  photoURL?: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+};
+
 interface Update {
   id: string;
   type: 'group_created' | 'post';
@@ -226,12 +234,19 @@ const HomePage = () => {
     }
   };
 
+  const handleFileInputClick = () => {
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#fbe4d8]">
+    <div className="min-h-screen bg-[#fdf0eb]">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {userDetails?.displayName || 'User'}!</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {userDetails?.firstName || 'User'}!</h1>
           <p className="text-gray-600 mt-2">Here's what's happening in your community</p>
         </div>
 
@@ -325,7 +340,7 @@ const HomePage = () => {
               <div className="flex items-center space-x-4 mb-4">
                 <Avatar>
                   <AvatarImage src={userDetails?.photoURL || ''} />
-                  <AvatarFallback>{userDetails?.displayName?.[0] || 'U'}</AvatarFallback>
+                  <AvatarFallback>{(userDetails?.firstName || 'U')[0]}</AvatarFallback>
                 </Avatar>
                 <Input
                   placeholder="What's on your mind?"
@@ -351,7 +366,7 @@ const HomePage = () => {
                   <Button 
                     variant="ghost" 
                     className="text-gray-600"
-                    onClick={() => document.querySelector('input[type="file"]')?.click()}
+                    onClick={handleFileInputClick}
                   >
                     <Image className="w-5 h-5 mr-2" />
                     Photo
