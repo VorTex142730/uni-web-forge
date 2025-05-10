@@ -38,17 +38,17 @@ const Sidebar = () => {
     <>
       {/* Mobile Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-30 w-64 bg-white transform transition-transform duration-300 ease-in-out md:hidden",
+        "fixed inset-y-0 left-0 z-30 w-64 bg-[#FBE4D8] shadow-lg border-r border-[#DFB6B2] rounded-tr-2xl rounded-br-2xl transform transition-transform duration-300 ease-in-out md:hidden",
         isExpanded ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
           {/* Mobile Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800">HotSpoT</h2>
+          <div className="flex items-center justify-between p-4 border-b border-[#DFB6B2]">
+            <h2 className="text-xl font-bold text-[#2B124C] tracking-wide">HotSpoT</h2>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-gray-500 hover:text-gray-700"
+              className="text-[#854F6C] hover:text-[#2B124C]"
               onClick={toggleSidebar}
             >
               <X className="h-6 w-6" />
@@ -63,14 +63,14 @@ const Sidebar = () => {
                 to={item.path}
                 onClick={toggleSidebar}
                 className={({ isActive }) => cn(
-                  "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-300",
-                  "text-gray-700 hover:bg-purple-50 hover:text-purple-600",
-                  isActive && "bg-purple-50 text-purple-600 font-medium",
+                  "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-200",
+                  "text-[#2B124C] hover:bg-[#DFB6B2] hover:text-[#2B124C]",
+                  isActive && "bg-[#854F6C] text-white font-semibold shadow-sm",
                   "group"
                 )}
               >
                 <span className={cn(
-                  "text-gray-600 group-hover:text-purple-600 transition-colors duration-300",
+                  "text-[#854F6C] group-hover:text-[#2B124C] group-[.active]:text-white transition-colors duration-200",
                   "flex-shrink-0"
                 )}>{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
@@ -81,9 +81,9 @@ const Sidebar = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all duration-300 group"
+            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-[#2B124C] hover:bg-[#DFB6B2] hover:text-[#2B124C] transition-all duration-200 group"
           >
-            <LogOut size={20} className="text-gray-600 group-hover:text-purple-600 transition-colors duration-300 flex-shrink-0" />
+            <LogOut size={20} className="text-[#854F6C] group-hover:text-[#2B124C] transition-colors duration-200 flex-shrink-0" />
             <span className="font-medium">Logout</span>
           </button>
         </div>
@@ -91,15 +91,15 @@ const Sidebar = () => {
 
       {/* Desktop Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-20 hidden md:flex flex-col bg-white border-r border-gray-200 transition-all duration-300",
+        "fixed inset-y-0 left-0 z-20 hidden md:flex flex-col bg-[#FBE4D8] border-r border-[#DFB6B2] shadow-lg rounded-tr-2xl rounded-br-2xl transition-all duration-300",
         isExpanded ? "w-64" : "w-16"
       )}>
         {/* Desktop Header */}
-        <div className="flex h-16 px-4 items-center border-b border-gray-200">
+        <div className="flex h-16 px-4 items-center border-b border-[#DFB6B2]">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-gray-500 hover:text-gray-700"
+            className="text-[#854F6C] hover:text-[#2B124C]"
             onClick={toggleSidebar}
           >
             <Menu size={20} />
@@ -114,15 +114,15 @@ const Sidebar = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) => cn(
-                  "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-300",
-                  "text-gray-700 hover:bg-purple-50 hover:text-purple-600",
-                  isActive && "bg-purple-50 text-purple-600 font-medium",
+                  "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-200",
+                  "text-[#2B124C] hover:bg-[#DFB6B2] hover:text-[#2B124C]",
+                  isActive && "bg-[#854F6C] text-white font-semibold shadow-sm",
                   !isExpanded && "md:justify-center md:mx-0",
                   "group"
                 )}
               >
                 <span className={cn(
-                  "text-gray-600 group-hover:text-purple-600 transition-colors duration-300",
+                  "text-[#854F6C] group-hover:text-[#2B124C] group-[.active]:text-white transition-colors duration-200",
                   "flex-shrink-0"
                 )}>{item.icon}</span>
                 <span className={cn(
