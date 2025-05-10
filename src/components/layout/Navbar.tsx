@@ -19,6 +19,12 @@ import { db } from '@/config/firebaseConfig';
 import { useDebounce } from '@/hooks/useDebounce';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useCart } from '@/context/CartContext';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface QuickSearchResult {
   id: string;
@@ -257,15 +263,15 @@ const Navbar = () => {
 
   console.log('Navbar component rendering JSX');
   return (
-    <div className={`h-16 bg-white flex items-center justify-between px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${
+    <div className={`h-16 bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-between px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${
       isExpanded ? 'md:left-64' : 'md:left-16'
-    } left-0 z-20 border-b border-gray-200`}>
+    } left-0 z-20 shadow-lg`}>
       <div className="flex items-center">
         {/* Mobile Menu Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden mr-2"
+          className="md:hidden mr-2 text-white hover:bg-white/10"
           onClick={() => {
             console.log('Mobile Menu Button clicked');
             toggleSidebar();
@@ -276,18 +282,18 @@ const Navbar = () => {
 
         {/* Logo */}
         <Link to="/" className="flex items-center" onClick={() => console.log('Logo clicked, navigating to home')}>
-          <h1 className="text-xl font-bold">HotSpoT</h1>
+          <h1 className="text-xl font-bold text-white">HotSpoT</h1>
         </Link>
       </div>
 
       {/* Search */}
-      <div ref={searchRef} className="flex-1 max-w-2xl mx-6 relative hidden md:block">
+      <div className="flex-1 max-w-2xl mx-4 relative">
         <form onSubmit={handleSearch}>
           <div className="relative">
             <Input
               type="search"
               placeholder="Search..."
-              className="w-full bg-gray-100/80 border-none pl-10"
+              className="w-full bg-white/10 border-none pl-10 text-white placeholder:text-white/70 focus:bg-white/20 focus:ring-2 focus:ring-white/30"
               value={searchQuery}
               onChange={(e) => {
                 console.log('Search input changed:', e.target.value);
@@ -301,13 +307,13 @@ const Navbar = () => {
                 console.log('Setting showResults to true on input focus');
               }}
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 h-4 w-4" />
           </div>
         </form>
 
         {/* Quick Results Dropdown */}
         {showResults && (searchQuery.trim() || loading) && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mx-auto"></div>
@@ -318,10 +324,10 @@ const Navbar = () => {
                 {quickResults.map((result) => (
                   <button
                     key={`${result.type}-${result.id}`}
-                    className="w-full px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 text-left"
+                    className="w-full px-4 py-2 hover:bg-gray-50 flex items-center space-x-3 text-left transition-colors duration-150"
                     onClick={() => handleResultClick(result)}
                   >
-                    {result.imageUrl ? ( // Use imageUrl from search result
+                    {result.imageUrl ? (
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={result.imageUrl} alt={result.title} />
                         <AvatarFallback>{result.title[0]}</AvatarFallback>
@@ -339,7 +345,7 @@ const Navbar = () => {
                 ))}
                 <div className="px-4 py-2 border-t border-gray-100">
                   <button
-                    className="w-full text-center text-blue-600 hover:text-blue-700"
+                    className="w-full text-center text-blue-600 hover:text-blue-700 font-medium"
                     onClick={handleSearch}
                   >
                     View all results
@@ -358,58 +364,83 @@ const Navbar = () => {
       {/* Actions */}
       <div className="flex items-center space-x-2 md:space-x-4">
         {/* Mobile Search Button */}
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => console.log('Mobile Search Button clicked')}>
+        <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/10" onClick={() => console.log('Mobile Search Button clicked')}>
           <Search className="h-5 w-5" />
         </Button>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-gray-600 relative"
-          onClick={() => handleNavigation('/messages')}
-        >
-          <Mail size={20} />
-          {user?.unreadMessages > 0 && (
-            <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
-              {user.unreadMessages}
-            </span>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-gray-600 relative"
-          onClick={() => handleNavigation('/notifications')}
-        >
-          <Bell size={20} />
-          {user?.unreadNotifications > 0 && (
-            <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
-              {user.unreadNotifications}
-            </span>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-gray-600 relative"
-          onClick={() => handleNavigation('/cart')}
-        >
-          <ShoppingCart size={20} />
-          {cartCount > 0 && (
-            <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
-              {cartCount}
-            </span>
-          )}
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/10 relative"
+                onClick={() => handleNavigation('/messages')}
+              >
+                <Mail size={20} />
+                {user?.unreadMessages > 0 && (
+                  <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center animate-pulse">
+                    {user.unreadMessages}
+                  </span>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Messages</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/10 relative"
+                onClick={() => handleNavigation('/notifications')}
+              >
+                <Bell size={20} />
+                {user?.unreadNotifications > 0 && (
+                  <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center animate-pulse">
+                    {user.unreadNotifications}
+                  </span>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Notifications</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/10 relative"
+                onClick={() => handleNavigation('/cart')}
+              >
+                <ShoppingCart size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center animate-pulse">
+                    {cartCount}
+                  </span>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Cart</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* User Profile Dropdown - Hide on mobile */}
         <div className="hidden md:block">
           <DropdownMenu onOpenChange={(open) => console.log('User Profile Dropdown open state changed:', open)}>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-2 cursor-pointer">
-                <span className="font-medium">{userDisplayName}</span> {/* Use calculated display name */}
-                <ChevronDown size={16} className="text-gray-500" />
-                <Avatar className="h-8 w-8">
+              <button className="flex items-center space-x-2 cursor-pointer bg-white/10 hover:bg-white/20 rounded-full px-2 py-1 transition-colors duration-150">
+                <span className="font-medium text-white">{userDisplayName}</span>
+                <ChevronDown size={16} className="text-white/70" />
+                <Avatar className="h-8 w-8 border-2 border-white/20">
                   <AvatarImage src={userPhotoUrl} alt="Profile" />
                   <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback>
                 </Avatar>
@@ -423,7 +454,7 @@ const Navbar = () => {
                     <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-medium">{userDisplayName}</span> {/* Use calculated display name */}
+                    <span className="font-medium">{userDisplayName}</span>
                     <span className="text-sm text-gray-500">@{user?.username}</span>
                   </div>
                 </div>
