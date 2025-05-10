@@ -9,7 +9,7 @@ const LayoutContent = () => {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-[#fff4f4]">
+    <div className="min-h-screen bg-[#fbe4d8]">
       <Sidebar />
       <div className={`transition-all duration-300 ${isExpanded ? 'pl-64' : 'pl-16'}`}>
         <Navbar />
