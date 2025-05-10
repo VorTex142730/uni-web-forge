@@ -34,7 +34,7 @@ interface MemberCardProps {
 }
 
 const roleStyles: Record<string, string> = {
-  student: 'bg-blue-100 text-blue-800',
+  student: 'bg-purple-100 text-purple-800',
   admin: 'bg-purple-100 text-purple-800',
   instructor: 'bg-green-100 text-green-800',
   default: 'bg-gray-100 text-gray-800',
@@ -148,15 +148,17 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
 
       <div className="p-6 text-center flex-grow">
         <div className="relative mx-auto w-24 h-24 mb-4">
-          <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-            <AvatarImage
-              src={member.photoURL || undefined}
-              alt={`${member.firstName || ''} ${member.lastName || ''}'s Profile`}
-            />
-            <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-100 to-blue-200 text-gray-600">
-              {getInitials(member.firstName, member.lastName)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="h-24 w-24 rounded-full bg-white shadow-lg border-2 border-purple-100 flex items-center justify-center mx-auto">
+            <Avatar className="h-20 w-20">
+              <AvatarImage
+                src={member.photoURL || undefined}
+                alt={`${member.firstName || ''} ${member.lastName || ''}'s Profile`}
+              />
+              <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-100 to-purple-200 text-gray-600">
+                {getInitials(member.firstName, member.lastName)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
         </div>
 
         <div className="text-lg font-semibold truncate mb-2" title={`${member.firstName || ''} ${member.lastName || ''}`}>
@@ -195,7 +197,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
             {connectionStatus === 'connected' ? (
               <Button
                 variant="outline"
-                className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
+                className="w-full hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 transition-colors duration-200"
                 onClick={handleMessage}
               >
                 <Mail className="h-4 w-4 mr-2" />
@@ -204,7 +206,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
             ) : (
               <Button
                 variant="outline"
-                className="w-full hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors duration-200"
+                className="w-full hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 transition-colors duration-200"
                 disabled={sendingRequest || connectionStatus === 'pending'}
                 onClick={handleConnect}
               >
