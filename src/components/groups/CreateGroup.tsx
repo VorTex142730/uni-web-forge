@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Upload, Search, UserPlus } from 'lucide-react';
+import { ArrowLeft, Upload, Search, UserPlus, Users, Lock, Image as ImageIcon, MessageCircle, UserCheck, CheckCircle } from 'lucide-react';
 import { addDoc, collection, serverTimestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
@@ -13,6 +13,7 @@ import { getConnections } from '@/lib/firebase/connections';
 import { doc as firestoreDoc } from 'firebase/firestore';
 import ImageUpload from '@/components/ImageUpload';
 import { compressImage } from '@/lib/imageUtils';
+import { createNotification } from '@/components/notifications/NotificationService';
 
 interface CreateGroupProps {
   onCancel: () => void;
@@ -25,6 +26,14 @@ const steps = [
   { id: 3, label: 'Forum' },
   { id: 4, label: 'Photo' },
   { id: 5, label: 'Invites' }
+];
+
+const stepIcons = [
+  <Users key="users" className="w-5 h-5" />,
+  <Lock key="lock" className="w-5 h-5" />,
+  <MessageCircle key="forum" className="w-5 h-5" />,
+  <ImageIcon key="image" className="w-5 h-5" />,
+  <UserCheck key="invite" className="w-5 h-5" />
 ];
 
 const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
@@ -50,6 +59,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
   const [connections, setConnections] = useState<any[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [inviteWarning, setInviteWarning] = useState('');
+  const [errors, setErrors] = useState<{ name?: string; description?: string; members?: string }>({});
 
   const handlePhotoUpload = async (base64Image: string) => {
     try {
@@ -129,6 +139,20 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
         joinedAt: serverTimestamp()
       });
 
+      // Send notification to each invited member (except creator)
+      for (const memberId of formData.selectedMembers) {
+        if (memberId !== user.uid) {
+          await createNotification({
+            recipientId: memberId,
+            senderId: user.uid,
+            type: 'group',
+            groupId: groupRef.id,
+            groupName: formData.name,
+            message: `You have been invited to join the group "${formData.name}".`
+          });
+        }
+      }
+
       toast.success('Group created successfully!');
       onSuccess();
     } catch (error) {
@@ -140,6 +164,22 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
   };
 
   const handleNext = () => {
+    // Step 1: Require name and description
+    if (currentStep === 1) {
+      const newErrors: { name?: string; description?: string } = {};
+      if (!formData.name.trim()) newErrors.name = 'Group name is required.';
+      if (!formData.description.trim()) newErrors.description = 'Description is required.';
+      setErrors(newErrors);
+      if (Object.keys(newErrors).length > 0) return;
+    }
+    // Step 5: Require at least one member
+    if (currentStep === 5) {
+      if (formData.selectedMembers.length === 0) {
+        setErrors({ members: 'Please select at least one member to invite.' });
+        return;
+      }
+    }
+    setErrors({});
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -165,14 +205,16 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
               value={formData.name}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="Group Name"
-              className="w-full"
+              className={`w-full ${errors.name ? 'border-red-500' : ''}`}
             />
+            {errors.name && <div className="text-red-500 text-xs mt-1">{errors.name}</div>}
             <Textarea
               value={formData.description}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Group Description"
-              className="w-full h-32"
+              className={`w-full h-32 ${errors.description ? 'border-red-500' : ''}`}
             />
+            {errors.description && <div className="text-red-500 text-xs mt-1">{errors.description}</div>}
           </div>
         );
 
@@ -337,6 +379,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
                 </div>
               </div>
             )}
+            {errors.members && <div className="text-red-500 text-xs mt-2">{errors.members}</div>}
             {inviteWarning && <div className="text-red-500 text-sm mt-2">{inviteWarning}</div>}
           </div>
         );
@@ -347,74 +390,89 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <button
-          onClick={handleBack}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          <span className="text-sm">Back</span>
-        </button>
-
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="px-6 py-4 border-b">
-            <h1 className="text-xl font-medium">Create A New Group</h1>
-          </div>
-
-          <div className="border-b">
-            <div className="flex">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`py-3 px-4 text-sm ${
-                      currentStep === step.id
-                        ? 'text-blue-600 border-b-2 border-blue-600'
-                        : 'text-gray-500'
-                    }`}
-                  >
-                    {step.label}
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className="self-center w-8" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {renderStepContent()}
-              
-              <div className="flex justify-between mt-8">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  size="sm"
-                >
-                  {currentStep === 1 ? 'Cancel' : 'Back'}
-                </Button>
-                <Button
-                  type={currentStep === steps.length ? "submit" : "button"}
-                  size="sm"
-                  disabled={loading}
-                  onClick={currentStep === steps.length ? undefined : handleNext}
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      <span>Creating...</span>
-                    </div>
-                  ) : currentStep === steps.length ? (
-                    'Create Group'
-                  ) : (
-                    'Continue'
-                  )}
-                </Button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-10">
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="mb-8 flex items-center gap-2">
+          {steps.map((step, idx) => (
+            <React.Fragment key={step.id}>
+              <div className={`flex flex-col items-center ${currentStep === step.id ? 'text-blue-600' : 'text-gray-400'}`}> 
+                <div className={`rounded-full border-2 ${currentStep === step.id ? 'border-blue-600 bg-white shadow-lg' : 'border-gray-200 bg-gray-100'} w-10 h-10 flex items-center justify-center transition-all duration-200`}>{stepIcons[idx]}</div>
+                <span className={`mt-2 text-xs font-semibold ${currentStep === step.id ? 'text-blue-600' : 'text-gray-400'}`}>{step.label}</span>
               </div>
-            </form>
-          </div>
+              {idx < steps.length - 1 && <div className={`flex-1 h-1 ${currentStep > step.id ? 'bg-blue-500' : 'bg-gray-200'} mx-2 rounded transition-all duration-200`} />}
+            </React.Fragment>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Step Content */}
+            <div>
+              {currentStep === 1 && (
+                <>
+                  <h2 className="text-xl font-bold mb-2 text-gray-800">Group Details</h2>
+                  <p className="text-gray-500 mb-6">Give your group a name and description.</p>
+                </>
+              )}
+              {currentStep === 2 && (
+                <>
+                  <h2 className="text-xl font-bold mb-2 text-gray-800">Settings</h2>
+                  <p className="text-gray-500 mb-6">Choose privacy and permissions for your group.</p>
+                </>
+              )}
+              {currentStep === 3 && (
+                <>
+                  <h2 className="text-xl font-bold mb-2 text-gray-800">Forum</h2>
+                  <p className="text-gray-500 mb-6">Enable a discussion forum for your group.</p>
+                </>
+              )}
+              {currentStep === 4 && (
+                <>
+                  <h2 className="text-xl font-bold mb-2 text-gray-800">Group Photo</h2>
+                  <p className="text-gray-500 mb-6">Upload a group photo or logo.</p>
+                </>
+              )}
+              {currentStep === 5 && (
+                <>
+                  <h2 className="text-xl font-bold mb-2 text-gray-800">Invite Members</h2>
+                  <p className="text-gray-500 mb-6">Search and invite people to join your group.</p>
+                </>
+              )}
+              {renderStepContent()}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between items-center mt-8 gap-4">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                size="lg"
+                className="rounded-full px-6"
+              >
+                {currentStep === 1 ? 'Cancel' : 'Back'}
+              </Button>
+              <Button
+                type={currentStep === steps.length ? "submit" : "button"}
+                size="lg"
+                className="rounded-full px-8 bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:from-blue-600 hover:to-purple-600"
+                disabled={loading}
+                onClick={currentStep === steps.length ? undefined : handleNext}
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    <span>Creating...</span>
+                  </div>
+                ) : currentStep === steps.length ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 mr-2" />Create Group
+                  </>
+                ) : (
+                  'Continue'
+                )}
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
