@@ -18,7 +18,7 @@ const CreateBlogPostPage: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Restrict to admins only
-  if (!userDetails?.isAdmin) {
+  if (!userDetails?.role || userDetails.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-white p-8 rounded shadow text-center">
@@ -101,8 +101,7 @@ const CreateBlogPostPage: React.FC = () => {
         },
         likes: 0,
         comments: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        date: new Date().toISOString()
       });
       navigate('/blog');
     } catch (err: any) {
@@ -115,12 +114,12 @@ const CreateBlogPostPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-8">
+    <div className="min-h-screen bg-[#fdf0eb] py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
         <Button
           variant="ghost"
-          className="mb-6 -ml-2 hover:bg-gray-100"
+          className="mb-6 -ml-2 hover:bg-[#854f6c]/10 hover:text-[#854f6c]"
           onClick={() => navigate('/blog')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -228,7 +227,7 @@ const CreateBlogPostPage: React.FC = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-[#854f6c] hover:bg-[#854f6c]/90 text-white"
             >
               {loading ? 'Creating...' : 'Create Post'}
             </Button>

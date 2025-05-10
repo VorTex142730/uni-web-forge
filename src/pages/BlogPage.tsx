@@ -64,7 +64,7 @@ const BlogPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fff4f4] py-8">
+    <div className="min-h-screen bg-[#fdf0eb] py-8">
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header Section */}
         <div className="text-center mb-12">
@@ -72,7 +72,7 @@ const BlogPage: React.FC = () => {
           <p className="text-md text-gray-500 mb-2">A new breed of explorer</p>
           <Button
             onClick={() => navigate('/blog/create')}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-[#854f6c] hover:bg-[#854f6c]/90 text-white"
           >
             Create New Post
           </Button>
@@ -99,14 +99,14 @@ const BlogPage: React.FC = () => {
                 <div className="flex-1 p-6 flex flex-col justify-center">
                   {/* Category/Tags */}
                   <div className="mb-2">
-                    {post.categories && post.categories.length > 0 && (
+                    {post.category && (
                       <span className="text-xs font-semibold text-yellow-500 uppercase tracking-wide">
-                        {post.categories.join(' / ')}
+                        {post.category}
                       </span>
                     )}
                   </div>
                   {/* Title */}
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-[#854f6c] transition-colors line-clamp-2">
                     {post.title}
                   </h2>
                   {/* Meta info */}
@@ -123,7 +123,7 @@ const BlogPage: React.FC = () => {
                   <div className="flex items-center justify-between mt-auto pt-2">
                     <Button
                       variant="ghost"
-                      className="text-blue-600 hover:text-blue-800 text-sm px-2"
+                      className="text-[#854f6c] hover:text-[#854f6c]/80 text-sm px-2"
                       onClick={e => { e.stopPropagation(); navigate(`/blog/${post.id}`); }}
                     >
                       Read More →

@@ -97,7 +97,7 @@ const BlogPostPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#fdf0eb]">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading...</div>
         </div>
@@ -107,7 +107,7 @@ const BlogPostPage: React.FC = () => {
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#fdf0eb]">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-red-500">{error || 'Blog post not found'}</div>
         </div>
@@ -116,8 +116,8 @@ const BlogPostPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <article className="max-w-4xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-[#fdf0eb]">
+      <article className="max-w-4xl mx-auto px-6 py-12 bg-white rounded-lg shadow-sm">
         {/* Back Button */}
         <Button
           variant="ghost"
@@ -180,7 +180,7 @@ const BlogPostPage: React.FC = () => {
         {/* Content */}
         <div className="prose prose-base max-w-none text-gray-800 mb-8">
           {post.content.split('\n\n').map((paragraph, index) => (
-            <p key={index} className={index === 0 ? 'mb-6 first-letter:text-3xl first-letter:font-bold first-letter:text-blue-600 first-letter:float-left first-letter:mr-2' : 'mb-6'}>
+            <p key={index} className={index === 0 ? 'mb-6 first-letter:text-3xl first-letter:font-bold first-letter:text-[#854f6c] first-letter:float-left first-letter:mr-2' : 'mb-6'}>
               {paragraph}
             </p>
           ))}
@@ -191,10 +191,10 @@ const BlogPostPage: React.FC = () => {
           <button
             onClick={handleLike}
             disabled={!user}
-            className={`flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white hover:bg-gray-100 transition ${userLiked ? 'text-blue-600' : 'text-gray-400'}`}
+            className={`flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white hover:bg-gray-100 transition ${userLiked ? 'text-[#854f6c]' : 'text-gray-400'}`}
             title={userLiked ? 'Unlike' : 'Like'}
           >
-            <ThumbsUp className="h-6 w-6" fill={userLiked ? '#2563eb' : 'none'} />
+            <ThumbsUp className="h-6 w-6" fill={userLiked ? '#854f6c' : 'none'} />
           </button>
           <span className="text-gray-700 text-base font-medium">{totalLikes}</span>
           <span className="text-gray-400 text-sm">Likes</span>
@@ -222,14 +222,14 @@ const BlogPostPage: React.FC = () => {
                 )}
               </div>
               <textarea
-                className="flex-1 border border-gray-200 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-100 resize-none min-h-[40px] text-sm"
+                className="flex-1 border border-gray-200 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-[#854f6c]/20 resize-none min-h-[40px] text-sm"
                 placeholder="Add a comment..."
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
                 maxLength={500}
                 required
               />
-              <Button type="submit" className="h-9 px-3 text-sm">Post</Button>
+              <Button type="submit" className="h-9 px-3 text-sm bg-[#854f6c] hover:bg-[#854f6c]/90 text-white">Post</Button>
             </form>
           )}
           <div className="space-y-4">
