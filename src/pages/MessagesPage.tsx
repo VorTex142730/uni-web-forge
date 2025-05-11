@@ -305,7 +305,9 @@ const MessagesPage: React.FC = () => {
         senderId: user.uid,
         text: messageText.replace(/^\s+|\s+$/g, ''), // Only trim leading/trailing whitespace
         timestamp: serverTimestamp(),
-        isRead: false
+        isRead: false,
+        backgroundColor: '#fdf0eb',
+        textColor: '#333'
       };
       if (replyToMessage) {
         messageData.replyTo = replyToMessage.id;
@@ -317,7 +319,9 @@ const MessagesPage: React.FC = () => {
         lastMessage: {
           text: messageText.replace(/^\s+|\s+$/g, ''), // Only trim leading/trailing whitespace
           timestamp: serverTimestamp(),
-          senderId: user.uid
+          senderId: user.uid,
+          backgroundColor: '#fdf0eb',
+          textColor: '#333'
         }
       });
       
@@ -617,14 +621,14 @@ const MessagesPage: React.FC = () => {
   }, [contextMenu]);
 
   return (
-    <div className="flex h-[calc(100vh-80px)] -mt-4 -mx-4 overflow-hidden">
+    <div className="flex h-[calc(100vh-80px)] -mt-4 -mx-4 overflow-hidden bg-[#fdf0eb]">
       {/* Conversation List */}
-      <div className={`bg-white border-r border-gray-200 flex flex-col ${conversationId ? 'hidden md:flex w-1/3' : 'w-full md:w-1/3'}`}>
+      <div className={`bg-[#fdf0eb] border-r border-gray-200 flex flex-col ${conversationId ? 'hidden md:flex w-1/3' : 'w-full md:w-1/3'}`}>
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold mb-4">Messages</h1>
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#854F6C] h-4 w-4" />
               <Input
                 placeholder="Search messages..."
                 value={searchQuery}
@@ -646,7 +650,7 @@ const MessagesPage: React.FC = () => {
         {/* New Conversation Modal */}
         {showNewConversation && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="bg-[#fdf0eb] rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-hidden">
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="text-lg font-semibold">Start a New Conversation</h2>
                 <Button 
@@ -675,21 +679,21 @@ const MessagesPage: React.FC = () => {
               
               <div className="overflow-y-auto max-h-[50vh]">
                 {availableUsers.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">No users found</div>
+                  <div className="p-4 text-center text-[#854F6C]">No users found</div>
                 ) : (
                   availableUsers.map(user => (
                     <div
                       key={user.id}
-                      className="p-4 hover:bg-gray-50 cursor-pointer flex items-center gap-3"
+                      className="p-4 hover:bg-[#fdf0eb]/80 cursor-pointer flex items-center gap-3"
                       onClick={() => startNewConversation(user)}
                     >
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-10 w-10 ring-2 ring-[#DFB6B2] ring-offset-2 bg-gradient-to-r from-[#854F6C] to-[#DFB6B2] p-[2px]">
                         <AvatarImage src={user.avatar} alt={`${user.name}'s avatar`} />
                         <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
                         <h3 className="font-medium">{user.name}</h3>
-                        <p className="text-sm text-gray-500">@{user.username}</p>
+                        <p className="text-sm text-[#854F6C]">@{user.username}</p>
                       </div>
                       {user.status === 'online' && (
                         <span className="ml-auto h-3 w-3 rounded-full bg-green-500"></span>
@@ -702,28 +706,27 @@ const MessagesPage: React.FC = () => {
           </div>
         )}
         
-        <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="flex-1 overflow-y-auto bg-[#fdf0eb]">
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : filteredConversations.length === 0 ? (
-            <div className="p-4 text-center text-gray-400">No conversations found</div>
+            <div className="p-4 text-center text-[#854F6C]">No conversations found</div>
           ) : (
             filteredConversations.map(conversation => {
               const otherParticipantId = conversation.participants.find(id => id !== user?.uid);
               const otherParticipant = otherParticipantId ? users[otherParticipantId] : null;
               const isSelected = conversationId === conversation.id;
-
               return (
                 <Link
                   key={conversation.id}
                   to={`/messages/${conversation.id}`}
-                  className={`block p-4 rounded-xl shadow-sm mb-2 bg-white hover:bg-blue-50 transition-colors ${isSelected ? 'border border-blue-400' : 'border border-transparent'}`}
+                  className="block p-4 rounded-xl shadow-sm mb-2 bg-[#fdf0eb] hover:bg-[#fdf0eb]/90 transition-colors ${isSelected ? 'border border-blue-400' : 'border border-transparent'}"
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="h-12 w-12">
+                      <Avatar className="h-12 w-12 ring-2 ring-[#DFB6B2] ring-offset-2 bg-gradient-to-r from-[#854F6C] to-[#DFB6B2] p-[2px]">
                         <AvatarImage src={otherParticipant?.avatar} alt={`${otherParticipant?.name}'s avatar`} />
                         <AvatarFallback>{otherParticipant?.name?.charAt(0)}</AvatarFallback>
                       </Avatar>
@@ -731,13 +734,13 @@ const MessagesPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
                         <h3 className="font-semibold truncate text-base">{otherParticipant?.name || 'Unknown User'}</h3>
-                        <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                        <span className="text-xs text-[#854F6C] whitespace-nowrap ml-2">
                           {conversation.lastMessage?.timestamp
                             ? formatTimestamp(conversation.lastMessage.timestamp)
                             : 'No messages'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-[#854F6C] truncate">
                         {conversation.lastMessage?.senderId === user?.uid ? 'You: ' : ''}
                         {conversation.lastMessage?.text || 'No messages yet'}
                       </p>
@@ -752,9 +755,9 @@ const MessagesPage: React.FC = () => {
       
       {/* Message Detail */}
       {currentConversation && otherUser ? (
-        <div className={`bg-white flex flex-col ${conversationId ? 'w-full md:w-2/3' : 'hidden md:flex md:w-2/3'}`}>
+        <div className={`bg-[#fdf0eb] flex flex-col ${conversationId ? 'w-full md:w-2/3' : 'hidden md:flex md:w-2/3'}`}>
           {/* Header */}
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white shadow-sm">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-[#fdf0eb] shadow-sm">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -764,13 +767,13 @@ const MessagesPage: React.FC = () => {
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10 ring-2 ring-[#DFB6B2] ring-offset-2 bg-gradient-to-r from-[#854F6C] to-[#DFB6B2] p-[2px]">
                 <AvatarImage src={otherUser?.avatar} alt={`${otherUser?.name}'s avatar`} />
                 <AvatarFallback>{otherUser?.name?.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="font-semibold text-base">{otherUser?.name}</h3>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[#854F6C]">
                   {otherUser?.status === 'online'
                     ? 'Online'
                     : `Last active ${otherUser?.lastActive || 'unknown'}`}
@@ -800,7 +803,7 @@ const MessagesPage: React.FC = () => {
                       className={
                         isOwn
                           ? 'bg-blue-100 text-blue-900 rounded-2xl rounded-br-md shadow-sm px-4 py-2 transition-colors'
-                          : 'bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md shadow-sm px-4 py-2 transition-colors'
+                          : 'bg-[#fdf0eb] text-gray-900 rounded-2xl rounded-bl-md shadow-sm px-4 py-2 transition-colors'
                       }
                       onContextMenu={e => {
                         e.preventDefault();
@@ -815,22 +818,22 @@ const MessagesPage: React.FC = () => {
                         </div>
                       )}
                       {isDeleted ? (
-                        <span className="italic text-gray-400">This message was deleted</span>
+                        <span className="italic text-[#854F6C]">This message was deleted</span>
                       ) : editingMessageId === message.id ? (
                         <form onSubmit={e => { e.preventDefault(); handleEditSubmit(message); }} className="flex gap-2">
-                          <Input value={editText} onChange={e => setEditText(e.target.value)} className="flex-1 bg-white text-black border border-gray-300" />
+                          <Input value={editText} onChange={e => setEditText(e.target.value)} className="flex-1 bg-[#fdf0eb] text-black border border-gray-300" />
                           <Button type="submit" size="sm">Save</Button>
                           <Button type="button" size="sm" variant="ghost" onClick={() => setEditingMessageId(null)}>Cancel</Button>
                         </form>
                       ) : (
                         <>
                           <ReactMarkdown remarkPlugins={[remarkBreaks]}>{message.text}</ReactMarkdown>
-                          {message.edited && <span className="ml-2 text-xs italic text-gray-400">(edited)</span>}
+                          {message.edited && <span className="ml-2 text-xs italic text-[#854F6C]">(edited)</span>}
                         </>
                       )}
                     </div>
                     <div className="flex items-center gap-1 mt-1">
-                      <span className="text-xs text-gray-400">{formatTimestamp(message.timestamp)}</span>
+                      <span className="text-xs text-[#854F6C]">{formatTimestamp(message.timestamp)}</span>
                       {isOwn && !isDeleted && (
                         <span className="inline-flex items-center">
                           {message.seenBy && otherUserId && message.seenBy.includes(otherUserId) ? (
@@ -849,15 +852,15 @@ const MessagesPage: React.FC = () => {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                           {openDropdownId === message.id && (
-                            <div className="absolute right-0 z-10 mt-2 w-40 bg-white border rounded shadow-lg">
+                            <div className="absolute right-0 z-10 mt-2 w-40 bg-[#fdf0eb] border rounded shadow-lg">
                               <button
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                                className="block w-full text-left px-4 py-2 hover:bg-[#fdf0eb] text-sm"
                                 onClick={() => { handleDeleteMessage(message, false); setOpenDropdownId(null); }}
                               >
                                 Delete for me
                               </button>
                               <button
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-red-600"
+                                className="block w-full text-left px-4 py-2 hover:bg-[#fdf0eb] text-sm text-red-600"
                                 onClick={() => { handleDeleteMessage(message, true); setOpenDropdownId(null); }}
                               >
                                 Delete for everyone
@@ -873,17 +876,17 @@ const MessagesPage: React.FC = () => {
             })}
             <div ref={messagesEndRef} />
             {otherTyping && (
-              <div className="text-xs text-gray-500 mb-2">{otherUser.name} is typing...</div>
+              <div className="text-xs text-[#854F6C] mb-2">{otherUser.name} is typing...</div>
             )}
             {/* Context menu for reply */}
             {contextMenu && (
               <div
-                className="fixed z-50 bg-white border rounded shadow-lg py-1 text-sm"
+                className="fixed z-50 bg-[#fdf0eb] border rounded shadow-lg py-1 text-sm"
                 style={{ left: contextMenu.x, top: contextMenu.y }}
                 onContextMenu={e => e.preventDefault()}
               >
                 <button
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  className="block w-full text-left px-4 py-2 hover:bg-[#fdf0eb]"
                   onMouseDown={() => {
                     setReplyToMessage(contextMenu.message);
                     setContextMenu(null);
@@ -896,21 +899,21 @@ const MessagesPage: React.FC = () => {
           </div>
           
           {/* Input */}
-          <div className="p-4 border-t border-gray-100 bg-white shadow-sm">
+          <div className="p-4 border-t border-gray-100 bg-[#fdf0eb] shadow-sm">
             {replyToMessage && (
-              <div className="flex items-center bg-gray-100 px-3 py-2 mb-2 rounded border-l-4 border-blue-400">
+              <div className="flex items-center bg-[#fdf0eb] px-3 py-2 mb-2 rounded border-l-4 border-blue-400">
                 <div className="flex-1">
-                  <div className="text-xs text-gray-500">Replying to {replyToMessage.senderId === user?.uid ? 'yourself' : users[replyToMessage.senderId]?.name || 'User'}</div>
-                  <div className="text-sm text-gray-700 truncate max-w-xs">{replyToMessage.text}</div>
+                  <div className="text-xs text-[#854F6C]">Replying to {replyToMessage.senderId === user?.uid ? 'yourself' : users[replyToMessage.senderId]?.name || 'User'}</div>
+                  <div className="text-sm text-black truncate max-w-xs">{replyToMessage.text}</div>
                 </div>
-                <button className="ml-2 text-gray-400 hover:text-gray-600" onClick={() => setReplyToMessage(null)}>
+                <button className="ml-2 text-[#854F6C] hover:text-gray-600" onClick={() => setReplyToMessage(null)}>
                   <X className="h-4 w-4" />
                 </button>
               </div>
             )}
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <Button type="button" size="icon" variant="ghost">
-                <Image className="h-5 w-5 text-gray-400" />
+                <Image className="h-5 w-5 text-[#854F6C]" />
               </Button>
               <Textarea
                 ref={inputRef}
@@ -919,13 +922,13 @@ const MessagesPage: React.FC = () => {
                 onInput={handleTyping}
                 onKeyDown={handleKeyDown}
                 placeholder="Write a message..."
-                className="flex-1 bg-gray-50 px-4 py-2 focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[120px] overflow-hidden"
+                className="flex-1 bg-[#fdf0eb] px-4 py-2 focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[120px] overflow-hidden"
                 rows={1}
               />
               <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                 <PopoverTrigger asChild>
                   <Button type="button" size="icon" variant="ghost" onClick={() => setShowEmojiPicker((v) => !v)}>
-                    <Smile className="h-5 w-5 text-gray-400" />
+                    <Smile className="h-5 w-5 text-[#854F6C]" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 border-none shadow-none bg-transparent" align="end" sideOffset={8}>
@@ -935,7 +938,7 @@ const MessagesPage: React.FC = () => {
               <Popover open={showFormatToolbar} onOpenChange={setShowFormatToolbar}>
                 <PopoverTrigger asChild>
                   <Button type="button" size="icon" variant="ghost" onClick={() => setShowFormatToolbar((v) => !v)}>
-                    <Type className="h-5 w-5 text-gray-400" />
+                    <Type className="h-5 w-5 text-[#854F6C]" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="flex gap-2 bg-gray-50 border rounded shadow p-2" align="end" sideOffset={8}>
@@ -952,23 +955,23 @@ const MessagesPage: React.FC = () => {
                 <Send className="h-5 w-5" />
               </Button>
             </form>
-            <div className="text-xs text-gray-400 mt-2 text-center">
+            <div className="text-xs text-[#854F6C] mt-2 text-center">
               Enter to Send • Shift+Enter to add a new line
             </div>
           </div>
         </div>
       ) : (
-        <div className="hidden md:flex md:w-2/3 items-center justify-center bg-gray-50">
+        <div className="hidden md:flex md:w-2/3 items-center justify-center bg-[#fdf0eb]">
           <div className="text-center p-8">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
-              <MessageSquare className="h-10 w-10 text-blue-600" />
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#DFB6B2]">
+              <MessageSquare className="h-10 w-10 text-black" />
             </div>
             <h3 className="mt-4 text-lg font-semibold">Your Messages</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#854F6C]">
               Select a conversation to start messaging
             </p>
             <Button 
-              className="mt-4"
+              className="mt-4 bg-[#854F6C] hover:bg-[#854F6C]/90 text-white"
               onClick={() => setShowNewConversation(true)}
             >
               Start a new conversation
