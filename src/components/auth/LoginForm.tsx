@@ -84,7 +84,7 @@ const LoginForm: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="pl-10"
+            className="pl-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
           />
         </div>
 
@@ -98,7 +98,7 @@ const LoginForm: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
           />
           <button
             type="button"
@@ -124,7 +124,7 @@ const LoginForm: React.FC = () => {
               Remember Me
             </label>
           </div>
-          <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+          <Link to="/forgot-password" className="text-sm text-black hover:underline">
             Forgot Password?
           </Link>
         </div>
@@ -132,7 +132,7 @@ const LoginForm: React.FC = () => {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full bg-[#854f6c] hover:bg-[#6d3f58] text-white"
         >
           {loading ? 'Signing in...' : 'Log In'}
         </Button>

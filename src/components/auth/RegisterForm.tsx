@@ -119,6 +119,7 @@ const RegisterForm: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
           />
         </div>
 
@@ -129,7 +130,7 @@ const RegisterForm: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="pr-10"
+            className="pr-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
           />
           <button
             type="button"
@@ -151,7 +152,7 @@ const RegisterForm: React.FC = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="pr-10"
+            className="pr-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
           />
           <button
             type="button"
@@ -171,6 +172,7 @@ const RegisterForm: React.FC = () => {
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           required
+          className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
         />
 
         <Input
@@ -178,12 +180,14 @@ const RegisterForm: React.FC = () => {
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           required
+          className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
         />
 
         <Input
           placeholder="Nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
+          className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
         />
 
         <Select value={college} onValueChange={setCollege}>
@@ -225,7 +229,7 @@ const RegisterForm: React.FC = () => {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700"
+          className="w-full bg-[#854f6c] hover:bg-[#6d3f58] text-white"
         >
           {loading ? 'Creating Account...' : 'Create Account'}
         </Button>
