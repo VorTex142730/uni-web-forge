@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, LayoutGrid, List, Users } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
-import MemberCard from '@/components/members/MemberCard';
+import { MemberCard } from '@/components/members/MemberCard';
 import { useAuth } from '@/context/AuthContext';
 import { getConnections, getOutgoingRequests } from '@/lib/firebase/connections';
 
@@ -93,13 +93,13 @@ const MembersContent = () => {
   }, [searchQuery, sortBy, allMembers, user, connectedIds, pendingIds]);
 
   return (
-    <div className="min-h-screen bg-[#fff4f4]">
+    <div className="min-h-screen bg-[#fdf0eb]">
       {/* Header with Fixed Gradient */}
-      <div className="w-full bg-purple-300">
+      <div className="w-full bg-[#DFB6B2]">
         <div className="w-full max-w-7xl mx-auto px-4">
           {/* Cover Photo Area */}
           <div className="relative h-40">
-            <div className="absolute inset-0 bg-purple-300" />
+            <div className="absolute inset-0 bg-[#DFB6B2]" />
             <div className="absolute inset-0 bg-black/5" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-center gap-4">
@@ -152,13 +152,13 @@ const MembersContent = () => {
 
           <div className="flex border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
             <button
-              className={`p-2 ${view === 'grid' ? 'bg-purple-100 text-purple-600' : 'bg-white'}`}
+              className={`p-2 ${view === 'grid' ? 'bg-[#854F6C] text-white' : 'bg-white'}`}
               onClick={() => setView('grid')}
             >
               <LayoutGrid className="h-5 w-5" />
             </button>
             <button
-              className={`p-2 ${view === 'list' ? 'bg-purple-100 text-purple-600' : 'bg-white'}`}
+              className={`p-2 ${view === 'list' ? 'bg-[#854F6C] text-white' : 'bg-white'}`}
               onClick={() => setView('list')}
             >
               <List className="h-5 w-5" />

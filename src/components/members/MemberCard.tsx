@@ -34,13 +34,13 @@ interface MemberCardProps {
 }
 
 const roleStyles: Record<string, string> = {
-  student: 'bg-purple-100 text-purple-800',
-  admin: 'bg-purple-100 text-purple-800',
-  instructor: 'bg-green-100 text-green-800',
-  default: 'bg-gray-100 text-gray-800',
+  student: 'bg-[#DFB6B2]/30 text-black',
+  admin: 'bg-[#DFB6B2]/30 text-black',
+  instructor: 'bg-[#DFB6B2]/30 text-black',
+  default: 'bg-[#DFB6B2]/30 text-black',
 };
 
-const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }) => {
+export const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }) => {
   const { user, userDetails } = useAuth();
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'connected'>('none');
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -148,16 +148,18 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
 
       <div className="p-6 text-center flex-grow">
         <div className="relative mx-auto w-24 h-24 mb-4">
-          <div className="h-24 w-24 rounded-full bg-white shadow-lg border-2 border-purple-100 flex items-center justify-center mx-auto">
-            <Avatar className="h-20 w-20">
-              <AvatarImage
-                src={member.photoURL || undefined}
-                alt={`${member.firstName || ''} ${member.lastName || ''}'s Profile`}
-              />
-              <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-100 to-purple-200 text-gray-600">
-                {getInitials(member.firstName, member.lastName)}
-              </AvatarFallback>
-            </Avatar>
+          <div className="h-24 w-24 rounded-full bg-gradient-to-r from-[#522B58] to-[#854F6C] p-[2px] shadow-lg flex items-center justify-center mx-auto">
+            <div className="h-full w-full rounded-full bg-white flex items-center justify-center">
+              <Avatar className="h-20 w-20">
+                <AvatarImage
+                  src={member.photoURL || undefined}
+                  alt={`${member.firstName || ''} ${member.lastName || ''}'s Profile`}
+                />
+                <AvatarFallback className="text-2xl bg-gradient-to-br from-[#522B58] to-[#854F6C] text-white">
+                  {getInitials(member.firstName, member.lastName)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </div>
 
@@ -197,7 +199,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
             {connectionStatus === 'connected' ? (
               <Button
                 variant="outline"
-                className="w-full hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 transition-colors duration-200"
+                className="w-full bg-[#854F6C] text-white hover:bg-[#854F6C]/90 border-none transition-colors duration-200"
                 onClick={handleMessage}
               >
                 <Mail className="h-4 w-4 mr-2" />
@@ -206,7 +208,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
             ) : (
               <Button
                 variant="outline"
-                className="w-full hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 transition-colors duration-200"
+                className="w-full bg-[#854F6C] text-white hover:bg-[#854F6C]/90 border-none transition-colors duration-200"
                 disabled={sendingRequest || connectionStatus === 'pending'}
                 onClick={handleConnect}
               >
@@ -218,6 +220,4 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = false }
       </div>
     </div>
   );
-};
-
-export default MemberCard;
+}
