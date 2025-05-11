@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const AuthLayout: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -16,12 +15,12 @@ const AuthLayout: React.FC = () => {
     );
   }
 
-  if (isAuthenticated) {
+  if (user) {
     return <Navigate to="/" replace />;
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f4f7] py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         <Outlet />
       </div>
