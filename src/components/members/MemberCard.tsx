@@ -148,14 +148,14 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = 
 
       <div className="p-6 text-center flex-grow">
         <div className="relative mx-auto w-24 h-24 mb-4">
-          <div className="h-24 w-24 rounded-full bg-gradient-to-r from-[#522B58] to-[#854F6C] p-[2px] shadow-lg flex items-center justify-center mx-auto">
+          <div className="h-24 w-24 rounded-full bg-gradient-to-r from-[#0E4F52] to-[#156568] p-[2px] shadow-lg flex items-center justify-center mx-auto">
             <div className="h-full w-full rounded-full bg-white flex items-center justify-center">
               <Avatar className="h-20 w-20">
                 <AvatarImage
                   src={member.photoURL || undefined}
                   alt={`${member.firstName || ''} ${member.lastName || ''}'s Profile`}
                 />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-[#522B58] to-[#854F6C] text-white">
+                <AvatarFallback className="text-2xl bg-gradient-to-br from-[#0E4F52] to-[#156568] text-white">
                   {getInitials(member.firstName, member.lastName)}
                 </AvatarFallback>
               </Avatar>
@@ -199,7 +199,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = 
             {connectionStatus === 'connected' ? (
               <Button
                 variant="outline"
-                className="w-full bg-[#854F6C] text-white hover:bg-[#854F6C]/90 border-none transition-colors duration-200"
+                className="w-full bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white hover:opacity-90 border-none transition-all duration-200"
                 onClick={handleMessage}
               >
                 <Mail className="h-4 w-4 mr-2" />
@@ -208,7 +208,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = 
             ) : (
               <Button
                 variant="outline"
-                className="w-full bg-[#854F6C] text-white hover:bg-[#854F6C]/90 border-none transition-colors duration-200"
+                className="w-full bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white hover:opacity-90 border-none transition-all duration-200"
                 disabled={sendingRequest || connectionStatus === 'pending'}
                 onClick={handleConnect}
               >

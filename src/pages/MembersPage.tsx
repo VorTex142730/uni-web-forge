@@ -94,40 +94,6 @@ const MembersContent = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf0eb]">
-      {/* Header with Fixed Gradient */}
-      <div className="w-full bg-[#DFB6B2]">
-        <div className="w-full max-w-7xl mx-auto px-4">
-          {/* Cover Photo Area */}
-          <div className="relative h-40">
-            <div className="absolute inset-0 bg-[#DFB6B2]" />
-            <div className="absolute inset-0 bg-black/5" />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <div className="flex items-center gap-4">
-                {userDetails?.photoURL ? (
-                  <img
-                    src={userDetails.photoURL}
-                    alt="Profile"
-                    className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white shadow-lg flex items-center justify-center">
-                    <span className="text-white text-xl font-semibold">U</span>
-                  </div>
-                )}
-                <div className="text-white flex-1">
-                  <h1 className="text-2xl font-bold mb-2">Members Directory</h1>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">{allMembers.length} total members</span>
-                    <span>•</span>
-                    <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">{filteredMembers.length} matching your search</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl shadow-sm">
           <div className="relative flex-1">
@@ -152,13 +118,13 @@ const MembersContent = () => {
 
           <div className="flex border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
             <button
-              className={`p-2 ${view === 'grid' ? 'bg-[#854F6C] text-white' : 'bg-white'}`}
+              className={`p-2 ${view === 'grid' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : 'bg-white'}`}
               onClick={() => setView('grid')}
             >
               <LayoutGrid className="h-5 w-5" />
             </button>
             <button
-              className={`p-2 ${view === 'list' ? 'bg-[#854F6C] text-white' : 'bg-white'}`}
+              className={`p-2 ${view === 'list' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : 'bg-white'}`}
               onClick={() => setView('list')}
             >
               <List className="h-5 w-5" />

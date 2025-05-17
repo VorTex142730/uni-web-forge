@@ -186,9 +186,7 @@ const Navbar = () => {
 
   console.log('Navbar component rendering JSX');
   return (
-    <div className={`h-16 bg-gradient-to-r from-[#522B5B] to-[#854F6C] flex items-center justify-between px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${
-      isExpanded ? 'md:left-64' : 'md:left-16'
-    } left-0 z-20 shadow-lg`}>
+    <div className={`h-16 bg-[#0E4F52] flex items-center justify-between px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${isExpanded ? 'md:left-64' : 'md:left-16'} left-0 z-20 shadow-lg`}>
       <div className="flex items-center">
         {/* Mobile Menu Button */}
         <Button
