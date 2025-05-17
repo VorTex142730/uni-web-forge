@@ -5,9 +5,25 @@ import { LayoutGrid, List, Search, Users, Filter, ArrowUpDown, Camera } from 'lu
 import { collection, query, orderBy, getDocs, where, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
-import { Group } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { getFirestore } from 'firebase/firestore';
+
+interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  memberCount?: number;
+  bannerUrl?: string;
+  lastActive?: string;
+  createdAt?: string;
+  createdBy?: {
+    userId: string;
+    displayName?: string;
+    photoURL?: string;
+  };
+  privacy?: string;
+  tags?: string[];
+}
 
 const safeTimestampToISO = (timestamp: any): string => {
   if (timestamp instanceof Timestamp) {
@@ -245,7 +261,7 @@ const MyGroupsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fdf0eb]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row lg:space-x-8">
         <div className="flex flex-col w-full lg:w-80">
           <div className="bg-white shadow-sm rounded-xl p-6 mb-4">

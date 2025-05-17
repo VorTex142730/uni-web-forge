@@ -379,7 +379,7 @@ const Navbar = () => {
               </div>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/profile')}
               >
                 <User className="mr-3 h-4 w-4" />
@@ -387,7 +387,7 @@ const Navbar = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/timeline')}
               >
                 <Clock className="mr-3 h-4 w-4" />
@@ -395,7 +395,7 @@ const Navbar = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/connections')}
               >
                 <Users className="mr-3 h-4 w-4" />
@@ -403,7 +403,7 @@ const Navbar = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/groups')}
               >
                 <Users2 className="mr-3 h-4 w-4" />
@@ -411,7 +411,7 @@ const Navbar = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/photos')}
               >
                 <Image className="mr-3 h-4 w-4" />
@@ -419,7 +419,7 @@ const Navbar = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/videos')}
               >
                 <Video className="mr-3 h-4 w-4" />
@@ -427,7 +427,7 @@ const Navbar = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/forums')}
               >
                 <MessageSquare className="mr-3 h-4 w-4" />
@@ -437,7 +437,7 @@ const Navbar = () => {
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer"
+                className="px-4 py-2.5 cursor-pointer hover:bg-[#0E4F52]/20"
                 onClick={() => handleNavigation('/account')}
               >
                 <Settings className="mr-3 h-4 w-4" />
@@ -445,7 +445,7 @@ const Navbar = () => {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="px-4 py-2.5 cursor-pointer text-red-600 hover:text-red-700"
+                className="px-4 py-2.5 cursor-pointer text-red-600 hover:text-red-700 hover:bg-[#0E4F52]/20"
                 onClick={handleLogout}
               >
                 <LogOut className="mr-3 h-4 w-4" />

@@ -154,7 +154,7 @@ const ConnectionsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fdf0eb]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex space-x-8">
         {/* Left Column: Profile Card and Sidebar */}
         <div className="flex flex-col w-80">
