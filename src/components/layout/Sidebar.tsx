@@ -38,7 +38,7 @@ const Sidebar = () => {
     <>
       {/* Mobile Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-30 w-64 bg-[#FBE4D8] shadow-lg border-r border-[#DFB6B2] rounded-tr-2xl rounded-br-2xl transform transition-transform duration-300 ease-in-out md:hidden",
+        "fixed inset-y-0 left-0 z-30 w-64 bg-[#FFF4E6] shadow-lg border-r border-[#DFB6B2] rounded-tr-2xl rounded-br-2xl transform transition-transform duration-300 ease-in-out md:hidden",
         isExpanded ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
@@ -48,7 +48,7 @@ const Sidebar = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="text-[#854F6C] hover:text-[#2B124C]"
+              className="text-[#0E4F52] hover:text-[#2B124C]"
               onClick={toggleSidebar}
             >
               <X className="h-6 w-6" />
@@ -63,14 +63,14 @@ const Sidebar = () => {
                 to={item.path}
                 onClick={toggleSidebar}
                 className={({ isActive }) => cn(
-                  "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-200",
-                  "text-[#2B124C] hover:bg-[#DFB6B2] hover:text-[#2B124C]",
-                  isActive && "bg-[#854F6C] text-white font-semibold shadow-sm",
+                  "flex items-center space-x-3 px-4 py-3 mx-2 mb-1 rounded-lg transition-all duration-200",
+                  "text-[#2B124C] hover:bg-[#0E4F52] hover:text-white",
+                  isActive && "bg-[#0E4F52] text-white font-semibold shadow-sm",
                   "group"
                 )}
               >
                 <span className={cn(
-                  "text-[#854F6C] group-hover:text-[#2B124C] group-[.active]:text-white transition-colors duration-200",
+                  "text-[#0E4F52] group-hover:text-white group-[.active]:text-white transition-colors duration-200",
                   "flex-shrink-0"
                 )}>{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
@@ -81,9 +81,9 @@ const Sidebar = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-[#2B124C] hover:bg-[#DFB6B2] hover:text-[#2B124C] transition-all duration-200 group"
+            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-[#2B124C] hover:bg-[#0E4F52] hover:text-white transition-all duration-200 group"
           >
-            <LogOut size={20} className="text-[#854F6C] group-hover:text-[#2B124C] transition-colors duration-200 flex-shrink-0" />
+            <LogOut size={20} className="text-[#0E4F52] group-hover:text-white transition-colors duration-200 flex-shrink-0" />
             <span className="font-medium">Logout</span>
           </button>
         </div>
@@ -91,7 +91,7 @@ const Sidebar = () => {
 
       {/* Desktop Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-20 hidden md:flex flex-col bg-[#FBE4D8] border-r border-[#DFB6B2] shadow-lg rounded-tr-2xl rounded-br-2xl transition-all duration-300",
+        "fixed inset-y-0 left-0 z-20 hidden md:flex flex-col bg-[#FFF4E6] border-r border-[#DFB6B2] shadow-lg rounded-tr-2xl rounded-br-2xl transition-all duration-300",
         isExpanded ? "w-64" : "w-16"
       )}>
         {/* Desktop Header */}
@@ -99,7 +99,7 @@ const Sidebar = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-[#854F6C] hover:text-[#2B124C]"
+            className="text-[#0E4F52] hover:text-[#2B124C]"
             onClick={toggleSidebar}
           >
             <Menu size={20} />
@@ -114,15 +114,15 @@ const Sidebar = () => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) => cn(
-                  "flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-200",
-                  "text-[#2B124C] hover:bg-[#DFB6B2] hover:text-[#2B124C]",
-                  isActive && "bg-[#854F6C] text-white font-semibold shadow-sm",
+                  "flex items-center space-x-3 px-4 py-3 mx-2 mb-1 rounded-lg transition-all duration-200",
+                  "text-[#2B124C] hover:bg-[#0E4F52] hover:text-white",
+                  isActive && "bg-[#0E4F52] text-white font-semibold shadow-sm",
                   !isExpanded && "md:justify-center md:mx-0",
                   "group"
                 )}
               >
                 <span className={cn(
-                  "text-[#854F6C] group-hover:text-[#2B124C] group-[.active]:text-white transition-colors duration-200",
+                  "text-[#0E4F52] group-hover:text-white group-[.active]:text-white transition-colors duration-200",
                   "flex-shrink-0"
                 )}>{item.icon}</span>
                 <span className={cn(
