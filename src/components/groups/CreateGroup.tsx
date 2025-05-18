@@ -205,14 +205,14 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
               value={formData.name}
               onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="Group Name"
-              className={`w-full ${errors.name ? 'border-red-500' : ''}`}
+              className={`w-full placeholder:text-black focus-visible:ring-2 focus-visible:ring-gray-300 focus:border-transparent transition-all duration-200 ${errors.name ? 'border-red-500' : ''}`}
             />
             {errors.name && <div className="text-red-500 text-xs mt-1">{errors.name}</div>}
             <Textarea
               value={formData.description}
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Group Description"
-              className={`w-full h-32 ${errors.description ? 'border-red-500' : ''}`}
+              className={`w-full h-32 placeholder:text-black focus-visible:ring-2 focus-visible:ring-gray-300 focus:border-transparent transition-all duration-200 ${errors.description ? 'border-red-500' : ''}`}
             />
             {errors.description && <div className="text-red-500 text-xs mt-1">{errors.description}</div>}
           </div>
@@ -390,16 +390,16 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-10">
+    <div className="min-h-screen bg-[#fdf0eb] py-10">
       <div className="max-w-2xl mx-auto px-4">
         <div className="mb-8 flex items-center gap-2">
           {steps.map((step, idx) => (
             <React.Fragment key={step.id}>
-              <div className={`flex flex-col items-center ${currentStep === step.id ? 'text-blue-600' : 'text-gray-400'}`}> 
-                <div className={`rounded-full border-2 ${currentStep === step.id ? 'border-blue-600 bg-white shadow-lg' : 'border-gray-200 bg-gray-100'} w-10 h-10 flex items-center justify-center transition-all duration-200`}>{stepIcons[idx]}</div>
-                <span className={`mt-2 text-xs font-semibold ${currentStep === step.id ? 'text-blue-600' : 'text-gray-400'}`}>{step.label}</span>
+              <div className={`flex flex-col items-center ${currentStep === step.id ? 'text-black' : 'text-gray-400'}`}> 
+                <div className={`rounded-full border-2 ${currentStep === step.id ? 'border-black bg-white shadow-lg' : 'border-gray-200 bg-gray-100'} w-10 h-10 flex items-center justify-center transition-all duration-200`}>{stepIcons[idx]}</div>
+                <span className={`mt-2 text-xs font-semibold ${currentStep === step.id ? 'text-black' : 'text-gray-400'}`}>{step.label}</span>
               </div>
-              {idx < steps.length - 1 && <div className={`flex-1 h-1 ${currentStep > step.id ? 'bg-blue-500' : 'bg-gray-200'} mx-2 rounded transition-all duration-200`} />}
+              {idx < steps.length - 1 && <div className={`flex-1 h-1 ${currentStep > step.id ? 'bg-black' : 'bg-gray-200'} mx-2 rounded transition-all duration-200`} />}
             </React.Fragment>
           ))}
         </div>
@@ -410,32 +410,32 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
             <div>
               {currentStep === 1 && (
                 <>
-                  <h2 className="text-xl font-bold mb-2 text-gray-800">Group Details</h2>
-                  <p className="text-gray-500 mb-6">Give your group a name and description.</p>
+                  <h2 className="text-xl font-bold mb-2 text-black">Group Details</h2>
+                  <p className="text-black mb-6">Give your group a name and description.</p>
                 </>
               )}
               {currentStep === 2 && (
                 <>
-                  <h2 className="text-xl font-bold mb-2 text-gray-800">Settings</h2>
-                  <p className="text-gray-500 mb-6">Choose privacy and permissions for your group.</p>
+                  <h2 className="text-xl font-bold mb-2 text-black">Settings</h2>
+                  <p className="text-black mb-6">Choose privacy and permissions for your group.</p>
                 </>
               )}
               {currentStep === 3 && (
                 <>
-                  <h2 className="text-xl font-bold mb-2 text-gray-800">Forum</h2>
-                  <p className="text-gray-500 mb-6">Enable a discussion forum for your group.</p>
+                  <h2 className="text-xl font-bold mb-2 text-black">Forum</h2>
+                  <p className="text-black mb-6">Enable a discussion forum for your group.</p>
                 </>
               )}
               {currentStep === 4 && (
                 <>
-                  <h2 className="text-xl font-bold mb-2 text-gray-800">Group Photo</h2>
-                  <p className="text-gray-500 mb-6">Upload a group photo or logo.</p>
+                  <h2 className="text-xl font-bold mb-2 text-black">Group Photo</h2>
+                  <p className="text-black mb-6">Upload a group photo or logo.</p>
                 </>
               )}
               {currentStep === 5 && (
                 <>
-                  <h2 className="text-xl font-bold mb-2 text-gray-800">Invite Members</h2>
-                  <p className="text-gray-500 mb-6">Search and invite people to join your group.</p>
+                  <h2 className="text-xl font-bold mb-2 text-black">Invite Members</h2>
+                  <p className="text-black mb-6">Search and invite people to join your group.</p>
                 </>
               )}
               {renderStepContent()}
@@ -447,7 +447,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
                 variant="outline"
                 onClick={handleBack}
                 size="lg"
-                className="rounded-full px-6"
+                className="rounded-full px-6 text-black border-black"
               >
                 {currentStep === 1 ? 'Cancel' : 'Back'}
               </Button>

@@ -173,7 +173,13 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex flex-col items-center pt-6 px-6">
-        <GroupAvatar photo={group.photo} name={group.name} size={80} />
+        <div className="relative mb-2">
+          <div className="h-20 w-20 rounded-full bg-[#134E4A] p-[2px] shadow-lg flex items-center justify-center mx-auto">
+            <div className="h-full w-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+              <GroupAvatar photo={group.photo} name={group.name} size={72} />
+            </div>
+          </div>
+        </div>
         <h3 className="text-lg font-semibold text-gray-900 text-center truncate w-full">{group.name}</h3>
         {group.description && (
           <p className="text-gray-500 text-sm text-center mt-1 line-clamp-2 w-full">{group.description}</p>

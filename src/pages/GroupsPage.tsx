@@ -167,20 +167,18 @@ const GroupsPage = () => {
         <div className="bg-[#fdf0eb] rounded-xl shadow-sm overflow-hidden">
           {/* Tabs */}
           <Tabs defaultValue={activeTab} className="w-full" onValueChange={(value) => setActiveTab(value as 'all' | 'my' | 'create')}>
-            <div className="border-b">
-              <div className="px-4">
-                <TabsList className="w-full justify-start">
-                  <TabsTrigger value="all" className="flex items-center">
-                    All Groups
-                    <Badge variant="secondary" className="ml-2 bg-[#F5F3FF] text-black">{groups.length}</Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="my" className="flex items-center">
-                    My Groups
-                    <Badge variant="secondary" className="ml-2 bg-[#F5F3FF] text-black">{myGroups.length}</Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="create">Create a Group</TabsTrigger>
-                </TabsList>
-              </div>
+            <div className="border-b bg-white/50 backdrop-blur-sm rounded-xl px-4 py-2">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="all" className="flex items-center">
+                  All Groups
+                  <Badge variant="secondary" className="ml-2 bg-[#F5F3FF] text-black">{groups.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="my" className="flex items-center">
+                  My Groups
+                  <Badge variant="secondary" className="ml-2 bg-[#F5F3FF] text-black">{myGroups.length}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="create">Create a Group</TabsTrigger>
+              </TabsList>
             </div>
 
             <TabsContent value="create" className="p-6">
@@ -279,12 +277,12 @@ const GroupsPage = () => {
 
             <TabsContent value="my" className="p-0">
               <div className="p-4 border-b">
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <div className="relative flex-1 max-w-xl w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     type="search"
                     placeholder="Search my groups..."
-                    className="pl-10 w-full"
+                    className="border border-gray-200 pl-10 pr-4 py-2 rounded-lg w-full text-sm bg-white/80 backdrop-blur-sm text-black placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-gray-300 focus:border-transparent transition-all duration-200"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
