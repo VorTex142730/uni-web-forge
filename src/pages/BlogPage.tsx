@@ -72,7 +72,7 @@ const BlogPage: React.FC = () => {
           <p className="text-md text-gray-500 mb-2">A new breed of explorer</p>
           <Button
             onClick={() => navigate('/blog/create')}
-            className="bg-[#854f6c] hover:bg-[#854f6c]/90 text-white"
+            className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:from-[#F53855]/90 hover:to-[#FF8A00]/90 text-white"
           >
             Create New Post
           </Button>
