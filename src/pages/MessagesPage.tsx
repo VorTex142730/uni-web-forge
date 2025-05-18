@@ -641,7 +641,7 @@ const MessagesPage: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={() => setShowNewConversation(true)}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap hover:bg-gradient-to-r hover:from-[#F53855] hover:to-[#FF8A00] hover:text-white hover:border-transparent"
             >
               New Chat
             </Button>
@@ -781,13 +781,13 @@ const MessagesPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="hover:bg-teal-800 hover:text-white transition-colors">
+            <Button variant="ghost" size="icon">
               <MoreVertical className="h-5 w-5" />
             </Button>
           </div>
           
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 messages-container">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 messages-container">
             {messages.map(message => {
               const isOwn = message.senderId === user?.uid;
               const isDeleted = message.deleted || (message.deletedFor && message.deletedFor.includes(user.uid));
@@ -795,7 +795,7 @@ const MessagesPage: React.FC = () => {
               const repliedMessage = message.replyTo ? messages.find(m => m.id === message.replyTo) : null;
 
               return (
-                <div key={message.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} mb-2`}>
+                <div key={message.id} className={`flex flex-col gap-1 ${isOwn ? 'items-end' : 'items-start'} mb-4`}>
                   {!isOwn && (
                     <Avatar className="h-8 w-8 mr-2 mt-1" />
                   )}
@@ -804,7 +804,7 @@ const MessagesPage: React.FC = () => {
                       className={
                         isOwn
                           ? 'bg-teal-800 text-white rounded-2xl rounded-br-md shadow-lg px-4 py-2 transition-colors hover:opacity-95'
-                          : 'bg-[#fdf0eb] text-black rounded-2xl rounded-bl-md shadow-lg px-4 py-2 transition-colors hover:opacity-95'
+                          : 'bg-teal-800 text-white rounded-2xl rounded-bl-md shadow-lg px-4 py-2 transition-colors hover:opacity-95'
                       }
                       onContextMenu={e => {
                         e.preventDefault();
@@ -913,8 +913,8 @@ const MessagesPage: React.FC = () => {
               </div>
             )}
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-              <Button type="button" size="icon" variant="ghost" className="group hover:bg-teal-800 transition-colors">
-                <Image className="h-5 w-5 text-teal-800 group-hover:text-white transition-colors" />
+              <Button type="button" size="icon" variant="ghost">
+                <Image className="h-5 w-5 text-[#854F6C]" />
               </Button>
               <Textarea
                 ref={inputRef}
@@ -928,8 +928,8 @@ const MessagesPage: React.FC = () => {
               />
               <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                 <PopoverTrigger asChild>
-                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowEmojiPicker((v) => !v)} className="group hover:bg-teal-800 transition-colors">
-                    <Smile className="h-5 w-5 text-teal-800 group-hover:text-white transition-colors" />
+                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowEmojiPicker((v) => !v)}>
+                    <Smile className="h-5 w-5 text-[#854F6C]" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 border-none shadow-none bg-transparent" align="end" sideOffset={8}>
@@ -938,8 +938,8 @@ const MessagesPage: React.FC = () => {
               </Popover>
               <Popover open={showFormatToolbar} onOpenChange={setShowFormatToolbar}>
                 <PopoverTrigger asChild>
-                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowFormatToolbar((v) => !v)} className="group hover:bg-teal-800 transition-colors">
-                    <Type className="h-5 w-5 text-teal-800 group-hover:text-white transition-colors" />
+                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowFormatToolbar((v) => !v)}>
+                    <Type className="h-5 w-5 text-[#854F6C]" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="flex gap-2 bg-gray-50 border rounded shadow p-2" align="end" sideOffset={8}>
@@ -964,7 +964,7 @@ const MessagesPage: React.FC = () => {
       ) : (
         <div className="hidden md:flex md:w-2/3 items-center justify-center bg-teal-50">
           <div className="text-center p-8">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-teal-900">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-teal-700">
               <MessageSquare className="h-10 w-10 text-white" />
             </div>
             <h3 className="mt-4 text-lg font-semibold">Your Messages</h3>
