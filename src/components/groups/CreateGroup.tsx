@@ -145,7 +145,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
           await createNotification({
             recipientId: memberId,
             senderId: user.uid,
-            type: 'group',
+            type: 'GROUP_JOIN_REQUEST',
             groupId: groupRef.id,
             groupName: formData.name,
             message: `You have been invited to join the group "${formData.name}".`
@@ -183,7 +183,9 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleSubmit(new Event('submit'));
+      // Create a synthetic FormEvent for handleSubmit
+      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+      handleSubmit(fakeEvent);
     }
   };
 
@@ -454,7 +456,7 @@ const CreateGroup = ({ onCancel, onSuccess }: CreateGroupProps) => {
               <Button
                 type={currentStep === steps.length ? "submit" : "button"}
                 size="lg"
-                className="rounded-full px-8 bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:from-blue-600 hover:to-purple-600"
+                className="rounded-full px-8 bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white shadow-lg hover:opacity-90 border-none"
                 disabled={loading}
                 onClick={currentStep === steps.length ? undefined : handleNext}
               >
