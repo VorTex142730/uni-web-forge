@@ -112,7 +112,7 @@ const ShopPage: React.FC = () => {
   const closeModal = () => setModalProduct(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-pink-50">
+    <div className="min-h-screen bg-[#fdf0eb]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <h1 className="text-3xl font-bold text-blue-900">Shop</h1>
