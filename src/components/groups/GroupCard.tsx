@@ -162,7 +162,7 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
 
   return (
     <motion.div
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col cursor-pointer group min-h-[320px]"
+      className="bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200/50 flex flex-col hover:scale-[1.02] min-h-[320px] cursor-pointer group"
       onClick={onClick || (() => navigate(`/groups/${group.id}`))}
       whileHover={{ scale: 1.025, boxShadow: '0 8px 32px rgba(80, 63, 205, 0.08)' }}
       initial={{ opacity: 0, y: 16 }}
@@ -181,47 +181,46 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
         <div className="text-xs text-gray-400 mt-2 mb-1 text-center w-full">{metaInfo}</div>
       </div>
       <div className="flex-1" />
-      <div className="flex gap-2 px-6 pb-6 mt-4">
-        {memberStatus === 'creator' ? (
+      {/* Buttons */}
+      {memberStatus === 'creator' ? (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
+          className="flex-1 border-gray-300 hover:bg-transparent hover:text-black"
+        >
+          View
+        </Button>
+      ) : memberStatus === 'member' ? (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
+          className="flex-1 border-gray-300 hover:bg-transparent hover:text-black"
+        >
+          View
+        </Button>
+      ) : memberStatus === 'pending' ? (
+        <Button size="sm" disabled className="flex-1 bg-white text-black border border-gray-300">Pending</Button>
+      ) : (
+        <div className="flex gap-2 p-4 pt-0">
           <Button
             variant="outline"
             size="sm"
             onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
-            className="flex-1"
+            className="flex-1 border-gray-300 hover:bg-transparent hover:text-black"
           >
             View
           </Button>
-        ) : memberStatus === 'member' ? (
           <Button
-            variant="outline"
             size="sm"
-            onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
-            className="flex-1"
+            onClick={e => { e.stopPropagation(); handleJoinGroup(e); }}
+            className="flex-1 bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white hover:opacity-90 border-none"
           >
-            View
+            {group.privacy === 'private' ? 'Request' : 'Join'}
           </Button>
-        ) : memberStatus === 'pending' ? (
-          <Button size="sm" disabled className="flex-1">Pending</Button>
-        ) : (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={e => { e.stopPropagation(); navigate(`/groups/${group.id}`); }}
-              className="flex-1"
-            >
-              View
-            </Button>
-            <Button
-              size="sm"
-              onClick={e => { e.stopPropagation(); handleJoinGroup(e); }}
-              className="flex-1"
-            >
-              {group.privacy === 'private' ? 'Request' : 'Join'}
-            </Button>
-          </>
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 };

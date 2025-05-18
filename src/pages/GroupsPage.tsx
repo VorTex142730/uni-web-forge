@@ -161,10 +161,10 @@ const GroupsPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#fff4f4]">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#fdf0eb]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-[#fdf0eb] rounded-xl shadow-sm overflow-hidden">
           {/* Tabs */}
           <Tabs defaultValue={activeTab} className="w-full" onValueChange={(value) => setActiveTab(value as 'all' | 'my' | 'create')}>
             <div className="border-b">
@@ -172,11 +172,11 @@ const GroupsPage = () => {
                 <TabsList className="w-full justify-start">
                   <TabsTrigger value="all" className="flex items-center">
                     All Groups
-                    <Badge variant="secondary" className="ml-2">{groups.length}</Badge>
+                    <Badge variant="secondary" className="ml-2 bg-[#F5F3FF] text-black">{groups.length}</Badge>
                   </TabsTrigger>
                   <TabsTrigger value="my" className="flex items-center">
                     My Groups
-                    <Badge variant="secondary" className="ml-2">{myGroups.length}</Badge>
+                    <Badge variant="secondary" className="ml-2 bg-[#F5F3FF] text-black">{myGroups.length}</Badge>
                   </TabsTrigger>
                   <TabsTrigger value="create">Create a Group</TabsTrigger>
                 </TabsList>
@@ -191,85 +191,44 @@ const GroupsPage = () => {
             </TabsContent>
 
             <TabsContent value="all" className="p-0">
-              <div className="p-4 border-b">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <Input
-                      type="search"
-                      placeholder="Search groups..."
-                      className="pl-10 w-full"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center"
-                      onClick={() => setShowFilters(!showFilters)}
-                    >
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filters
-                    </Button>
-                    <div className="flex items-center border rounded-lg p-1 bg-white">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`p-2 rounded transition-colors ${view === 'grid' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-                        onClick={() => setView('grid')}
-                      >
-                        <LayoutGrid size={18} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`p-2 rounded transition-colors ${view === 'list' ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-                        onClick={() => setView('list')}
-                      >
-                        <List size={18} />
-                      </Button>
-                    </div>
-                  </div>
+              <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+                {/* Search */}
+                <div className="relative flex-1 max-w-xl w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    type="search"
+                    placeholder="Search groups..."
+                    className="border border-gray-200 pl-10 pr-4 py-2 rounded-lg w-full text-sm bg-white/80 backdrop-blur-sm text-black placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-gray-300 focus:border-transparent transition-all duration-200"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
-
-                {/* Filters Panel */}
-                {showFilters && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">Sort By</h3>
-                      <Button variant="ghost" size="sm" className="h-8">
-                        <ArrowUpDown className="h-4 w-4 mr-1" />
-                        {sortBy === 'recently-active' ? 'Recently Active' : 
-                         sortBy === 'newest' ? 'Newest' : 'Alphabetical'}
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button 
-                        variant={sortBy === 'recently-active' ? 'default' : 'outline'} 
-                        size="sm"
-                        onClick={() => setSortBy('recently-active')}
-                      >
-                        Recently Active
-                      </Button>
-                      <Button 
-                        variant={sortBy === 'newest' ? 'default' : 'outline'} 
-                        size="sm"
-                        onClick={() => setSortBy('newest')}
-                      >
-                        Newest
-                      </Button>
-                      <Button 
-                        variant={sortBy === 'alphabetical' ? 'default' : 'outline'} 
-                        size="sm"
-                        onClick={() => setSortBy('alphabetical')}
-                      >
-                        Alphabetical
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                {/* Right controls: Sort + View Toggle */}
+                <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                  <select
+                    className="border border-gray-200 px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all duration-200"
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value)}
+                  >
+                    <option value="recently-active">Recently Active</option>
+                    <option value="newest">Newest</option>
+                    <option value="alphabetical">Alphabetical</option>
+                  </select>
+                  <button
+                    className={`p-2 rounded-lg border border-gray-200 transition-colors duration-200 ${view === 'grid' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : 'bg-white text-black'}`}
+                    onClick={() => setView('grid')}
+                    aria-label="Grid view"
+                  >
+                    <LayoutGrid className="h-5 w-5" />
+                  </button>
+                  <button
+                    className={`p-2 rounded-lg border border-gray-200 transition-colors duration-200 ${view === 'list' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : 'bg-white text-black'}`}
+                    onClick={() => setView('list')}
+                    aria-label="List view"
+                  >
+                    <List className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               {loading ? (
@@ -300,7 +259,7 @@ const GroupsPage = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="bg-[#f3edf9] rounded-2xl p-6">
+                    <div className="bg-[#fdf0eb] rounded-2xl p-6">
                       <div className={view === 'grid' 
                         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
                         : 'space-y-4'}>
@@ -355,7 +314,7 @@ const GroupsPage = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="bg-[#f3edf9] rounded-2xl p-6">
+                    <div className="bg-[#fdf0eb] rounded-2xl p-6">
                       <div className={view === 'grid' 
                         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
                         : 'space-y-4'}>
@@ -385,7 +344,6 @@ const generateGradient = (text: string) => {
   for (let i = 0; i < text.length; i++) {
     hash = text.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
   const h1 = hash % 360;
   const h2 = (h1 + 40) % 360;
   return `from-[hsl(${h1},70%,60%)] to-[hsl(${h2},70%,50%)]`;

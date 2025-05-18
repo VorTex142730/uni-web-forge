@@ -103,7 +103,7 @@ const ProfilePage: React.FC = () => {
               <div className="mt-1 text-xs text-gray-500">
                 @{user.username || user.displayName?.toLowerCase().replace(/\s/g, '')} • Joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </div>
-              <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+              <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#fdf0eb] text-[#2A363B]">
                 {userDetails.role}
               </span>
             </div>
@@ -117,8 +117,8 @@ const ProfilePage: React.FC = () => {
                 to={item.path}
                 className={`block px-4 py-3 rounded-lg text-base font-medium ${
                   window.location.pathname === item.path
-                    ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-[#FF847C] text-[#2A363B]'
+                    : 'text-[#2A363B] hover:bg-[#FECEA8] hover:bg-opacity-50 hover:text-[#2A363B]'
                 } transition-colors duration-200`}
               >
                 {item.label}
