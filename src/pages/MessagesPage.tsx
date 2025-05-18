@@ -51,6 +51,7 @@ import {
 } from 'firebase/firestore';
 import remarkBreaks from 'remark-breaks';
 
+
 interface Message {
   id: string;
   senderId: string;
@@ -650,7 +651,7 @@ const MessagesPage: React.FC = () => {
         {/* New Conversation Modal */}
         {showNewConversation && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-[#fdf0eb] rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="bg-teal-50 rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-hidden">
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="text-lg font-semibold">Start a New Conversation</h2>
                 <Button 
@@ -755,9 +756,9 @@ const MessagesPage: React.FC = () => {
       
       {/* Message Detail */}
       {currentConversation && otherUser ? (
-        <div className={`bg-[#fdf0eb] flex flex-col ${conversationId ? 'w-full md:w-2/3' : 'hidden md:flex md:w-2/3'}`}>
+        <div className={`bg-teal-50 flex flex-col ${conversationId ? 'w-full md:w-2/3' : 'hidden md:flex md:w-2/3'}`}>
           {/* Header */}
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-[#fdf0eb] shadow-sm">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-teal-50 shadow-sm">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -780,13 +781,13 @@ const MessagesPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hover:bg-teal-800 hover:text-white transition-colors">
               <MoreVertical className="h-5 w-5" />
             </Button>
           </div>
           
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 messages-container">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 messages-container">
             {messages.map(message => {
               const isOwn = message.senderId === user?.uid;
               const isDeleted = message.deleted || (message.deletedFor && message.deletedFor.includes(user.uid));
@@ -794,7 +795,7 @@ const MessagesPage: React.FC = () => {
               const repliedMessage = message.replyTo ? messages.find(m => m.id === message.replyTo) : null;
 
               return (
-                <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}>
+                <div key={message.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} mb-2`}>
                   {!isOwn && (
                     <Avatar className="h-8 w-8 mr-2 mt-1" />
                   )}
@@ -802,8 +803,8 @@ const MessagesPage: React.FC = () => {
                     <div
                       className={
                         isOwn
-                          ? 'bg-blue-100 text-blue-900 rounded-2xl rounded-br-md shadow-sm px-4 py-2 transition-colors'
-                          : 'bg-[#fdf0eb] text-gray-900 rounded-2xl rounded-bl-md shadow-sm px-4 py-2 transition-colors'
+                          ? 'bg-teal-800 text-white rounded-2xl rounded-br-md shadow-lg px-4 py-2 transition-colors hover:opacity-95'
+                          : 'bg-[#fdf0eb] text-black rounded-2xl rounded-bl-md shadow-lg px-4 py-2 transition-colors hover:opacity-95'
                       }
                       onContextMenu={e => {
                         e.preventDefault();
@@ -818,17 +819,17 @@ const MessagesPage: React.FC = () => {
                         </div>
                       )}
                       {isDeleted ? (
-                        <span className="italic text-[#854F6C]">This message was deleted</span>
+                        <span className="italic text-white bg-teal-700 px-3 py-1 rounded-full text-sm">This message was deleted</span>
                       ) : editingMessageId === message.id ? (
                         <form onSubmit={e => { e.preventDefault(); handleEditSubmit(message); }} className="flex gap-2">
-                          <Input value={editText} onChange={e => setEditText(e.target.value)} className="flex-1 bg-[#fdf0eb] text-black border border-gray-300" />
+                          <Input value={editText} onChange={e => setEditText(e.target.value)} className="flex-1 bg-teal-50 text-black border border-gray-300" />
                           <Button type="submit" size="sm">Save</Button>
                           <Button type="button" size="sm" variant="ghost" onClick={() => setEditingMessageId(null)}>Cancel</Button>
                         </form>
                       ) : (
                         <>
                           <ReactMarkdown remarkPlugins={[remarkBreaks]}>{message.text}</ReactMarkdown>
-                          {message.edited && <span className="ml-2 text-xs italic text-[#854F6C]">(edited)</span>}
+                          {message.edited && <span className="ml-2 text-xs italic text-white/90">(edited)</span>}
                         </>
                       )}
                     </div>
@@ -839,7 +840,7 @@ const MessagesPage: React.FC = () => {
                           {message.seenBy && otherUserId && message.seenBy.includes(otherUserId) ? (
                             <CheckCheck className="h-3 w-3 text-blue-400 ml-1" />
                           ) : (
-                            <Check className="h-3 w-3 text-gray-300 ml-1" />
+                            <Check className="text-xs text-gray-500 mt-1 opacity-75" />
                           )}
                         </span>
                       )}
@@ -852,15 +853,15 @@ const MessagesPage: React.FC = () => {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                           {openDropdownId === message.id && (
-                            <div className="absolute right-0 z-10 mt-2 w-40 bg-[#fdf0eb] border rounded shadow-lg">
+                            <div className="absolute right-0 z-10 mt-2 w-40 bg-teal-50 border rounded shadow-lg">
                               <button
-                                className="block w-full text-left px-4 py-2 hover:bg-[#fdf0eb] text-sm"
+                                className="block w-full text-left px-4 py-2 hover:bg-teal-50 text-sm"
                                 onClick={() => { handleDeleteMessage(message, false); setOpenDropdownId(null); }}
                               >
                                 Delete for me
                               </button>
                               <button
-                                className="block w-full text-left px-4 py-2 hover:bg-[#fdf0eb] text-sm text-red-600"
+                                className="block w-full text-left px-4 py-2 hover:bg-teal-50 text-sm text-red-600"
                                 onClick={() => { handleDeleteMessage(message, true); setOpenDropdownId(null); }}
                               >
                                 Delete for everyone
@@ -881,12 +882,12 @@ const MessagesPage: React.FC = () => {
             {/* Context menu for reply */}
             {contextMenu && (
               <div
-                className="fixed z-50 bg-[#fdf0eb] border rounded shadow-lg py-1 text-sm"
+                className="fixed z-50 bg-teal-50 border rounded shadow-lg py-1 text-sm"
                 style={{ left: contextMenu.x, top: contextMenu.y }}
                 onContextMenu={e => e.preventDefault()}
               >
                 <button
-                  className="block w-full text-left px-4 py-2 hover:bg-[#fdf0eb]"
+                  className="block w-full text-left px-4 py-2 hover:bg-teal-50"
                   onMouseDown={() => {
                     setReplyToMessage(contextMenu.message);
                     setContextMenu(null);
@@ -899,9 +900,9 @@ const MessagesPage: React.FC = () => {
           </div>
           
           {/* Input */}
-          <div className="p-4 border-t border-gray-100 bg-[#fdf0eb] shadow-sm">
+          <div className="p-4 border-t border-gray-100 bg-teal-50 shadow-sm">
             {replyToMessage && (
-              <div className="flex items-center bg-[#fdf0eb] px-3 py-2 mb-2 rounded border-l-4 border-blue-400">
+              <div className="flex items-center bg-white/50 px-3 py-2 mb-2 rounded border-l-4 border-teal-400">
                 <div className="flex-1">
                   <div className="text-xs text-[#854F6C]">Replying to {replyToMessage.senderId === user?.uid ? 'yourself' : users[replyToMessage.senderId]?.name || 'User'}</div>
                   <div className="text-sm text-black truncate max-w-xs">{replyToMessage.text}</div>
@@ -912,8 +913,8 @@ const MessagesPage: React.FC = () => {
               </div>
             )}
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-              <Button type="button" size="icon" variant="ghost">
-                <Image className="h-5 w-5 text-[#854F6C]" />
+              <Button type="button" size="icon" variant="ghost" className="group hover:bg-teal-800 transition-colors">
+                <Image className="h-5 w-5 text-teal-800 group-hover:text-white transition-colors" />
               </Button>
               <Textarea
                 ref={inputRef}
@@ -922,13 +923,13 @@ const MessagesPage: React.FC = () => {
                 onInput={handleTyping}
                 onKeyDown={handleKeyDown}
                 placeholder="Write a message..."
-                className="flex-1 bg-[#fdf0eb] px-4 py-2 focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[120px] overflow-hidden"
+                className="flex-1 bg-transparent px-4 py-2 focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[120px] overflow-hidden placeholder:text-gray-500"
                 rows={1}
               />
               <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                 <PopoverTrigger asChild>
-                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowEmojiPicker((v) => !v)}>
-                    <Smile className="h-5 w-5 text-[#854F6C]" />
+                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowEmojiPicker((v) => !v)} className="group hover:bg-teal-800 transition-colors">
+                    <Smile className="h-5 w-5 text-teal-800 group-hover:text-white transition-colors" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 border-none shadow-none bg-transparent" align="end" sideOffset={8}>
@@ -937,8 +938,8 @@ const MessagesPage: React.FC = () => {
               </Popover>
               <Popover open={showFormatToolbar} onOpenChange={setShowFormatToolbar}>
                 <PopoverTrigger asChild>
-                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowFormatToolbar((v) => !v)}>
-                    <Type className="h-5 w-5 text-[#854F6C]" />
+                  <Button type="button" size="icon" variant="ghost" onClick={() => setShowFormatToolbar((v) => !v)} className="group hover:bg-teal-800 transition-colors">
+                    <Type className="h-5 w-5 text-teal-800 group-hover:text-white transition-colors" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="flex gap-2 bg-gray-50 border rounded shadow p-2" align="end" sideOffset={8}>
@@ -951,7 +952,7 @@ const MessagesPage: React.FC = () => {
                   <Button type="button" size="icon" variant="ghost" title="Preformatted" onClick={() => handleFormat('code')}><Code2 className="h-4 w-4" /></Button>
                 </PopoverContent>
               </Popover>
-              <Button type="submit" size="icon" disabled={messageText.trim() === ''} className="bg-blue-500 hover:bg-blue-600 text-white rounded-full">
+              <Button type="submit" size="icon" disabled={messageText.trim() === ''} className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:opacity-90 text-white rounded-full">
                 <Send className="h-5 w-5" />
               </Button>
             </form>
@@ -961,17 +962,17 @@ const MessagesPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="hidden md:flex md:w-2/3 items-center justify-center bg-[#fdf0eb]">
+        <div className="hidden md:flex md:w-2/3 items-center justify-center bg-teal-50">
           <div className="text-center p-8">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#DFB6B2]">
-              <MessageSquare className="h-10 w-10 text-black" />
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-teal-900">
+              <MessageSquare className="h-10 w-10 text-white" />
             </div>
             <h3 className="mt-4 text-lg font-semibold">Your Messages</h3>
             <p className="mt-1 text-sm text-[#854F6C]">
               Select a conversation to start messaging
             </p>
             <Button 
-              className="mt-4 bg-[#854F6C] hover:bg-[#854F6C]/90 text-white"
+              className="mt-4 bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:opacity-90 text-white"
               onClick={() => setShowNewConversation(true)}
             >
               Start a new conversation
