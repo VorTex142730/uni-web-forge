@@ -64,15 +64,12 @@ const Sidebar = () => {
                 onClick={toggleSidebar}
                 className={({ isActive }) => cn(
                   "flex items-center space-x-3 px-4 py-3 mx-2 mb-1 rounded-lg transition-all duration-200",
-                  "text-[#2B124C] hover:bg-[#0E4F52] hover:text-white",
+                  "text-black hover:bg-[#0E4F52] hover:text-white",
                   isActive && "bg-[#0E4F52] text-white font-semibold shadow-sm",
                   "group"
                 )}
               >
-                <span className={cn(
-                  "text-[#0E4F52] group-hover:text-white group-[.active]:text-white transition-colors duration-200",
-                  "flex-shrink-0"
-                )}>{item.icon}</span>
+                <span className="text-[#0E4F52] [.bg-\[\#0E4F52\]_&]:text-white group-hover:text-white transition-colors duration-200 flex-shrink-0">{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
               </NavLink>
             ))}
@@ -81,9 +78,9 @@ const Sidebar = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-[#2B124C] hover:bg-[#0E4F52] hover:text-white transition-all duration-200 group"
+            className="flex items-center space-x-3 px-4 py-3 mx-2 mb-4 rounded-lg text-black hover:bg-[#0E4F52] hover:text-white transition-all duration-200 group"
           >
-            <LogOut size={20} className="text-[#0E4F52] group-hover:text-white transition-colors duration-200 flex-shrink-0" />
+            <span className="text-inherit transition-colors duration-200 flex-shrink-0"><LogOut size={20} /></span>
             <span className="font-medium">Logout</span>
           </button>
         </div>
@@ -115,16 +112,13 @@ const Sidebar = () => {
                 to={item.path}
                 className={({ isActive }) => cn(
                   "flex items-center space-x-3 px-4 py-3 mx-2 mb-1 rounded-lg transition-all duration-200",
-                  "text-[#2B124C] hover:bg-[#0E4F52] hover:text-white",
+                  "text-black hover:bg-[#0E4F52] hover:text-white",
                   isActive && "bg-[#0E4F52] text-white font-semibold shadow-sm",
                   !isExpanded && "md:justify-center md:mx-0",
                   "group"
                 )}
               >
-                <span className={cn(
-                  "text-[#0E4F52] group-hover:text-white group-[.active]:text-white transition-colors duration-200",
-                  "flex-shrink-0"
-                )}>{item.icon}</span>
+                <span className="text-[#0E4F52] [.bg-\[\#0E4F52\]_&]:text-white group-hover:text-white transition-colors duration-200 flex-shrink-0">{item.icon}</span>
                 <span className={cn(
                   "truncate font-medium",
                   !isExpanded && "md:hidden"
