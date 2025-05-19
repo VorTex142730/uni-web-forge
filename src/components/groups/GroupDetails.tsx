@@ -333,35 +333,34 @@ const GroupDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fff4f4]">
+    <div className="min-h-screen bg-[#fdf0eb]">
       {/* Header with Fixed Gradient */}
-      <div className="bg-purple-300">
+      <div className="bg-white/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4">
           {/* Cover Photo Area */}
           <div className="relative h-48">
-            <div className="absolute inset-0 bg-purple-300" />
-            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute inset-0 bg-white/50 backdrop-blur-sm" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-center gap-4">
                 <div className={`w-16 h-16 rounded-lg flex items-center justify-center bg-gradient-to-br ${generateGradient(group.name + '-logo')}`}>
-                  <span className="text-white text-xl font-bold">
+                  <span className="text-black text-xl font-bold">
                     {getInitials(group.name)}
                   </span>
                 </div>
-                <div className="text-white flex-1">
+                <div className="text-black flex-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold">{group.name}</h1>
+                    <h1 className="text-2xl font-bold text-black">{group.name}</h1>
                     {group.createdBy && (
-                      <div className="flex items-center text-sm bg-white/10 px-3 py-1 rounded-full">
+                      <div className="flex items-center text-sm bg-white/70 px-3 py-1 rounded-full">
                         <Crown size={14} className="text-yellow-400 mr-1" />
-                        <span>Created by {group.createdBy.displayName}</span>
+                        <span className="text-black">Created by {group.createdBy.displayName}</span>
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm mt-1">
-                    <span className="capitalize">{group.privacy} Group</span>
-                    <span>•</span>
-                    <span>{group.members?.length || 0} members</span>
+                    <span className="capitalize text-black">{group.privacy} Group</span>
+                    <span className="text-black">•</span>
+                    <span className="text-black">{group.members?.length || 0} members</span>
                   </div>
                 </div>
                 <div>
@@ -370,7 +369,7 @@ const GroupDetails = () => {
                       onClick={handleJoinRequest} 
                       size="default"
                       variant="secondary"
-                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                      className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white hover:opacity-90 border-none"
                     >
                       {group.privacy === 'private' ? 'Request to Join' : 'Join Group'}
                     </Button>
@@ -380,7 +379,7 @@ const GroupDetails = () => {
                       variant="secondary" 
                       size="default" 
                       disabled
-                      className="bg-white/10 text-white border-white/20"
+                      className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white border-none"
                     >
                       Join Request Pending
                     </Button>
@@ -389,7 +388,7 @@ const GroupDetails = () => {
                     <Button 
                       variant="secondary" 
                       size="default"
-                      className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+                      className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white border-none"
                     >
                       Member
                     </Button>
@@ -403,54 +402,54 @@ const GroupDetails = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
         {/* Sidebar */}
-        <div className="w-64 flex-shrink-0">
+        <div className="w-64 flex-shrink-0 bg-white rounded-xl shadow-sm p-4">
           <nav className="space-y-1">
             <button
               onClick={() => setActiveTab('feed')}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 activeTab === 'feed'
-                  ? 'bg-purple-50 text-purple-600'
-                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                  ? 'bg-[#134E4A] text-white'
+                  : 'text-gray-700 hover:bg-[#2D6A67]/80 hover:text-white'
               }`}
             >
               Feed
             </button>
             <button
               onClick={() => setActiveTab('members')}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 activeTab === 'members'
-                  ? 'bg-purple-50 text-purple-600'
-                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                  ? 'bg-[#134E4A] text-white'
+                  : 'text-gray-700 hover:bg-[#2D6A67]/80 hover:text-white'
               }`}
             >
               Members
             </button>
             <button
               onClick={() => setActiveTab('photos')}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 activeTab === 'photos'
-                  ? 'bg-purple-50 text-purple-600'
-                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                  ? 'bg-[#134E4A] text-white'
+                  : 'text-gray-700 hover:bg-[#2D6A67]/80 hover:text-white'
               }`}
             >
               Photos
             </button>
             <button
               onClick={() => setActiveTab('videos')}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 activeTab === 'videos'
-                  ? 'bg-purple-50 text-purple-600'
-                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                  ? 'bg-[#134E4A] text-white'
+                  : 'text-gray-700 hover:bg-[#2D6A67]/80 hover:text-white'
               }`}
             >
               Videos
             </button>
             <button
               onClick={() => setActiveTab('albums')}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium ${
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                 activeTab === 'albums'
-                  ? 'bg-purple-50 text-purple-600'
-                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                  ? 'bg-[#134E4A] text-white'
+                  : 'text-gray-700 hover:bg-[#2D6A67]/80 hover:text-white'
               }`}
             >
               Albums
@@ -478,13 +477,13 @@ const GroupDetails = () => {
         {/* Main Content */}
         <div className="flex-1">
           {activeTab === 'members' && (
-            <div className="p-4 border-b">
-              <div className="relative">
+            <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+              <div className="relative mb-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <Input
                   type="search"
                   placeholder="Search Members..."
-                  className="pl-10 w-full"
+                  className="pl-10 w-full text-black placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-gray-300 focus:border-transparent transition-all duration-200"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -502,7 +501,7 @@ const GroupDetails = () => {
             )}
 
             {activeTab === 'members' && (
-              <div className="space-y-4">
+              <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
                 {!group.members || group.members.length === 0 ? (
                   <p className="text-center text-gray-500 py-8">No members yet</p>
                 ) : (
@@ -533,7 +532,7 @@ const GroupDetails = () => {
                           <div className="flex items-center gap-2">
                             <p className="font-medium">{member.displayName}</p>
                             {member.role === 'admin' && (
-                              <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                              <span className="text-xs bg-[#F5F3FF] text-black px-2 py-0.5 rounded-full">
                                 Admin
                               </span>
                             )}

@@ -191,11 +191,11 @@ const ConnectionsPage: React.FC = () => {
 
           {/* Sidebar */}
           <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
-            <button onClick={() => navigate('/profile')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Profile</button>
-            <button onClick={() => navigate('/connections')} className="block px-4 py-3 rounded-lg text-base font-medium bg-indigo-50 text-indigo-600 transition-colors duration-200">Connections</button>
-            <button onClick={() => navigate('/profilegroups')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Groups</button>
-            <button onClick={() => navigate('/forums')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Forums</button>
-            <button onClick={() => navigate('/blog')} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Blog</button>
+            <button onClick={() => navigate('/profile')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profile' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Profile</button>
+            <button onClick={() => navigate('/connections')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/connections' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Connections</button>
+            <button onClick={() => navigate('/profilegroups')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profilegroups' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Groups</button>
+            <button onClick={() => navigate('/forums')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/forums' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Forums</button>
+            <div className="w-full block px-4 py-3 rounded-lg text-base font-medium text-left text-[#2A363B] opacity-60 cursor-default select-none bg-transparent">My Activity</div>
           </nav>
         </div>
 

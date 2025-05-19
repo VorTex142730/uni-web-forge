@@ -57,7 +57,7 @@ const ProfilePage: React.FC = () => {
     { label: 'Connections', path: '/connections' },
     { label: 'Groups', path: '/profilegroups' },
     { label: 'Forums', path: '/forums' },
-    { label: 'Blog', path: '/blog' }
+    { label: 'My Activity', path: null }
   ];
 
   return (
@@ -112,17 +112,26 @@ const ProfilePage: React.FC = () => {
           {/* Sidebar */}
           <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
             {sidebarItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                className={`block px-4 py-3 rounded-lg text-base font-medium ${
-                  window.location.pathname === item.path
-                    ? 'bg-[#FF847C] text-[#2A363B]'
-                    : 'text-[#2A363B] hover:bg-[#FECEA8] hover:bg-opacity-50 hover:text-[#2A363B]'
-                } transition-colors duration-200`}
-              >
-                {item.label}
-              </Link>
+              item.path ? (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
+                    window.location.pathname === item.path
+                      ? 'bg-[#0E4F52] text-white'
+                      : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <div
+                  key={item.label}
+                  className="block px-4 py-3 rounded-lg text-base font-medium text-[#2A363B] opacity-60 cursor-default select-none bg-transparent"
+                >
+                  {item.label}
+                </div>
+              )
             ))}
           </nav>
         </div>

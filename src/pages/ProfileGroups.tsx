@@ -206,8 +206,8 @@ const MyGroupsPage: React.FC = () => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-indigo-100 to-blue-100 flex items-center justify-center">
-              <Users className="h-8 w-8 text-indigo-500" />
+            <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
+              <Users className="h-8 w-8 text-gray-500" />
             </div>
           )}
         </div>
@@ -223,9 +223,7 @@ const MyGroupsPage: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-800 truncate">{group.name}</h3>
             <p className="text-sm text-gray-500 mt-1 line-clamp-2">{group.description || 'No description available'}</p>
             <div className="flex flex-wrap items-center mt-2 gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {group.privacy}
-              </Badge>
+              <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-700">{group.privacy}</Badge>
               <span className="text-xs text-gray-500 flex items-center">
                 <Users className="h-4 w-4 mr-1" />
                 {group.memberCount} members
@@ -241,7 +239,7 @@ const MyGroupsPage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto hover:bg-gray-100 hover:text-gray-700"
               onClick={() => window.location.href = `/groups/${group.id}`}
             >
               View Group
@@ -308,11 +306,11 @@ const MyGroupsPage: React.FC = () => {
           </div>
 
           <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
-            <button onClick={() => window.location.href = '/profile'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Profile</button>
-            <button onClick={() => window.location.href = '/connections'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Connections</button>
-            <button onClick={() => window.location.href = '/groups'} className="block px-4 py-3 rounded-lg text-base font-medium bg-indigo-50 text-indigo-600 transition-colors duration-200">Groups</button>
-            <button onClick={() => window.location.href = '/forums'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Forums</button>
-            <button onClick={() => window.location.href = '/blog'} className="block px-4 py-3 rounded-lg text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200">Blog</button>
+            <button onClick={() => window.location.href = '/profile'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profile' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Profile</button>
+            <button onClick={() => window.location.href = '/connections'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/connections' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Connections</button>
+            <button onClick={() => window.location.href = '/profilegroups'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profilegroups' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Groups</button>
+            <button onClick={() => window.location.href = '/forums'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/forums' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Forums</button>
+            <div className="w-full block px-4 py-3 rounded-lg text-base font-medium text-left text-[#2A363B] opacity-60 cursor-default select-none bg-transparent">My Activity</div>
           </nav>
         </div>
 
@@ -327,7 +325,7 @@ const MyGroupsPage: React.FC = () => {
                   <Input
                     type="search"
                     placeholder="Search my groups by name or description..."
-                    className="pl-10 w-full"
+                    className="pl-10 w-full placeholder-gray-500 focus-visible:ring-gray-400 focus-visible:ring-2 focus-visible:ring-offset-2"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -337,31 +335,31 @@ const MyGroupsPage: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center"
+                    className="flex items-center hover:bg-gray-100 hover:text-gray-700"
                     onClick={() => setShowFilters(!showFilters)}
                     aria-expanded={showFilters}
                   >
-                    <Filter className="h-4 w-4 mr-2" />
+                    <Filter className="h-4 w-4 mr-2 text-gray-500" />
                     Sort / Filter
                   </Button>
                   <div className="flex items-center border rounded-md p-0.5 bg-gray-100">
                     <Button
                       variant={view === 'grid' ? 'secondary' : 'ghost'}
                       size="sm"
-                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'grid' ? '' : 'text-gray-600 hover:bg-gray-200'}`}
+                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'grid' ? 'bg-gray-300 text-gray-800' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'}`}
                       onClick={() => setView('grid')}
                       aria-label="Grid view"
                     >
-                      <LayoutGrid size={18} />
+                      <LayoutGrid size={18} className={view === 'grid' ? 'text-gray-800' : 'text-gray-500'} />
                     </Button>
                     <Button
                       variant={view === 'list' ? 'secondary' : 'ghost'}
                       size="sm"
-                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'list' ? '' : 'text-gray-600 hover:bg-gray-200'}`}
+                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'list' ? 'bg-gray-300 text-gray-800' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'}`}
                       onClick={() => setView('list')}
                       aria-label="List view"
                     >
-                      <List size={18} />
+                      <List size={18} className={view === 'list' ? 'text-gray-800' : 'text-gray-500'} />
                     </Button>
                   </div>
                 </div>
