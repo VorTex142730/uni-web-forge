@@ -159,7 +159,7 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
               placeholder="What's on your mind?"
               value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
-              className="min-h-[100px] resize-none"
+              className="min-h-[100px] resize-none border border-gray-300 focus-visible:ring-2 focus-visible:ring-gray-300 text-gray-700 placeholder:text-gray-400 focus:border-transparent"
             />
 
             {/* Image preview */}
@@ -206,7 +206,7 @@ const GroupFeed: React.FC<GroupFeedProps> = ({ groupId, isOwner, isMember }) => 
               <Button 
                 type="submit" 
                 disabled={isSubmitting || (!newPost.trim() && !selectedImage)}
-                className="rounded-full"
+                className="rounded-full bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white hover:opacity-90 border-none transition-all duration-200"
               >
                 {isSubmitting ? (
                   <>
