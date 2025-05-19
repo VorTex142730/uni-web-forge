@@ -120,8 +120,7 @@ const BlogPostPage: React.FC = () => {
       <article className="max-w-4xl mx-auto px-6 py-12 bg-white rounded-lg shadow-sm">
         {/* Back Button */}
         <Button
-          variant="ghost"
-          className="mb-4 -ml-2"
+          className="mb-4 -ml-2 bg-teal-500 text-white transition-all hover:bg-gradient-to-r hover:from-[#F53855] hover:to-[#FF8A00]"
           onClick={() => navigate('/blog')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -229,7 +228,7 @@ const BlogPostPage: React.FC = () => {
                 maxLength={500}
                 required
               />
-              <Button type="submit" className="h-9 px-3 text-sm bg-[#854f6c] hover:bg-[#854f6c]/90 text-white">Post</Button>
+              <Button type="submit" className="h-9 px-3 text-sm text-white" style={{ background: 'linear-gradient(90deg, #F53855, #FF8A00)' }}>Post</Button>
             </form>
           )}
           <div className="space-y-4">
