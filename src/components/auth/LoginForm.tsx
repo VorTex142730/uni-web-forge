@@ -44,7 +44,7 @@ const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto p-6 space-y-6">
+    <div className="max-w-md w-full mx-auto p-6 space-y-6 bg-[#fdf0eb] rounded-xl shadow-md">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-semibold text-gray-900">HotSpoT</h1>
         <h2 className="text-xl text-gray-900">Welcome Back</h2>
@@ -54,7 +54,7 @@ const LoginForm: React.FC = () => {
       <Button
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700"
+        className="w-full bg-[#0E4F52] border border-[#0E4F52] hover:bg-[#156568] text-white"
       >
         <img
           src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -84,7 +84,7 @@ const LoginForm: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="pl-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+            className="pl-10 text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
           />
         </div>
 
@@ -98,7 +98,7 @@ const LoginForm: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="pl-10 pr-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+            className="pl-10 pr-10 text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
           />
           <button
             type="button"
@@ -119,6 +119,7 @@ const LoginForm: React.FC = () => {
               id="remember"
               checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(checked === true)}
+              className="checkbox-teal"
             />
             <label htmlFor="remember" className="text-sm text-gray-600">
               Remember Me
@@ -132,7 +133,7 @@ const LoginForm: React.FC = () => {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#854f6c] hover:bg-[#6d3f58] text-white"
+          className="w-full bg-[#0E4F52] hover:bg-[#156568] text-white"
         >
           {loading ? 'Signing in...' : 'Log In'}
         </Button>

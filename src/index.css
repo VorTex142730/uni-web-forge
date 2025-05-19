@@ -113,3 +113,22 @@
 .user-status-online {
   @apply bg-green-500;
 }
+
+/* Custom dropdown menu item hover for navbar (darker transparent teal) */
+.dropdown-menu-item-hover-teal:hover,
+.dropdown-menu-item-hover-teal:focus,
+[data-state="open"].dropdown-menu-item-hover-teal {
+  background-color: rgba(14, 79, 82, 0.16) !important;
+  color: #0E4F52;
+}
+
+/* Custom teal checkbox */
+.checkbox-teal {
+  background-color: white !important;
+  border-color: #0E4F52 !important;
+}
+.checkbox-teal[data-state="checked"] {
+  background-color: #0E4F52 !important;
+  border-color: #0E4F52 !important;
+  color: white !important;
+}

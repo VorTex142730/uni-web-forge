@@ -82,7 +82,7 @@ const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto p-6 space-y-6">
+    <div className="max-w-md w-full mx-auto p-6 space-y-6 bg-[#fdf0eb] rounded-xl shadow-md">
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-semibold text-gray-900">HotSpoT</h1>
         <h2 className="text-xl text-gray-900">Create an Account</h2>
@@ -92,7 +92,7 @@ const RegisterForm: React.FC = () => {
       <Button
         onClick={handleGoogleSignUp}
         disabled={loading}
-        className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700"
+        className="w-full bg-[#0E4F52] border border-[#0E4F52] hover:bg-[#156568] text-white"
       >
         <img
           src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -119,7 +119,7 @@ const RegisterForm: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+            className="text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
           />
         </div>
 
@@ -130,7 +130,7 @@ const RegisterForm: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="pr-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+            className="pr-10 text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
           />
           <button
             type="button"
@@ -152,7 +152,7 @@ const RegisterForm: React.FC = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="pr-10 text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+            className="pr-10 text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
           />
           <button
             type="button"
@@ -172,7 +172,7 @@ const RegisterForm: React.FC = () => {
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           required
-          className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+          className="text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
         />
 
         <Input
@@ -180,14 +180,14 @@ const RegisterForm: React.FC = () => {
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           required
-          className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+          className="text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
         />
 
         <Input
           placeholder="Nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          className="text-black border-[#854f6c] focus-visible:ring-[#854f6c] placeholder:text-black"
+          className="text-black border-[#0E4F52] focus-visible:ring-[#0E4F52] focus:border-[#0E4F52] placeholder:text-black"
         />
 
         <Select value={college} onValueChange={setCollege}>
@@ -229,7 +229,7 @@ const RegisterForm: React.FC = () => {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#854f6c] hover:bg-[#6d3f58] text-white"
+          className="w-full bg-[#0E4F52] hover:bg-[#156568] text-white"
         >
           {loading ? 'Creating Account...' : 'Create Account'}
         </Button>
