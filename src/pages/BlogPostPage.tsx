@@ -6,6 +6,7 @@ import { BlogService, BlogPost, BlogComment } from '@/services/blogService';
 import { format } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTheme } from '@/context/ThemeContext';
 
 const MAX_CLAPS = 50;
 
@@ -16,6 +17,7 @@ const BlogPostPage: React.FC = () => {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useTheme();
 
   // Comments state
   const [comments, setComments] = useState<BlogComment[]>([]);
@@ -97,7 +99,7 @@ const BlogPostPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fdf0eb]">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'}`}>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading...</div>
         </div>
@@ -107,7 +109,7 @@ const BlogPostPage: React.FC = () => {
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-[#fdf0eb]">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'}`}>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-red-500">{error || 'Blog post not found'}</div>
         </div>
@@ -116,8 +118,8 @@ const BlogPostPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
-      <article className="max-w-4xl mx-auto px-6 py-12 bg-white rounded-lg shadow-sm">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'}`}>
+      <article className={`max-w-4xl mx-auto px-6 py-12 rounded-lg shadow-sm ${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'}`}>
         {/* Back Button */}
         <Button
           className="mb-4 -ml-2 bg-teal-500 text-white transition-all hover:bg-gradient-to-r hover:from-[#F53855] hover:to-[#FF8A00]"
@@ -129,7 +131,7 @@ const BlogPostPage: React.FC = () => {
 
         {/* Author and Meta Information */}
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border overflow-hidden">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center border overflow-hidden ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
             {post.author.avatar && post.author.avatar.startsWith('data:image/') ? (
               <img
                 src={post.author.avatar}
@@ -141,27 +143,27 @@ const BlogPostPage: React.FC = () => {
                 }}
               />
             ) : (
-              <span className="text-base font-bold text-gray-500">
+              <span className={`text-base font-bold ${theme === 'dark' ? 'text-gray-200' : 'text-gray-500'}`}>
                 {post.author.name?.[0]?.toUpperCase() || '?'}
               </span>
             )}
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-gray-800 text-sm">{post.author.name}</span>
-            <span className="text-xs text-gray-400">
+            <span className={`font-semibold text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>{post.author.name}</span>
+            <span className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-400'}`}>
               {format(post.createdAt?.toDate ? post.createdAt.toDate() : new Date(), 'MMM d, yyyy')} • {post.readTime}
             </span>
           </div>
         </div>
-        <hr className="mb-6 border-gray-100" />
+        <hr className={`mb-6 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-100'}`} />
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 leading-tight">
+        <h1 className={`text-3xl font-bold mb-2 leading-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
           {post.title}
         </h1>
 
         {/* Subtitle/Excerpt */}
-        <p className="text-lg text-gray-500 mb-6 italic">
+        <p className={`text-lg mb-6 italic ${theme === 'dark' ? 'text-gray-200' : 'text-gray-500'}`}>
           {post.excerpt}
         </p>
 
@@ -171,13 +173,13 @@ const BlogPostPage: React.FC = () => {
             <img
               src={post.imageUrl}
               alt={post.title}
-              className="w-full max-w-xl h-64 object-cover rounded-lg border border-gray-100"
+              className={`w-full max-w-xl h-64 object-cover rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-100'}`}
             />
           </div>
         )}
 
         {/* Content */}
-        <div className="prose prose-base max-w-none text-gray-800 mb-8">
+        <div className={`prose prose-base max-w-none mb-8 ${theme === 'dark' ? 'text-white prose-headings:text-white prose-p:text-white prose-strong:text-white prose-em:text-white' : 'text-gray-800'}`}>
           {post.content.split('\n\n').map((paragraph, index) => (
             <p key={index} className={index === 0 ? 'mb-6 first-letter:text-3xl first-letter:font-bold first-letter:text-[#854f6c] first-letter:float-left first-letter:mr-2' : 'mb-6'}>
               {paragraph}
@@ -190,13 +192,13 @@ const BlogPostPage: React.FC = () => {
           <button
             onClick={handleLike}
             disabled={!user}
-            className={`flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white hover:bg-gray-100 transition ${userLiked ? 'text-[#854f6c]' : 'text-gray-400'}`}
+            className={`flex items-center justify-center w-10 h-10 rounded-full border ${theme === 'dark' ? 'border-gray-700 bg-[#072E2E]' : 'border-gray-200 bg-white'} hover:bg-gray-100 transition ${userLiked ? 'text-[#854f6c]' : theme === 'dark' ? 'text-gray-200' : 'text-gray-400'}`}
             title={userLiked ? 'Unlike' : 'Like'}
           >
             <ThumbsUp className="h-6 w-6" fill={userLiked ? '#854f6c' : 'none'} />
           </button>
-          <span className="text-gray-700 text-base font-medium">{totalLikes}</span>
-          <span className="text-gray-400 text-sm">Likes</span>
+          <span className={`text-base font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}>{totalLikes}</span>
+          <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-400'}`}>Likes</span>
         </div>
 
         {/* Comments Section */}
@@ -221,7 +223,7 @@ const BlogPostPage: React.FC = () => {
                 )}
               </div>
               <textarea
-                className="flex-1 border border-gray-200 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-[#854f6c]/20 resize-none min-h-[40px] text-sm"
+                className={`flex-1 border border-gray-200 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-[#854f6c]/20 resize-none min-h-[40px] text-sm ${theme === 'dark' ? 'bg-[#0E4F52] text-white placeholder:text-gray-200 border-none' : 'bg-white'}`}
                 placeholder="Add a comment..."
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
@@ -257,7 +259,7 @@ const BlogPostPage: React.FC = () => {
                   {editingCommentId === comment.id ? (
                     <div className="flex items-center space-x-2 mt-1">
                       <input
-                        className="flex-1 border border-gray-200 rounded p-1 text-sm"
+                        className={`flex-1 border border-gray-200 rounded p-1 text-sm ${theme === 'dark' ? 'bg-[#0E4F52] text-white placeholder:text-gray-200 border-none' : 'bg-white'}`}
                         value={editingText}
                         onChange={e => setEditingText(e.target.value)}
                         maxLength={500}
@@ -266,7 +268,7 @@ const BlogPostPage: React.FC = () => {
                       <Button size="sm" variant="ghost" onClick={() => setEditingCommentId(null)}>Cancel</Button>
                     </div>
                   ) : (
-                    <p className="text-gray-700 text-sm mb-0.5">{comment.text}</p>
+                    <p className={`text-sm mb-0.5 ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}>{comment.text}</p>
                   )}
                   {user && user.uid === comment.userId && editingCommentId !== comment.id && (
                     <div className="flex space-x-2 mt-1">
