@@ -1,268 +1,710 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import {
+  collection,
+  getDocs,
+  getCountFromServer,
+  doc,
+  setDoc,
+  Timestamp,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  getDoc,
+} from "firebase/firestore";
+import { db } from "@/config/firebaseConfig";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/context/AuthContext"; // <-- Add this import if you have a useAuth hook
 
-// Mock data to replicate the screenshot
-const MOCK_FORUMS = [
-  {
-    id: '1',
-    title: 'Adventure and Thrill',
-    isPrivate: false,
-    description: '',
-    lastActivity: null,
-    memberCount: 0,
-    image: null
-  },
-  {
-    id: '2',
-    title: 'Private: Entrepreneurship Club',
-    isPrivate: true,
-    description: 'To meet the future entrepreneur in the campus.',
-    lastActivity: null,
-    memberCount: 0,
-    image: 'mission-unicorn.png'
-  },
-  {
-    id: '3',
-    title: 'Private: Game development Group',
-    isPrivate: true,
-    description: '',
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 - 1000 * 60 * 60 * 24 * 14), // 1 month, 2 weeks ago
-    memberCount: 0,
-    image: null
-  },
-  {
-    id: '4',
-    title: 'Nexora',
-    isPrivate: false,
-    description: '',
-    lastActivity: null,
-    memberCount: 0,
-    image: null
-  },
-  {
-    id: '5',
-    title: 'Testing club',
-    isPrivate: false,
-    description: 'Just to check if the website is working properly or not ?',
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 * 6 - 1000 * 60 * 60 * 24 * 14), // 6 months, 2 weeks ago
-    memberCount: 0,
-    image: 'hotspot.png'
-  },
-  {
-    id: '6',
-    title: 'Private: Travify',
-    isPrivate: true,
-    description: '',
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 - 1000 * 60 * 60 * 24 * 14), // 1 month, 2 weeks ago
-    memberCount: 0,
-    image: null
-  }
-];
+interface ForumThread {
+  id: string;
+  title: string;
+  author: {
+    name: string;
+    id: string;
+  };
+  createdAt: Timestamp | Date;
+  category?: string;
+  excerpt: string;
+  content: string;
+}
 
-// Mock discussion data
-const DISCUSSIONS = [
-  {
-    id: '1',
-    title: 'Unreal or Unity ?',
-    author: 'Robert',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30 - 1000 * 60 * 60 * 24 * 14), // 1 month, 2 weeks ago
-    memberCount: 2,
-    replyCount: 2,
-    group: 'Game development Group'
-  }
-];
+interface Comment {
+  id: string;
+  content: string;
+  author: {
+    name: string;
+    id: string;
+  };
+  createdAt: Timestamp;
+}
 
-const ForumsPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
+const ForumPage: React.FC = () => {
+  const [threads, setThreads] = useState<ForumThread[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [counts, setCounts] = useState<
+    Record<string, { likes: number; replies: number }>
+  >({});
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedThread, setSelectedThread] = useState<ForumThread | null>(
+    null
+  );
+  const [formData, setFormData] = useState<Partial<ForumThread>>({
+    title: "",
+    category: "",
+    excerpt: "",
+    content: "",
+  });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [userVotes, setUserVotes] = useState<
+    Record<string, "like" | "dislike" | null>
+  >({});
+  const { user, userDetails } = useAuth(); // <-- Get the current user from your auth context/hook
 
-  const formatDate = (date) => {
-    if (!date) return null;
-    
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const months = Math.floor(days / 30);
-    const weeks = Math.floor((days % 30) / 7);
-    
-    if (months >= 1) {
-      return `${months} month${months > 1 ? 's' : ''}, ${weeks} weeks ago`;
+  // Fetch threads and their counts
+  useEffect(() => {
+    const fetchThreads = async () => {
+      try {
+        const threadsCollection = collection(db, "forumThreads");
+        const threadsSnapshot = await getDocs(threadsCollection);
+        const threads: ForumThread[] = threadsSnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as ForumThread)
+        );
+
+        const countsObj: Record<string, { likes: number; replies: number }> = {};
+        await Promise.all(
+          threads.map(async (thread) => {
+            const likesSnap = await getCountFromServer(
+              collection(db, "forumThreads", thread.id, "likes")
+            );
+            // Corrected the subcollection name to 'comments'
+            const repliesSnap = await getCountFromServer(
+              collection(db, "forumThreads", thread.id, "comments")
+            );
+            countsObj[thread.id] = {
+              likes: likesSnap.data().count,
+              replies: repliesSnap.data().count,
+            };
+          })
+        );
+
+        setThreads(threads);
+        setCounts(countsObj);
+      } catch (err) {
+        setError("Failed to load forum threads");
+        console.error("Error fetching forum threads:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchThreads();
+  }, []);
+
+  // Handle form input changes
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission to create a new thread
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError(null);
+
+    try {
+      // Basic validation
+      if (!formData.title || !formData.content) {
+        throw new Error("Title and content are required");
+      }
+
+      const threadRef = doc(collection(db, "forumThreads"));
+      const threadData: ForumThread = {
+        id: threadRef.id,
+        title: formData.title!,
+        author: {
+          name: user?.displayName || "User", // Use actual user display name
+          id: user?.uid || "unknown", // Use actual user UID
+        },
+        createdAt: new Date(),
+        category: formData.category || undefined,
+        excerpt: formData.excerpt || formData.content!.slice(0, 100),
+        content: formData.content!,
+      };
+
+      // Only include defined fields to avoid undefined values
+      const { category, ...rest } = threadData;
+      const dataToSave = {
+        ...rest,
+        ...(category && { category }), // Only include category if defined
+      };
+
+      await setDoc(threadRef, dataToSave);
+
+      // Refresh threads list
+      setThreads((prev) => [threadData, ...prev]);
+      setFormData({ title: "", category: "", excerpt: "", content: "" });
+      setShowCreateForm(false);
+    } catch (err) {
+      setFormError("Failed to create thread");
+      console.error("Error creating thread:", err);
+    } finally {
+      setFormLoading(false);
     }
-    return `${weeks} weeks ago`;
   };
 
-  const handleForumClick = (forumId: string) => {
-    navigate(`/forums/${forumId}`);
+  // For sidebar: get recent threads (top 5)
+  const recentThreads = threads.slice(0, 5);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (selectedThread) {
+        const commentsCollection = collection(
+          db,
+          "forumThreads",
+          selectedThread.id,
+          "comments"
+        );
+        const commentsQuery = query(
+          commentsCollection,
+          orderBy("createdAt", "desc")
+        );
+        const commentsSnapshot = await getDocs(commentsQuery);
+        const commentsData = commentsSnapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as Comment)
+        );
+        setComments(commentsData);
+
+        // Update replies count to match actual number of comments
+        setCounts((prev) => ({
+          ...prev,
+          [selectedThread.id]: {
+            ...prev[selectedThread.id],
+            replies: commentsData.length,
+          },
+        }));
+      }
+    };
+
+    const fetchUserVotes = async () => {
+      if (selectedThread && user?.uid) {
+        const userId = user.uid;
+        const likesDoc = doc(
+          db,
+          "forumThreads",
+          selectedThread.id,
+          "likes",
+          userId
+        );
+        const dislikesDoc = doc(
+          db,
+          "forumThreads",
+          selectedThread.id,
+          "dislikes",
+          userId
+        );
+
+        const [likeSnap, dislikeSnap] = await Promise.all([
+          getDoc(likesDoc),
+          getDoc(dislikesDoc),
+        ]);
+
+        setUserVotes((prev) => ({
+          ...prev,
+          [selectedThread.id]: likeSnap.exists()
+            ? "like"
+            : dislikeSnap.exists()
+            ? "dislike"
+            : null,
+        }));
+      }
+    };
+
+    if (selectedThread) {
+      fetchComments();
+      fetchUserVotes();
+    }
+  }, [selectedThread, user?.uid]);
+
+  const handleVote = async (type: "like" | "dislike") => {
+    if (!selectedThread || !user?.uid) return;
+
+    const userId = user.uid;
+    const threadId = selectedThread.id;
+    const currentVote = userVotes[threadId];
+
+    const likesDoc = doc(db, "forumThreads", threadId, "likes", userId);
+    const dislikesDoc = doc(db, "forumThreads", threadId, "dislikes", userId);
+
+    try {
+      if (type === "like") {
+        if (currentVote === "like") {
+          // Remove like
+          await deleteDoc(likesDoc);
+          setCounts((prev) => ({
+            ...prev,
+            [threadId]: { ...prev[threadId], likes: prev[threadId].likes - 1 },
+          }));
+          setUserVotes((prev) => ({ ...prev, [threadId]: null }));
+        } else {
+          // Add like and remove dislike if exists
+          await setDoc(likesDoc, { userId });
+          if (currentVote === "dislike") {
+            await deleteDoc(dislikesDoc);
+            setCounts((prev) => ({
+              ...prev,
+              [threadId]: {
+                ...prev[threadId],
+                dislikes: (prev[threadId].dislikes || 1) - 1,
+              },
+            }));
+          }
+          setCounts((prev) => ({
+            ...prev,
+            [threadId]: {
+              ...prev[threadId],
+              likes: (prev[threadId].likes || 0) + 1,
+            },
+          }));
+          setUserVotes((prev) => ({ ...prev, [threadId]: "like" }));
+        }
+      } else {
+        if (currentVote === "dislike") {
+          // Remove dislike
+          await deleteDoc(dislikesDoc);
+          setCounts((prev) => ({
+            ...prev,
+            [threadId]: {
+              ...prev[threadId],
+              dislikes: prev[threadId].dislikes - 1,
+            },
+          }));
+          setUserVotes((prev) => ({ ...prev, [threadId]: null }));
+        } else {
+          // Add dislike and remove like if exists
+          await setDoc(dislikesDoc, { userId });
+          if (currentVote === "like") {
+            await deleteDoc(likesDoc);
+            setCounts((prev) => ({
+              ...prev,
+              [threadId]: {
+                ...prev[threadId],
+                likes: (prev[threadId].likes || 1) - 1,
+              },
+            }));
+          }
+          setCounts((prev) => ({
+            ...prev,
+            [threadId]: {
+              ...prev[threadId],
+              dislikes: (prev[threadId].dislikes || 0) + 1,
+            },
+          }));
+          setUserVotes((prev) => ({ ...prev, [threadId]: "dislike" }));
+        }
+      }
+    } catch (error) {
+      console.error("Error handling vote:", error);
+    }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with Fixed Gradient */}
-      <div className="bg-gradient-to-br from-purple-600 to-indigo-700">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Cover Photo Area */}
-          <div className="relative h-32">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600" />
-            <div className="absolute inset-0 bg-black/10" />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-purple-400 to-indigo-500">
-                  <MessageSquare className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-white flex-1">
-                  <div className="flex items-center gap-4 text-sm">
-                    <span>{MOCK_FORUMS.length} total forums</span>
-                    <span>•</span>
-                    <span>{DISCUSSIONS.length} active discussions</span>
-                  </div>
-                </div>
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedThread || !newComment.trim() || !user?.uid) return;
+
+    try {
+      const commentsCollection = collection(
+        db,
+        "forumThreads",
+        selectedThread.id,
+        "comments"
+      );
+      const commentDoc = doc(commentsCollection);
+
+      let commenterName = "User";
+      if (userDetails?.nickname) {
+        commenterName = userDetails.nickname;
+      }
+
+      const commentData = {
+        id: commentDoc.id,
+        content: newComment.trim(),
+        author: {
+          name: commenterName,
+          id: user.uid,
+        },
+        createdAt: Timestamp.now(),
+      };
+
+      await setDoc(commentDoc, commentData);
+      setNewComment("");
+
+      // Re-fetch comments to update both the comments list and replies count
+      const commentsQuery = query(
+        commentsCollection,
+        orderBy("createdAt", "desc")
+      );
+      const commentsSnapshot = await getDocs(commentsQuery);
+      const commentsData = commentsSnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as Comment)
+      );
+      setComments(commentsData);
+      setCounts((prev) => ({
+        ...prev,
+        [selectedThread.id]: {
+          ...prev[selectedThread.id],
+          replies: commentsData.length,
+        },
+      }));
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center text-red-500">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedThread) {
+    return (
+      <div className="min-h-screen bg-[#fdf0eb] py-8">
+        <div className="container mx-auto px-4 max-w-5xl">
+          {/* Thread Details Header */}
+          <div className="text-center mb-12">
+            <Button
+              onClick={() => setSelectedThread(null)}
+              className="mb-4 bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:from-[#F53855]/90 hover:to-[#FF8A00]/90 text-white"
+            >
+              ← Back to Threads
+            </Button>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              {selectedThread.title}
+            </h1>
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleVote("like")}
+                  className={`p-2 rounded-full ${
+                    userVotes[selectedThread.id] === "like"
+                      ? "text-blue-500"
+                      : "text-gray-500"
+                  }`}
+                >
+                  👍 {counts[selectedThread.id]?.likes ?? 0}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleVote("dislike")}
+                  className={`p-2 rounded-full ${
+                    userVotes[selectedThread.id] === "dislike"
+                      ? "text-red-500"
+                      : "text-gray-500"
+                  }`}
+                >
+                  👎 {counts[selectedThread.id]?.dislikes ?? 0}
+                </Button>
               </div>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-500">
+                💬 {counts[selectedThread.id]?.replies ?? 0} comments
+              </span>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="bg-white rounded-xl shadow p-6 mb-8">
+            <div className="mb-4">
+              {selectedThread.category && (
+                <span className="text-xs font-semibold text-yellow-500 uppercase tracking-wide">
+                  {selectedThread.category}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
+              <span className="font-semibold uppercase tracking-wide">
+                {selectedThread.author.name}
+              </span>
+              <span>•</span>
+              <span>
+                {format(
+                  selectedThread.createdAt?.toDate
+                    ? selectedThread.createdAt.toDate()
+                    : new Date(),
+                  "MMMM d, yyyy"
+                )}
+              </span>
+            </div>
+            <p className="text-gray-600 mb-4 text-sm">
+              {selectedThread.excerpt}
+            </p>
+            <div className="prose prose-sm max-w-none text-gray-900">
+              {selectedThread.content}
+            </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-2xl font-bold mb-6">
+              Comments ({comments.length})
+            </h2>
+
+            <form onSubmit={handleCommentSubmit} className="mb-8">
+              <Textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write your comment..."
+                className="mb-4"
+                rows={3}
+              />
+              <Button
+                type="submit"
+                className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:from-[#F53855]/90 hover:to-[#FF8A00]/90"
+              >
+                Post Comment
+              </Button>
+            </form>
+
+            <div className="space-y-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="border-b pb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-semibold text-sm">
+                      {comment.author.name}
+                    </span>
+                    <span className="text-gray-500 text-xs">
+                      {format(
+                        comment.createdAt.toDate(),
+                        "MMM d, yyyy 'at' h:mm a"
+                      )}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 text-sm">{comment.content}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search forums..."
-              className="border border-gray-200 pl-10 pr-4 py-2 rounded-lg w-60 text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+  return (
+    <div className="min-h-screen bg-[#fdf0eb] py-8">
+      <div className="container mx-auto px-4 max-w-5xl">
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Community Forum
+          </h1>
+          <p className="text-md text-gray-500 mb-2">
+            Connect, discuss, and share ideas
+          </p>
+          <Button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:from-[#F53855]/90 hover:to-[#FF8A00]/90 text-white"
+          >
+            {showCreateForm ? "Cancel" : "Create New Thread"}
+          </Button>
+        </div>
+
+        {/* Create Thread Form */}
+        {showCreateForm && (
+          <div className="bg-white rounded-xl shadow p-6 max-w-3xl mx-auto mb-12">
+            {formError && (
+              <div className="text-center text-red-500 mb-4">{formError}</div>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label
+                  htmlFor="title"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Thread Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  id="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  placeholder="Enter thread title"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="category"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Category (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="category"
+                  id="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  placeholder="e.g., General, Tech, Ideas"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="excerpt"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Excerpt (Optional)
+                </label>
+                <textarea
+                  name="excerpt"
+                  id="excerpt"
+                  value={formData.excerpt}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  placeholder="Brief summary of the thread (100 characters or less)"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="content"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Content
+                </label>
+                <textarea
+                  name="content"
+                  id="content"
+                  value={formData.content}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  placeholder="Write your thread content here"
+                  rows={8}
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowCreateForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={formLoading}
+                  className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:from-[#F53855]/90 hover:to-[#FF8A00]/90 text-white"
+                >
+                  {formLoading ? "Creating..." : "Create Thread"}
+                </Button>
+              </div>
+            </form>
           </div>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {MOCK_FORUMS.map((forum) => (
-            <div
-              key={forum.id}
-              className="bg-white rounded-lg overflow-hidden shadow-sm cursor-pointer transition-shadow hover:shadow-md"
-              onClick={() => handleForumClick(forum.id)}
-            >
-              <div className="h-32 bg-slate-500 relative">
-                {forum.image ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black">
-                    <img 
-                      src={`/images/${forum.image}`} 
-                      alt={forum.title}
-                      className="max-h-full object-contain"
-                    />
+        {/* Thread List */}
+        <div className="space-y-16">
+          {threads.map((thread, index) => {
+            const isEven = index % 2 === 0;
+            return (
+              <article
+                key={thread.id}
+                className="bg-white rounded-xl overflow-hidden shadow group flex flex-col transition-all duration-300 hover:shadow-lg cursor-pointer"
+                onClick={() => setSelectedThread(thread)}
+              >
+                <div className="flex-1 p-6 flex flex-col justify-center">
+                  <div className="mb-2">
+                    {thread.category && (
+                      <span className="text-xs font-semibold text-yellow-500 uppercase tracking-wide">
+                        {thread.category}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
-                    <MessageSquare className="h-8 w-8 text-white opacity-50" />
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-[#854f6c] transition-colors line-clamp-2">
+                    {thread.title}
+                  </h2>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                    <span className="font-semibold uppercase tracking-wide">
+                      {thread.author.name}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      {format(
+                        thread.createdAt?.toDate
+                          ? thread.createdAt.toDate()
+                          : new Date(),
+                        "MMMM d, yyyy"
+                      )}
+                    </span>
                   </div>
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="font-medium text-gray-900">{forum.title}</h3>
-                {forum.description && (
-                  <p className="text-gray-600 text-sm mt-1">
-                    {forum.description}
+                  <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
+                    {thread.excerpt}
                   </p>
-                )}
-                <div className="text-sm text-gray-500 mt-2">
-                  {forum.lastActivity ? (
-                    <span>{formatDate(forum.lastActivity)}</span>
-                  ) : (
-                    <span>No Discussions</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-sm text-gray-500 mb-6">
-          Viewing 1 - {MOCK_FORUMS.length} of {MOCK_FORUMS.length} forums
-        </div>
-
-        <div className="bg-white rounded-lg p-4">
-          <h2 className="text-lg font-medium mb-4">All Discussions</h2>
-          
-          {DISCUSSIONS.map(discussion => (
-            <div key={discussion.id} className="border-t border-gray-100 py-4 flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-gray-300 mr-4"></div>
-                <div>
-                  <h3 className="font-medium">{discussion.title}</h3>
-                  <div className="text-sm text-gray-500">
-                    <span>{discussion.author} replied {formatDate(discussion.date)}</span>
-                    <span className="mx-1">·</span>
-                    <span>{discussion.memberCount} Members</span>
-                    <span className="mx-1">·</span>
-                    <span>{discussion.replyCount} Replies</span>
+                  <div className="flex items-center justify-between mt-auto pt-2">
+                    <Button
+                      variant="ghost"
+                      className="text-[#854f6c] hover:text-[#854f6c]/80 text-sm px-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedThread(thread);
+                      }}
+                    >
+                      View Thread →
+                    </Button>
+                    <div className="flex items-center space-x-4 text-xs text-gray-400">
+                      <span>👍 {counts[thread.id]?.likes ?? 0}</span>
+                      <span>💬 {counts[thread.id]?.replies ?? 0}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="bg-purple-500 text-white text-xs rounded-full px-3 py-1">
-                {discussion.group}
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-export default ForumsPage;
-
-/* 
-Firebase integration would go here:
-
-1. Import Firebase hooks and functions:
-import { useAuth } from '@/context/AuthContext';
-import { getForums, createForum } from '@/lib/firebase/forums';
-
-2. Add state for loading and forum data:
-const [forums, setForums] = useState([]);
-const [loading, setLoading] = useState(true);
-const { user } = useAuth();
-
-3. Load forums from Firebase on component mount:
-useEffect(() => {
-  const loadForums = async () => {
-    try {
-      const forumsData = await getForums();
-      setForums(forumsData);
-    } catch (error) {
-      console.error('Error loading forums:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  loadForums();
-}, []);
-
-4. For forum creation, you would need the Dialog component and related state:
-const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-const [newForumData, setNewForumData] = useState({
-  title: '',
-  description: '',
-  isPrivate: false,
-});
-
-const handleCreateForum = async () => {
-  try {
-    const forumRef = await createForum({
-      title: newForumData.title,
-      description: newForumData.description,
-      isPrivate: newForumData.isPrivate,
-    });
-    
-    // Reset form and reload data
-    setIsCreateDialogOpen(false);
-    setNewForumData({ title: '', description: '', isPrivate: false });
-    loadForums();
-  } catch (error) {
-    console.error('Error creating forum:', error);
-  }
-};
-*/
+export default ForumPage;
