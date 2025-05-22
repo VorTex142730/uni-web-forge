@@ -3,15 +3,17 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
+import { useTheme } from '@/context/ThemeContext';
 
 const LayoutContent = () => {
   const { isExpanded } = useSidebar();
   const location = useLocation();
+  const { theme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'}`}>
       <Sidebar />
-      <div className={`transition-all duration-300 ${isExpanded ? 'pl-64' : 'pl-16'}`}>
+      <div className={`pt-16 ${isExpanded ? 'md:pl-64' : 'md:pl-16'} transition-all duration-300`}>
         <Navbar />
         <main className="p-6 mt-16">
           <Outlet />

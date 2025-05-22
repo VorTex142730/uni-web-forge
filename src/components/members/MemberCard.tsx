@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { sendConnectionRequest, areUsersConnected, hasPendingRequest } from '@/lib/firebase/connections';
 import { createConnectionRequestNotification } from '@/components/notifications/NotificationService';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Member {
   id: string;
@@ -46,6 +47,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = 
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   const getInitials = (firstName: string = '', lastName: string = '') => {
     const firstInitial = firstName?.charAt(0) || '';
@@ -126,7 +128,7 @@ export const MemberCard: React.FC<MemberCardProps> = ({ member, isCurrentUser = 
   return (
     <div
       className={cn(
-        'bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200/50 flex flex-col hover:scale-[1.02]',
+        `${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white/80'} backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200/50 flex flex-col hover:scale-[1.02]`,
       )}
     >
       {!isCurrentUser && (

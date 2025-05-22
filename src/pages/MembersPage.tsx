@@ -5,6 +5,7 @@ import { db } from '@/config/firebaseConfig';
 import { MemberCard } from '@/components/members/MemberCard';
 import { useAuth } from '@/context/AuthContext';
 import { getConnections, getOutgoingRequests } from '@/lib/firebase/connections';
+import { useTheme } from '@/context/ThemeContext';
 
 const MembersContent = () => {
   const [view, setView] = useState('grid');
@@ -16,6 +17,7 @@ const MembersContent = () => {
   const { user, userDetails } = useAuth();
   const [connectedIds, setConnectedIds] = useState<string[]>([]);
   const [pendingIds, setPendingIds] = useState<string[]>([]);
+  const { theme } = useTheme();
 
   // Fetch members from Firestore
   useEffect(() => {
@@ -93,22 +95,22 @@ const MembersContent = () => {
   }, [searchQuery, sortBy, allMembers, user, connectedIds, pendingIds]);
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+        <div className={`mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${theme === 'dark' ? 'bg-[#072E2E]' : 'bg-white/50'} backdrop-blur-sm p-4 rounded-xl shadow-sm`}>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Search Members..."
-              className="border border-gray-200 pl-10 pr-4 py-2 rounded-lg w-full text-sm bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+              className={`border ${theme === 'dark' ? 'border-[#072E2E] bg-[#072E2E] text-white' : 'border-gray-200 bg-white/80'} pl-10 pr-4 py-2 rounded-lg w-full text-sm backdrop-blur-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200`}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
 
           <select
-            className="border border-gray-200 px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+            className={`border ${theme === 'dark' ? 'border-[#072E2E] bg-[#072E2E] text-white' : 'border-gray-200 bg-white/80'} px-4 py-2 rounded-lg backdrop-blur-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200`}
             value={sortBy}
             onChange={e => setSortBy(e.target.value)}
           >
@@ -116,15 +118,15 @@ const MembersContent = () => {
             <option value="alphabetical">Alphabetical</option>
           </select>
 
-          <div className="flex border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
+          <div className={`flex border ${theme === 'dark' ? 'border-[#072E2E]' : 'border-gray-200'} rounded-lg overflow-hidden ${theme === 'dark' ? 'bg-[#072E2E]' : 'bg-white/80'} backdrop-blur-sm`}>
             <button
-              className={`p-2 ${view === 'grid' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : 'bg-white'}`}
+              className={`p-2 ${view === 'grid' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'}`}
               onClick={() => setView('grid')}
             >
               <LayoutGrid className="h-5 w-5" />
             </button>
             <button
-              className={`p-2 ${view === 'list' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : 'bg-white'}`}
+              className={`p-2 ${view === 'list' ? 'bg-gradient-to-r from-[#F53855] to-[#FF8A00] text-white' : theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'}`}
               onClick={() => setView('list')}
             >
               <List className="h-5 w-5" />
@@ -133,9 +135,9 @@ const MembersContent = () => {
         </div>
 
         {isLoading ? (
-          <div className="text-center text-gray-500 bg-white/50 backdrop-blur-sm p-8 rounded-xl">Loading members...</div>
+          <div className={`text-center text-gray-500 ${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white/50'} backdrop-blur-sm p-8 rounded-xl`}>Loading members...</div>
         ) : error ? (
-          <div className="bg-white/50 backdrop-blur-sm p-8 rounded-xl text-center text-red-500">{error}</div>
+          <div className={`${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white/50'} backdrop-blur-sm p-8 rounded-xl text-center text-red-500`}>{error}</div>
         ) : filteredMembers.length > 0 ? (
           <div className={view === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6' : 'flex flex-col gap-4'}>
             {filteredMembers.map(member => (
@@ -143,7 +145,7 @@ const MembersContent = () => {
             ))}
           </div>
         ) : (
-          <div className="bg-white/50 backdrop-blur-sm p-8 rounded-xl text-center">
+          <div className={`${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white/50'} backdrop-blur-sm p-8 rounded-xl text-center`}>
             <p className="text-gray-500">No members found matching your search.</p>
           </div>
         )}
