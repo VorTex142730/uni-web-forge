@@ -5,6 +5,7 @@ import { BlogService, BlogPost } from '@/services/blogService';
 import { format } from 'date-fns';
 import { collection, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
+import { useTheme } from '@/context/ThemeContext';
 
 const BlogPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const BlogPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, { likes: number; comments: number }>>({});
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -45,7 +47,7 @@ const BlogPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-gray-50'} py-8`}>
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center">Loading...</div>
         </div>
@@ -55,7 +57,7 @@ const BlogPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-gray-50'} py-8`}>
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center text-red-500">{error}</div>
         </div>
@@ -64,12 +66,12 @@ const BlogPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb] py-8">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'} py-8`}>
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Journey Blog</h1>
-          <p className="text-md text-gray-500 mb-2">A new breed of explorer</p>
+          <h1 className={`text-4xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Journey Blog</h1>
+          <p className={`text-md mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>A new breed of explorer</p>
           <Button
             onClick={() => navigate('/blog/create')}
             className="bg-gradient-to-r from-[#F53855] to-[#FF8A00] hover:from-[#F53855]/90 hover:to-[#FF8A00]/90 text-white"
@@ -84,7 +86,7 @@ const BlogPage: React.FC = () => {
             return (
               <article
                 key={post.id}
-                className={`bg-white rounded-xl overflow-hidden shadow group flex flex-col md:flex-row ${isEven ? 'md:flex-row-reverse' : ''} transition-all duration-300 hover:shadow-lg cursor-pointer`}
+                className={`${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'} rounded-xl overflow-hidden shadow group flex flex-col md:flex-row ${isEven ? 'md:flex-row-reverse' : ''} transition-all duration-300 hover:shadow-lg cursor-pointer`}
                 onClick={() => navigate(`/blog/${post.id}`)}
               >
                 {/* Image */}
@@ -106,19 +108,17 @@ const BlogPage: React.FC = () => {
                     )}
                   </div>
                   {/* Title */}
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-[#854f6c] transition-colors line-clamp-2">
+                  <h2 className={`text-2xl font-bold mb-2 group-hover:text-[#854f6c] transition-colors line-clamp-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     {post.title}
                   </h2>
                   {/* Meta info */}
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                  <div className={`flex items-center gap-2 text-xs mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
                     <span className="font-semibold uppercase tracking-wide">{post.author.name}</span>
                     <span>•</span>
                     <span>{format(post.createdAt?.toDate ? post.createdAt.toDate() : new Date(), 'MMMM d, yyyy')}</span>
                   </div>
                   {/* Excerpt */}
-                  <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
-                    {post.excerpt}
-                  </p>
+                  <p className={`mb-4 line-clamp-2 text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-600'}`}>{post.excerpt}</p>
                   {/* Read more and meta */}
                   <div className="flex items-center justify-between mt-auto pt-2">
                     <Button
@@ -128,7 +128,7 @@ const BlogPage: React.FC = () => {
                     >
                       Read More →
                     </Button>
-                    <div className="flex items-center space-x-4 text-xs text-gray-400">
+                    <div className={`flex items-center space-x-4 text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-400'}`}>
                       <span>👍 {counts[post.id]?.likes ?? 0}</span>
                       <span>💬 {counts[post.id]?.comments ?? 0}</span>
                     </div>
