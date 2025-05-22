@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useTheme } from '@/context/ThemeContext';
 
 const GroupsPage = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const GroupsPage = () => {
   const [myGroups, setMyGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const { theme } = useTheme();
 
   const fetchGroups = async () => {
     setLoading(true);
@@ -161,10 +163,10 @@ const GroupsPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Content */}
-        <div className="bg-[#fdf0eb] rounded-xl shadow-sm overflow-hidden">
+        <div className={`${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'} rounded-xl shadow-sm overflow-hidden`}>
           {/* Tabs */}
           <Tabs defaultValue={activeTab} className="w-full" onValueChange={(value) => setActiveTab(value as 'all' | 'my' | 'create')}>
             <div className="border-b bg-white/50 backdrop-blur-sm rounded-xl px-4 py-2">
@@ -189,7 +191,7 @@ const GroupsPage = () => {
             </TabsContent>
 
             <TabsContent value="all" className="p-0">
-              <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/50 backdrop-blur-sm p-4 rounded-xl shadow-sm">
+              <div className={`mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${theme === 'dark' ? 'bg-[#072E2E]' : 'bg-white/50'} backdrop-blur-sm p-4 rounded-xl shadow-sm`}>
                 {/* Search */}
                 <div className="relative flex-1 max-w-xl w-full">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -257,7 +259,7 @@ const GroupsPage = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="bg-[#fdf0eb] rounded-2xl p-6">
+                    <div className={`${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'} rounded-2xl p-6`}>
                       <div className={view === 'grid' 
                         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
                         : 'space-y-4'}>
@@ -312,7 +314,7 @@ const GroupsPage = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="bg-[#fdf0eb] rounded-2xl p-6">
+                    <div className={`${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'} rounded-2xl p-6`}>
                       <div className={view === 'grid' 
                         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' 
                         : 'space-y-4'}>

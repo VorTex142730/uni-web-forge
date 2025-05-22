@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GroupAvatar } from './GroupAvatar';
+import { useTheme } from '@/context/ThemeContext';
 
 interface GroupCardProps {
   group: Group;
@@ -37,6 +38,7 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
   const { user } = useAuth();
   const [memberStatus, setMemberStatus] = useState<'creator' | 'member' | 'none' | 'pending'>('none');
   const [isHovered, setIsHovered] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const checkMemberStatus = async () => {
@@ -161,17 +163,7 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
   const metaInfo = `${group.memberCount} member${group.memberCount !== 1 ? 's' : ''} • ${group.privacy} • Active ${formatRelativeTime(group.lastActive)}`;
 
   return (
-    <motion.div
-      className="bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200/50 flex flex-col hover:scale-[1.02] min-h-[320px] cursor-pointer group"
-      onClick={onClick || (() => navigate(`/groups/${group.id}`))}
-      whileHover={{ scale: 1.025, boxShadow: '0 8px 32px rgba(80, 63, 205, 0.08)' }}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 16 }}
-      transition={{ duration: 0.25, type: 'spring', stiffness: 120 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className={`${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white/80'} backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200/50 flex flex-col hover:scale-[1.02] min-h-[320px] cursor-pointer group`}>
       <div className="flex flex-col items-center pt-6 px-6">
         <div className="relative mb-2">
           <div className="h-20 w-20 rounded-full bg-[#134E4A] p-[2px] shadow-lg flex items-center justify-center mx-auto">
@@ -227,7 +219,7 @@ const GroupCard = ({ group, onClick, variant = 'grid' }: GroupCardProps) => {
           </Button>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 
