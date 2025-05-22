@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings, Search, Menu, BookOpen } from 'lucide-react';
+import { Bell, ShoppingCart, ChevronDown, Mail, User, Users, Clock, MessageSquare, UserPlus, Image, Video, LogOut, Users2, Settings, Search, Menu, BookOpen, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, useNavigate } from 'react-router-dom';
@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useUniversalSearch } from '@/hooks/useUniversalSearch';
+import { useTheme } from '@/context/ThemeContext';
 
 interface QuickSearchResult {
   id: string;
@@ -72,6 +73,8 @@ const Navbar = () => {
   const typeIcons: Record<string, JSX.Element> = {
     user: <Users className="h-4 w-4" />, group: <Users2 className="h-4 w-4" />, forum: <MessageSquare className="h-4 w-4" />, post: <BookOpen className="h-4 w-4" />, blog: <BookOpen className="h-4 w-4" />, photo: <Image className="h-4 w-4" />, video: <Video className="h-4 w-4" />
   };
+
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     console.log('Navbar useEffect: Setting up handleClickOutside');
@@ -281,6 +284,16 @@ const Navbar = () => {
 
       {/* Actions */}
       <div className="flex items-center space-x-2 md:space-x-4">
+        {/* Dark Mode Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-white hover:bg-white/10"
+          onClick={toggleTheme}
+        >
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </Button>
+
         {/* Mobile Search Button */}
         <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/10" onClick={() => console.log('Mobile Search Button clicked')}>
           <Search className="h-5 w-5" />

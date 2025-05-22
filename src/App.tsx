@@ -39,6 +39,7 @@ import AdminProductPage from './pages/AdminProductPage';
 import { CartProvider } from './context/CartContext';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import { ThemeProvider } from './context/ThemeContext';
 
 const queryClient = new QueryClient();
 
@@ -233,15 +234,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          <TooltipProvider>
-            <SidebarProvider>
-              <BrowserRouter>
-                <AppRoutes />
-                <Toaster />
-                <Sonner />
-              </BrowserRouter>
-            </SidebarProvider>
-          </TooltipProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <SidebarProvider>
+                <BrowserRouter>
+                  <AppRoutes />
+                  <Toaster />
+                  <Sonner />
+                </BrowserRouter>
+              </SidebarProvider>
+            </TooltipProvider>
+          </ThemeProvider>
         </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
