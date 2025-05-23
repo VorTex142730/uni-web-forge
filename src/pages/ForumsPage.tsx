@@ -17,6 +17,7 @@ import {
 import { db } from "@/config/firebaseConfig";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext"; // <-- Add this import if you have a useAuth hook
+import { useTheme } from '@/context/ThemeContext';
 
 interface ForumThread {
   id: string;
@@ -66,6 +67,7 @@ const ForumPage: React.FC = () => {
     Record<string, "like" | "dislike" | null>
   >({});
   const { user, userDetails } = useAuth(); // <-- Get the current user from your auth context/hook
+  const { theme } = useTheme();
 
   // Fetch threads and their counts
   useEffect(() => {
@@ -384,7 +386,7 @@ const ForumPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-gray-50'} py-8`}>
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center">Loading...</div>
         </div>
@@ -394,7 +396,7 @@ const ForumPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-gray-50'} py-8`}>
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="text-center text-red-500">{error}</div>
         </div>
@@ -404,7 +406,7 @@ const ForumPage: React.FC = () => {
 
   if (selectedThread) {
     return (
-      <div className="min-h-screen bg-[#fdf0eb] py-8">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'} py-8`}>
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Thread Details Header */}
           <div className="text-center mb-12">
@@ -414,43 +416,26 @@ const ForumPage: React.FC = () => {
             >
               ← Back to Threads
             </Button>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              {selectedThread.title}
-            </h1>
+            <h1 className={`text-4xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{selectedThread.title}</h1>
             <div className="flex items-center justify-center gap-4">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   onClick={() => handleVote("like")}
-                  className={`p-2 rounded-full ${
-                    userVotes[selectedThread.id] === "like"
-                      ? "text-blue-500"
-                      : "text-gray-500"
-                  }`}
+                  className={`p-2 rounded-full ${userVotes[selectedThread.id] === "like" ? "text-blue-500" : "text-gray-500"}`}
                 >
                   👍 {counts[selectedThread.id]?.likes ?? 0}
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleVote("dislike")}
-                  className={`p-2 rounded-full ${
-                    userVotes[selectedThread.id] === "dislike"
-                      ? "text-red-500"
-                      : "text-gray-500"
-                  }`}
-                >
-                  👎 {counts[selectedThread.id]?.dislikes ?? 0}
-                </Button>
               </div>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-500">
+              <span className={`text-gray-500`}>•</span>
+              <span className={`text-gray-500`}>
                 💬 {counts[selectedThread.id]?.replies ?? 0} comments
               </span>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="bg-white rounded-xl shadow p-6 mb-8">
+          <div className={`rounded-xl shadow p-6 mb-8 ${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'}`}>
             <div className="mb-4">
               {selectedThread.category && (
                 <span className="text-xs font-semibold text-yellow-500 uppercase tracking-wide">
@@ -458,40 +443,32 @@ const ForumPage: React.FC = () => {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
+            <div className={`flex items-center gap-2 text-xs mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}> 
               <span className="font-semibold uppercase tracking-wide">
                 {selectedThread.author.name}
               </span>
               <span>•</span>
               <span>
                 {format(
-                  selectedThread.createdAt?.toDate
-                    ? selectedThread.createdAt.toDate()
-                    : new Date(),
+                  selectedThread.createdAt instanceof Date ? selectedThread.createdAt : selectedThread.createdAt.toDate(),
                   "MMMM d, yyyy"
                 )}
               </span>
             </div>
-            <p className="text-gray-600 mb-4 text-sm">
-              {selectedThread.excerpt}
-            </p>
-            <div className="prose prose-sm max-w-none text-gray-900">
-              {selectedThread.content}
-            </div>
+            <p className={`mb-4 text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-600'}`}>{selectedThread.excerpt}</p>
+            <div className={`prose prose-sm max-w-none ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{selectedThread.content}</div>
           </div>
 
           {/* Comments Section */}
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-2xl font-bold mb-6">
-              Comments ({comments.length})
-            </h2>
+          <div className={`rounded-xl shadow p-6 ${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'}`}>
+            <h2 className={`text-2xl font-bold mb-6 ${theme === 'dark' ? 'text-white' : ''}`}>Comments ({comments.length})</h2>
 
             <form onSubmit={handleCommentSubmit} className="mb-8">
               <Textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write your comment..."
-                className="mb-4"
+                className={`mb-4 ${theme === 'dark' ? 'border border-gray-600 focus:ring-0 focus:border-gray-600 text-white placeholder:text-gray-400 bg-[#0E4F52]' : ''}`}
                 rows={3}
               />
               <Button
@@ -506,17 +483,10 @@ const ForumPage: React.FC = () => {
               {comments.map((comment) => (
                 <div key={comment.id} className="border-b pb-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="font-semibold text-sm">
-                      {comment.author.name}
-                    </span>
-                    <span className="text-gray-500 text-xs">
-                      {format(
-                        comment.createdAt.toDate(),
-                        "MMM d, yyyy 'at' h:mm a"
-                      )}
-                    </span>
+                    <span className={`font-semibold text-sm ${theme === 'dark' ? 'text-white' : ''}`}>{comment.author.name}</span>
+                    <span className={`text-gray-500 text-xs ${theme === 'dark' ? 'text-gray-300' : ''}`}>{format(comment.createdAt.toDate(), "MMM d, yyyy 'at' h:mm a")}</span>
                   </div>
-                  <p className="text-gray-700 text-sm">{comment.content}</p>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}>{comment.content}</p>
                 </div>
               ))}
             </div>
@@ -527,11 +497,11 @@ const ForumPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb] py-8">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'} py-8`}>
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className={`text-4xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             Community Forum
           </h1>
           <p className="text-md text-gray-500 mb-2">
@@ -650,52 +620,20 @@ const ForumPage: React.FC = () => {
             return (
               <article
                 key={thread.id}
-                className="bg-white rounded-xl overflow-hidden shadow group flex flex-col transition-all duration-300 hover:shadow-lg cursor-pointer"
+                className={`rounded-xl overflow-hidden shadow group flex flex-col transition-all duration-300 hover:shadow-lg cursor-pointer ${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'}`}
                 onClick={() => setSelectedThread(thread)}
               >
-                <div className="flex-1 p-6 flex flex-col justify-center">
-                  <div className="mb-2">
-                    {thread.category && (
-                      <span className="text-xs font-semibold text-yellow-500 uppercase tracking-wide">
-                        {thread.category}
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-[#854f6c] transition-colors line-clamp-2">
-                    {thread.title}
-                  </h2>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                    <span className="font-semibold uppercase tracking-wide">
-                      {thread.author.name}
-                    </span>
+                <div className="p-6">
+                  <h2 className={`text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{thread.title}</h2>
+                  <div className={`flex items-center gap-2 text-xs mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
+                    <span className="font-semibold uppercase tracking-wide">{thread.author.name}</span>
                     <span>•</span>
-                    <span>
-                      {format(
-                        thread.createdAt?.toDate
-                          ? thread.createdAt.toDate()
-                          : new Date(),
-                        "MMMM d, yyyy"
-                      )}
-                    </span>
+                    <span>{format(thread.createdAt instanceof Date ? thread.createdAt : thread.createdAt.toDate(), 'MMMM d, yyyy')}</span>
                   </div>
-                  <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
-                    {thread.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-2">
-                    <Button
-                      variant="ghost"
-                      className="text-[#854f6c] hover:text-[#854f6c]/80 text-sm px-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedThread(thread);
-                      }}
-                    >
-                      View Thread →
-                    </Button>
-                    <div className="flex items-center space-x-4 text-xs text-gray-400">
-                      <span>👍 {counts[thread.id]?.likes ?? 0}</span>
-                      <span>💬 {counts[thread.id]?.replies ?? 0}</span>
-                    </div>
+                  <p className={`mb-4 line-clamp-2 text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-600'}`}>{thread.excerpt}</p>
+                  <div className={`flex items-center space-x-4 text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-400'}`}>
+                    <span>👍 {counts[thread.id]?.likes ?? 0}</span>
+                    <span>💬 {counts[thread.id]?.replies ?? 0}</span>
                   </div>
                 </div>
               </article>
