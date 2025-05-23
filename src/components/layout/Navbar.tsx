@@ -189,7 +189,7 @@ const Navbar = () => {
 
   console.log('Navbar component rendering JSX');
   return (
-    <div className={`h-16 bg-[#0E4F52] flex items-center justify-between px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${isExpanded ? 'md:left-64' : 'md:left-16'} left-0 z-20 shadow-lg`}>
+    <div className={`h-16 bg-[#0E4F52] flex items-center px-4 md:px-6 fixed top-0 right-0 transition-all duration-300 ${isExpanded ? 'md:left-64' : 'md:left-16'} left-0 z-20 shadow-lg`}>
       <div className="flex items-center">
         {/* Mobile Menu Button */}
         <Button
@@ -211,7 +211,7 @@ const Navbar = () => {
       </div>
 
       {/* Search */}
-      <div className="flex-1 max-w-2xl mx-4 relative">
+      <div className="flex-1 w-full md:max-w-2xl mx-2 md:mx-4 relative">
         <form onSubmit={handleSearch} className="relative" ref={searchRef}>
           <div className="relative">
             <Input
@@ -283,7 +283,7 @@ const Navbar = () => {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center space-x-2 md:space-x-4">
+      <div className="flex items-center space-x-2 md:space-x-4 w-full justify-end">
         {/* Dark Mode Toggle */}
         <Button
           variant="ghost"
@@ -294,18 +294,13 @@ const Navbar = () => {
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </Button>
 
-        {/* Mobile Search Button */}
-        <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/10" onClick={() => console.log('Mobile Search Button clicked')}>
-          <Search className="h-5 w-5" />
-        </Button>
-
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-white/10 relative"
+                className="text-white hover:bg-white/10 relative hidden md:flex"
                 onClick={() => handleNavigation('/messages')}
               >
                 <Mail size={20} />
@@ -326,7 +321,7 @@ const Navbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-white/10 relative"
+                className="text-white hover:bg-white/10 relative hidden md:flex"
                 onClick={() => handleNavigation('/notifications')}
               >
                 <Bell size={20} />
@@ -347,7 +342,7 @@ const Navbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-white/10 relative"
+                className="text-white hover:bg-white/10 relative hidden md:flex"
                 onClick={() => handleNavigation('/cart')}
               >
                 <ShoppingCart size={20} />
@@ -364,7 +359,7 @@ const Navbar = () => {
           </Tooltip>
         </TooltipProvider>
 
-        {/* User Profile Dropdown - Hide on mobile */}
+        {/* User Profile Dropdown */}
         <div className="hidden md:block">
           <DropdownMenu onOpenChange={(open) => console.log('User Profile Dropdown open state changed:', open)}>
             <DropdownMenuTrigger asChild>

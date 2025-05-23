@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { BookOpen, Users, MessageSquare, LayoutGrid, Menu, X, LogOut, ShoppingBag } from 'lucide-react';
+import { BookOpen, Users, MessageSquare, LayoutGrid, Menu, X, LogOut, ShoppingBag, Bell, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,12 @@ const Sidebar = () => {
     navItems.push({ icon: <ShoppingBag size={20} />, label: 'Admin Products', path: '/admin/products' });
   }
 
+  const mobileNavItems = [
+    { icon: <Bell size={20} />, label: 'Notifications', path: '/notifications' },
+    { icon: <ShoppingCart size={20} />, label: 'Cart', path: '/cart' },
+    ...navItems,
+  ];
+
   return (
     <>
       {/* Mobile Sidebar */}
@@ -43,21 +49,35 @@ const Sidebar = () => {
       )}>
         <div className="flex flex-col h-full">
           {/* Mobile Header */}
-          <div className="flex items-center justify-between p-4 border-b border-[#DFB6B2]">
-            <h2 className="text-xl font-bold text-[#2B124C] tracking-wide">HotSpoT</h2>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-[#0E4F52] hover:text-[#2B124C]"
-              onClick={toggleSidebar}
-            >
-              <X className="h-6 w-6" />
-            </Button>
-          </div>
+          <div className="flex flex-col items-center p-4 border-b border-[#DFB6B2]">
+             <div className="flex items-center justify-between w-full mb-4">
+              <h2 className="text-xl font-bold text-[#2B124C] tracking-wide">HotSpoT</h2>
+               <Button 
+                 variant="ghost" 
+                 size="icon" 
+                 className="text-[#0E4F52] hover:text-[#2B124C]"
+                 onClick={toggleSidebar}
+               >
+                 <X className="h-6 w-6" />
+               </Button>
+             </div>
+             {user && userDetails && (
+               <NavLink to="/profile" onClick={toggleSidebar} className="flex items-center space-x-3 w-full">
+                 <Avatar className="h-10 w-10">
+                   <AvatarImage src={userDetails.photoURL || '/default-avatar.png'} alt="Profile" />
+                   <AvatarFallback>{userDetails.firstName ? userDetails.firstName[0] : 'U'}</AvatarFallback>
+                 </Avatar>
+                 <div className="flex flex-col">
+                   <span className="font-medium text-[#2B124C]">{userDetails.firstName || user.username}</span>
+                   <span className="text-sm text-gray-600">View Profile</span>
+                 </div>
+               </NavLink>
+             )}
+           </div>
 
           {/* Navigation */}
           <div className="flex-1 py-4 overflow-y-auto">
-            {navItems.map((item) => (
+            {mobileNavItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
@@ -106,7 +126,7 @@ const Sidebar = () => {
         {/* Navigation */}
         <div className="flex flex-col h-[calc(100vh-64px)] overflow-y-auto">
           <div className="flex-1 py-4">
-            {navItems.map((item) => (
+            {[...navItems].map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}

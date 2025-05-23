@@ -4,6 +4,9 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
+import { Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const LayoutContent = () => {
   const { isExpanded } = useSidebar();
@@ -18,6 +21,19 @@ const LayoutContent = () => {
         <main className="p-6 mt-16">
           <Outlet />
         </main>
+      </div>
+
+      {/* Fixed Messages Button for Mobile */}
+      <div className="fixed bottom-4 right-4 md:hidden z-50">
+        <Link to="/messages">
+          <Button
+            variant="default"
+            size="icon"
+            className="rounded-full h-14 w-14 shadow-lg bg-[#0E4F52] hover:bg-[#0E4F52]/90 text-white"
+          >
+            <Mail size={24} />
+          </Button>
+        </Link>
       </div>
     </div>
   );
