@@ -270,13 +270,6 @@ const ForumPage: React.FC = () => {
           await setDoc(likesDoc, { userId });
           if (currentVote === "dislike") {
             await deleteDoc(dislikesDoc);
-            setCounts((prev) => ({
-              ...prev,
-              [threadId]: {
-                ...prev[threadId],
-                dislikes: (prev[threadId].dislikes || 1) - 1,
-              },
-            }));
           }
           setCounts((prev) => ({
             ...prev,
@@ -291,36 +284,18 @@ const ForumPage: React.FC = () => {
         if (currentVote === "dislike") {
           // Remove dislike
           await deleteDoc(dislikesDoc);
-          setCounts((prev) => ({
-            ...prev,
-            [threadId]: {
-              ...prev[threadId],
-              dislikes: prev[threadId].dislikes - 1,
-            },
-          }));
-          setUserVotes((prev) => ({ ...prev, [threadId]: null }));
         } else {
           // Add dislike and remove like if exists
           await setDoc(dislikesDoc, { userId });
-          if (currentVote === "like") {
-            await deleteDoc(likesDoc);
-            setCounts((prev) => ({
-              ...prev,
-              [threadId]: {
-                ...prev[threadId],
-                likes: (prev[threadId].likes || 1) - 1,
-              },
-            }));
-          }
-          setCounts((prev) => ({
-            ...prev,
-            [threadId]: {
-              ...prev[threadId],
-              dislikes: (prev[threadId].dislikes || 0) + 1,
-            },
-          }));
-          setUserVotes((prev) => ({ ...prev, [threadId]: "dislike" }));
         }
+        setCounts((prev) => ({
+          ...prev,
+          [threadId]: {
+            ...prev[threadId],
+            likes: (prev[threadId].likes || 0) - 1,
+          },
+        }));
+        setUserVotes((prev) => ({ ...prev, [threadId]: "dislike" }));
       }
     } catch (error) {
       console.error("Error handling vote:", error);
@@ -517,15 +492,15 @@ const ForumPage: React.FC = () => {
 
         {/* Create Thread Form */}
         {showCreateForm && (
-          <div className="bg-white rounded-xl shadow p-6 max-w-3xl mx-auto mb-12">
+          <div className={`rounded-xl shadow p-6 max-w-3xl mx-auto mb-12 ${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'}`}>
             {formError && (
-              <div className="text-center text-red-500 mb-4">{formError}</div>
+              <div className={`text-center mb-4 ${theme === 'dark' ? 'text-red-300' : 'text-red-500'}`}>{formError}</div>
             )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label
                   htmlFor="title"
-                  className="block text-sm font-medium text-gray-700"
+                  className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}
                 >
                   Thread Title
                 </label>
@@ -535,7 +510,7 @@ const ForumPage: React.FC = () => {
                   id="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm ${theme === 'dark' ? 'bg-[#0E4F52] text-white placeholder:text-gray-300 border-none' : ''}`}
                   placeholder="Enter thread title"
                   required
                 />
@@ -543,7 +518,7 @@ const ForumPage: React.FC = () => {
               <div>
                 <label
                   htmlFor="category"
-                  className="block text-sm font-medium text-gray-700"
+                  className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}
                 >
                   Category (Optional)
                 </label>
@@ -553,14 +528,14 @@ const ForumPage: React.FC = () => {
                   id="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm ${theme === 'dark' ? 'bg-[#0E4F52] text-white placeholder:text-gray-300 border-none' : ''}`}
                   placeholder="e.g., General, Tech, Ideas"
                 />
               </div>
               <div>
                 <label
                   htmlFor="excerpt"
-                  className="block text-sm font-medium text-gray-700"
+                  className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}
                 >
                   Excerpt (Optional)
                 </label>
@@ -569,7 +544,7 @@ const ForumPage: React.FC = () => {
                   id="excerpt"
                   value={formData.excerpt}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm ${theme === 'dark' ? 'bg-[#0E4F52] text-white placeholder:text-gray-300 border-none' : ''}`}
                   placeholder="Brief summary of the thread (100 characters or less)"
                   rows={3}
                 />
@@ -577,7 +552,7 @@ const ForumPage: React.FC = () => {
               <div>
                 <label
                   htmlFor="content"
-                  className="block text-sm font-medium text-gray-700"
+                  className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}
                 >
                   Content
                 </label>
@@ -586,7 +561,7 @@ const ForumPage: React.FC = () => {
                   id="content"
                   value={formData.content}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm"
+                  className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#854f6c] focus:ring-[#854f6c] sm:text-sm ${theme === 'dark' ? 'bg-[#0E4F52] text-white placeholder:text-gray-300 border-none' : ''}`}
                   placeholder="Write your thread content here"
                   rows={8}
                   required
@@ -596,7 +571,7 @@ const ForumPage: React.FC = () => {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-gray-500 hover:text-gray-700"
+                  className={`hover:text-gray-700 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}
                   onClick={() => setShowCreateForm(false)}
                 >
                   Cancel
