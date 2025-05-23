@@ -4,8 +4,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
 import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { Camera, Edit2 } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 const ProfilePage: React.FC = () => {
+  const { theme } = useTheme();
   const { username } = useParams();
   const navigate = useNavigate();
   const { user, userDetails } = useAuth();
@@ -61,12 +63,12 @@ const ProfilePage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-[#fdf0eb]' : 'bg-[#001F1F]'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex space-x-8">
         {/* Left Column: Profile Card and Sidebar */}
         <div className="flex flex-col w-80">
           {/* Profile Card */}
-          <div className="bg-white shadow-sm rounded-xl p-6 mb-4">
+          <div className={`shadow-sm rounded-xl p-6 mb-4 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
             <div className="relative group">
               <div className="w-16 h-16 rounded-full border-2 border-white shadow-md overflow-hidden relative mx-auto">
                 {userDetails?.photoURL ? (
@@ -99,8 +101,8 @@ const ProfilePage: React.FC = () => {
               <div className="absolute bottom-0 right-8 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
             </div>
             <div className="mt-2 text-center">
-              <h1 className="text-lg font-bold text-gray-900">{userDetails.firstName} {userDetails.lastName}</h1>
-              <div className="mt-1 text-xs text-gray-500">
+              <h1 className={`text-lg font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{userDetails.firstName} {userDetails.lastName}</h1>
+              <div className={`mt-1 text-xs ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>
                 @{user.username || user.displayName?.toLowerCase().replace(/\s/g, '')} • Joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </div>
               <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#fdf0eb] text-[#2A363B]">
@@ -110,7 +112,7 @@ const ProfilePage: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
+          <nav className={`rounded-xl shadow-sm p-6 sticky top-8 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
             {sidebarItems.map((item) => (
               item.path ? (
                 <Link
@@ -119,7 +121,9 @@ const ProfilePage: React.FC = () => {
                   className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
                     window.location.pathname === item.path
                       ? 'bg-[#0E4F52] text-white'
-                      : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'
+                      : theme === 'light'
+                        ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'
+                        : 'text-white hover:bg-[#0E4F52]/20'
                   }`}
                 >
                   {item.label}
@@ -127,7 +131,7 @@ const ProfilePage: React.FC = () => {
               ) : (
                 <div
                   key={item.label}
-                  className="block px-4 py-3 rounded-lg text-base font-medium text-[#2A363B] opacity-60 cursor-default select-none bg-transparent"
+                  className={`block px-4 py-3 rounded-lg text-base font-medium opacity-60 cursor-default select-none bg-transparent ${theme === 'light' ? 'text-[#2A363B]' : 'text-white'}`}
                 >
                   {item.label}
                 </div>
@@ -138,9 +142,9 @@ const ProfilePage: React.FC = () => {
 
         {/* Main Content */}
         <div className="flex-1">
-          <div className="bg-white rounded-xl shadow-sm p-8">
+          <div className={`rounded-xl shadow-sm p-8 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-semibold text-gray-900">Profile Details</h2>
+              <h2 className={`text-xl font-semibold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Profile Details</h2>
               <button 
                 onClick={() => navigate('/account')}
                 className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors duration-200"
@@ -152,24 +156,24 @@ const ProfilePage: React.FC = () => {
             
             <div className="grid grid-cols-1 gap-6">
               <div className="grid grid-cols-3 gap-4">
-                <div className="text-gray-500 font-medium">First Name</div>
-                <div className="col-span-2 text-gray-900">{userDetails.firstName}</div>
+                <div className={`font-medium ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>First Name</div>
+                <div className={`col-span-2 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{userDetails.firstName}</div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="text-gray-500 font-medium">Last Name</div>
-                <div className="col-span-2 text-gray-900">{userDetails.lastName}</div>
+                <div className={`font-medium ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>Last Name</div>
+                <div className={`col-span-2 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{userDetails.lastName}</div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="text-gray-500 font-medium">Nickname</div>
-                <div className="col-span-2 text-gray-900">{userDetails.nickname}</div>
+                <div className={`font-medium ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>Nickname</div>
+                <div className={`col-span-2 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{userDetails.nickname}</div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="text-gray-500 font-medium">College</div>
-                <div className="col-span-2 text-gray-900">{userDetails.college}</div>
+                <div className={`font-medium ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>College</div>
+                <div className={`col-span-2 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{userDetails.college}</div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="text-gray-500 font-medium">Role</div>
-                <div className="col-span-2 text-gray-900">{userDetails.role}</div>
+                <div className={`font-medium ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>Role</div>
+                <div className={`col-span-2 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{userDetails.role}</div>
               </div>
             </div>
           </div>
