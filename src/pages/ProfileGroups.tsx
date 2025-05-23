@@ -5,6 +5,7 @@ import { LayoutGrid, List, Search, Users, Filter, ArrowUpDown, Camera } from 'lu
 import { collection, query, orderBy, getDocs, where, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { Badge } from '@/components/ui/badge';
 import { getFirestore } from 'firebase/firestore';
 
@@ -48,6 +49,7 @@ const safeTimestampToISO = (timestamp: any): string => {
 
 const MyGroupsPage: React.FC = () => {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recently-active');
@@ -191,7 +193,7 @@ const MyGroupsPage: React.FC = () => {
     return (
       <div
         key={group.id}
-        className={`bg-white rounded-xl shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md w-full max-w-md mx-auto ${
+        className={`rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md w-full max-w-md mx-auto ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#072E2E] border-gray-700'} ${
           isGrid ? 'flex flex-col' : 'flex flex-col sm:flex-row sm:items-center'
         }`}
       >
@@ -206,8 +208,8 @@ const MyGroupsPage: React.FC = () => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
-              <Users className="h-8 w-8 text-gray-500" />
+            <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-gradient-to-r from-gray-100 to-gray-200' : 'bg-gradient-to-r from-[#072E2E] to-[#0E4F52]'}`}>
+              <Users className={`h-8 w-8 ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`} />
             </div>
           )}
         </div>
@@ -220,16 +222,16 @@ const MyGroupsPage: React.FC = () => {
         >
           {/* Group Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-800 truncate">{group.name}</h3>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{group.description || 'No description available'}</p>
+            <h3 className={`text-lg font-semibold truncate ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>{group.name}</h3>
+            <p className={`text-sm mt-1 line-clamp-2 ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>{group.description || 'No description available'}</p>
             <div className="flex flex-wrap items-center mt-2 gap-2">
-              <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-700">{group.privacy}</Badge>
-              <span className="text-xs text-gray-500 flex items-center">
+              <Badge variant="secondary" className={`text-xs ${theme === 'light' ? 'bg-gray-200 text-gray-700' : 'bg-gray-700 text-gray-200'}`}>{group.privacy}</Badge>
+              <span className={`text-xs flex items-center ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>
                 <Users className="h-4 w-4 mr-1" />
                 {group.memberCount} members
               </span>
             </div>
-            <p className="text-xs text-gray-400 mt-1 truncate">
+            <p className={`text-xs mt-1 truncate ${theme === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>
               Last active: {new Date(group.lastActive).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
@@ -239,7 +241,7 @@ const MyGroupsPage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              className="w-full sm:w-auto hover:bg-gray-100 hover:text-gray-700"
+              className={`w-full sm:w-auto ${theme === 'light' ? 'hover:bg-gray-100 hover:text-gray-700' : 'hover:bg-[#0E4F52] hover:text-white'}`}
               onClick={() => window.location.href = `/groups/${group.id}`}
             >
               View Group
@@ -252,17 +254,17 @@ const MyGroupsPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-between mb-4 px-1">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-[#fdf0eb]' : 'bg-[#001F1F]'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row lg:space-x-8">
         <div className="flex flex-col w-full lg:w-80">
-          <div className="bg-white shadow-sm rounded-xl p-6 mb-4">
+          <div className={`shadow-sm rounded-xl p-6 mb-4 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
             <div className="relative group">
               <div className="w-16 h-16 rounded-full border-2 border-white shadow-md overflow-hidden relative mx-auto">
                 {profilePhotoURL ? (
@@ -295,39 +297,39 @@ const MyGroupsPage: React.FC = () => {
               <div className="absolute bottom-0 right-8 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
             </div>
             <div className="mt-2 text-center">
-              <h1 className="text-lg font-bold text-gray-800">{user.displayName || 'User'}</h1>
-              <div className="mt-1 text-xs text-gray-500">
+              <h1 className={`text-lg font-bold ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>{user.displayName || 'User'}</h1>
+              <div className={`mt-1 text-xs ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>
                 @{user.displayName?.toLowerCase().replace(/\s/g, '') || 'user'} • Joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </div>
-              <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+              <span className={`inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${theme === 'light' ? 'bg-indigo-100 text-indigo-700' : 'bg-indigo-900 text-indigo-200'}`}>
                 Member
               </span>
             </div>
           </div>
 
-          <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
-            <button onClick={() => window.location.href = '/profile'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profile' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Profile</button>
-            <button onClick={() => window.location.href = '/connections'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/connections' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Connections</button>
-            <button onClick={() => window.location.href = '/profilegroups'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profilegroups' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Groups</button>
-            <button onClick={() => window.location.href = '/forums'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/forums' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Forums</button>
-            <div className="w-full block px-4 py-3 rounded-lg text-base font-medium text-left text-[#2A363B] opacity-60 cursor-default select-none bg-transparent">My Activity</div>
+          <nav className={`rounded-xl shadow-sm p-6 sticky top-8 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
+            <button onClick={() => window.location.href = '/profile'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profile' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Profile</button>
+            <button onClick={() => window.location.href = '/connections'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/connections' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Connections</button>
+            <button onClick={() => window.location.href = '/profilegroups'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profilegroups' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Groups</button>
+            <button onClick={() => window.location.href = '/forums'} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/forums' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Forums</button>
+            <div className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left opacity-60 cursor-default select-none bg-transparent ${theme === 'light' ? 'text-[#2A363B]' : 'text-white'}`}>My Activity</div>
           </nav>
         </div>
 
         <div className="flex-1 mt-6 lg:mt-0">
-          <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">My Groups</h1>
+          <div className={`rounded-xl shadow-sm p-6 sm:p-8 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
+            <h1 className={`text-2xl font-bold mb-6 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>My Groups</h1>
 
             <div className="mb-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="relative flex-1 max-w-lg">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${theme === 'light' ? 'text-gray-400' : 'text-gray-500'}`} size={18} />
                   <Input
-                    type="search"
+                    type="text"
                     placeholder="Search my groups by name or description..."
-                    className="pl-10 w-full placeholder-gray-500 focus-visible:ring-gray-400 focus-visible:ring-2 focus-visible:ring-offset-2"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`flex-1 mr-2 pl-10 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E] text-white placeholder:text-gray-400 border-gray-700'}`}
                   />
                 </div>
 
@@ -335,18 +337,17 @@ const MyGroupsPage: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center hover:bg-gray-100 hover:text-gray-700"
+                    className={`flex items-center gap-2 ${theme === 'light' ? '' : 'bg-[#0E4F52] text-white border-[#0E4F52]'}`}
                     onClick={() => setShowFilters(!showFilters)}
-                    aria-expanded={showFilters}
                   >
-                    <Filter className="h-4 w-4 mr-2 text-gray-500" />
+                    <Filter className={`h-4 w-4 mr-2 ${theme === 'light' ? 'text-gray-500' : 'text-white'}`} />
                     Sort / Filter
                   </Button>
-                  <div className="flex items-center border rounded-md p-0.5 bg-gray-100">
+                  <div className="flex space-x-1.5">
                     <Button
                       variant={view === 'grid' ? 'secondary' : 'ghost'}
                       size="sm"
-                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'grid' ? 'bg-gray-300 text-gray-800' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'}`}
+                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'grid' ? (theme === 'light' ? 'bg-gray-300 text-gray-800' : 'bg-[#0E4F52] text-white') : (theme === 'light' ? 'text-gray-600 hover:bg-gray-200 hover:text-gray-800' : 'text-gray-300 hover:bg-[#0E4F52] hover:text-white')}`}
                       onClick={() => setView('grid')}
                       aria-label="Grid view"
                     >
@@ -355,7 +356,7 @@ const MyGroupsPage: React.FC = () => {
                     <Button
                       variant={view === 'list' ? 'secondary' : 'ghost'}
                       size="sm"
-                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'list' ? 'bg-gray-300 text-gray-800' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'}`}
+                      className={`p-1.5 h-auto rounded-sm transition-colors ${view === 'list' ? (theme === 'light' ? 'bg-gray-300 text-gray-800' : 'bg-[#0E4F52] text-white') : (theme === 'light' ? 'text-gray-600 hover:bg-gray-200 hover:text-gray-800' : 'text-gray-300 hover:bg-[#0E4F52] hover:text-white')}`}
                       onClick={() => setView('list')}
                       aria-label="List view"
                     >
@@ -366,14 +367,14 @@ const MyGroupsPage: React.FC = () => {
               </div>
 
               {showFilters && (
-                <div className="mt-4 pt-4 border-t">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                <div className={`mt-4 pt-4 border-t ${theme === 'light' ? 'border-gray-200' : 'border-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${theme === 'light' ? 'text-gray-700' : 'text-white'}`}>Sort By</label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <Button
                       variant={sortBy === 'recently-active' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSortBy('recently-active')}
-                      className="justify-start text-left"
+                      className={`justify-start text-left ${theme === 'light' ? '' : 'bg-[#0E4F52] text-white border-[#0E4F52]'}`}
                     >
                       Recently Active
                     </Button>
@@ -381,7 +382,7 @@ const MyGroupsPage: React.FC = () => {
                       variant={sortBy === 'newest' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSortBy('newest')}
-                      className="justify-start text-left"
+                      className={`justify-start text-left ${theme === 'light' ? '' : 'bg-[#0E4F52] text-white border-[#0E4F52]'}`}
                     >
                       Newest
                     </Button>
@@ -389,7 +390,7 @@ const MyGroupsPage: React.FC = () => {
                       variant={sortBy === 'alphabetical' ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setSortBy('alphabetical')}
-                      className="justify-start text-left"
+                      className={`justify-start text-left ${theme === 'light' ? '' : 'bg-[#0E4F52] text-white border-[#0E4F52]'}`}
                     >
                       Alphabetical (A-Z)
                     </Button>
@@ -400,21 +401,21 @@ const MyGroupsPage: React.FC = () => {
 
             {loading ? (
               <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${theme === 'light' ? 'border-blue-600' : 'border-blue-400'}`}></div>
               </div>
             ) : (
               <div>
                 {sortedGroups.length === 0 ? (
-                  <div className="text-center py-16 px-6 bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Users className="h-8 w-8 text-blue-600" />
+                  <div className={`text-center py-16 px-6 rounded-lg shadow-sm border ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#072E2E] border-gray-700'}`}>
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${theme === 'light' ? 'bg-blue-100' : 'bg-[#0E4F52]'}`}>
+                      <Users className={`h-8 w-8 ${theme === 'light' ? 'text-blue-600' : 'text-blue-400'}`} />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    <h3 className={`text-xl font-semibold mb-2 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>
                       {searchQuery
                         ? 'No groups match your search'
                         : "You haven't joined any groups yet"}
                     </h3>
-                    <p className="text-gray-500">
+                    <p className={`${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>
                       {searchQuery
                         ? 'Try adjusting your search query or clearing the filter.'
                         : 'Explore and join groups to connect with others!'}
