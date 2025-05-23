@@ -8,6 +8,7 @@ import { db } from '@/config/firebaseConfig';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Search, Users, UserPlus, MessageSquare, MoreHorizontal } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Connection {
   id: string;
@@ -36,6 +37,7 @@ interface UserDetails {
 }
 
 const ConnectionsPage: React.FC = () => {
+  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const { user, userDetails } = useAuth();
   const navigate = useNavigate();
@@ -154,12 +156,12 @@ const ConnectionsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-[#fdf0eb]' : 'bg-[#001F1F]'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex space-x-8">
         {/* Left Column: Profile Card and Sidebar */}
         <div className="flex flex-col w-80">
           {/* Profile Card */}
-          <div className="bg-white shadow-sm rounded-xl p-6 mb-4">
+          <div className={`shadow-sm rounded-xl p-6 mb-4 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
             <div className="relative group">
               <div className="w-16 h-16 rounded-full border-2 border-white shadow-md overflow-hidden relative mx-auto">
                 {userDetails?.photoURL ? (
@@ -179,7 +181,7 @@ const ConnectionsPage: React.FC = () => {
               <div className="absolute bottom-0 right-8 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
             </div>
             <div className="mt-2 text-center">
-              <h1 className="text-lg font-bold text-gray-900">{userDetails.firstName} {userDetails.lastName}</h1>
+              <h1 className={`text-lg font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{userDetails.firstName} {userDetails.lastName}</h1>
               <div className="mt-1 text-xs text-gray-500">
                 @{user.username || user.displayName?.toLowerCase().replace(/\s/g, '')} • Joined {new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </div>
@@ -190,18 +192,18 @@ const ConnectionsPage: React.FC = () => {
           </div>
 
           {/* Sidebar */}
-          <nav className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
-            <button onClick={() => navigate('/profile')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profile' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Profile</button>
-            <button onClick={() => navigate('/connections')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/connections' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Connections</button>
-            <button onClick={() => navigate('/profilegroups')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profilegroups' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Groups</button>
-            <button onClick={() => navigate('/forums')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/forums' ? 'bg-[#0E4F52] text-white' : 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]'}`}>Forums</button>
-            <div className="w-full block px-4 py-3 rounded-lg text-base font-medium text-left text-[#2A363B] opacity-60 cursor-default select-none bg-transparent">My Activity</div>
+          <nav className={`rounded-xl shadow-sm p-6 sticky top-8 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
+            <button onClick={() => navigate('/profile')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profile' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Profile</button>
+            <button onClick={() => navigate('/connections')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/connections' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Connections</button>
+            <button onClick={() => navigate('/profilegroups')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/profilegroups' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Groups</button>
+            <button onClick={() => navigate('/forums')} className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left transition-colors duration-200 ${window.location.pathname === '/forums' ? 'bg-[#0E4F52] text-white' : theme === 'light' ? 'text-[#2A363B] hover:bg-[#0E4F52]/20 hover:text-[#0E4F52]' : 'text-white hover:bg-[#0E4F52]/20'}`}>Forums</button>
+            <div className={`w-full block px-4 py-3 rounded-lg text-base font-medium text-left opacity-60 cursor-default select-none bg-transparent ${theme === 'light' ? 'text-[#2A363B]' : 'text-white'}`}>My Activity</div>
           </nav>
         </div>
 
         {/* Main Content */}
         <div className="flex-1">
-          <div className="bg-white rounded-xl shadow-sm p-8">
+          <div className={`rounded-lg shadow ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'} p-8`}>
             {/* Search and Tabs */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-4">
@@ -224,7 +226,7 @@ const ConnectionsPage: React.FC = () => {
                     className={`${
                       activeTab === 'connections'
                         ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        : `border-transparent ${theme === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-gray-300 hover:text-white'} hover:border-gray-300`
                     } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                   >
                     Connections ({connectionUsers.length})
@@ -234,7 +236,7 @@ const ConnectionsPage: React.FC = () => {
                     className={`${
                       activeTab === 'requests'
                         ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        : `border-transparent ${theme === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-gray-300 hover:text-white'} hover:border-gray-300`
                     } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                   >
                     Pending Requests ({requestUsers.length})
@@ -251,16 +253,16 @@ const ConnectionsPage: React.FC = () => {
               <div className="grid grid-cols-1 gap-4">
                 {activeTab === 'connections' ? (
                   filteredConnections.length === 0 ? (
-                    <div className="text-center py-12 bg-white rounded-lg shadow">
+                    <div className={`text-center py-12 rounded-lg shadow ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
                       <Users className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">No connections found</h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <h3 className={`text-sm font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>No connections found</h3>
+                      <p className={`mt-1 text-sm ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>
                         {searchQuery ? 'Try adjusting your search' : 'Start connecting with other members'}
                       </p>
                     </div>
                   ) : (
                     filteredConnections.map((member) => (
-                      <div key={member.id} className="bg-white rounded-lg shadow p-6">
+                      <div key={member.id} className={`rounded-lg shadow p-6 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
                         <div className="flex items-start">
                           <Avatar className="h-16 w-16">
                             <AvatarImage src={member.avatar} />
@@ -271,11 +273,11 @@ const ConnectionsPage: React.FC = () => {
                           <div className="ml-4 flex-1">
                             <div className="flex items-center justify-between">
                               <div>
-                                <h3 className="text-lg font-medium text-gray-900">
+                                <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
                                   {member.firstName} {member.lastName}
                                 </h3>
-                                <p className="text-sm text-gray-500">{member.college}</p>
-                                <p className="text-sm text-gray-500">{member.role}</p>
+                                <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>{member.college}</p>
+                                <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>{member.role}</p>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Button 
@@ -303,10 +305,10 @@ const ConnectionsPage: React.FC = () => {
                   )
                 ) : (
                   requestUsers.length === 0 ? (
-                    <div className="text-center py-12 bg-white rounded-lg shadow">
+                    <div className={`text-center py-12 rounded-lg shadow ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'}`}>
                       <UserPlus className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">No pending requests</h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <h3 className={`text-sm font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>No pending requests</h3>
+                      <p className={`mt-1 text-sm ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>
                         You're all caught up! No pending connection requests.
                       </p>
                     </div>
@@ -316,7 +318,7 @@ const ConnectionsPage: React.FC = () => {
                       return (
                         <div
                           key={member.id}
-                          className={`bg-white rounded-lg shadow p-6 transition-opacity duration-400 ${removingRequestId === request?.id ? 'opacity-0' : 'opacity-100'}`}
+                          className={`rounded-lg shadow p-6 transition-opacity duration-400 ${theme === 'light' ? 'bg-white' : 'bg-[#072E2E]'} ${removingRequestId === request?.id ? 'opacity-0' : 'opacity-100'}`}
                         >
                           <div className="flex items-start">
                             <Avatar className="h-16 w-16">
@@ -328,11 +330,11 @@ const ConnectionsPage: React.FC = () => {
                             <div className="ml-4 flex-1">
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <h3 className="text-lg font-medium text-gray-900">
+                                  <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
                                     {member.firstName} {member.lastName}
                                   </h3>
-                                  <p className="text-sm text-gray-500">{member.college}</p>
-                                  <p className="text-sm text-gray-500">{member.role}</p>
+                                  <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>{member.college}</p>
+                                  <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-gray-300'}`}>{member.role}</p>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Button
