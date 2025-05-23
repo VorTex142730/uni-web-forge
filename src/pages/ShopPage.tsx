@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { ShopService, Product } from '@/services/shopService';
 import { useAuth } from '@/context/AuthContext';
 import { ShoppingCart, Search, X, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 const ShopPage: React.FC = () => {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ const ShopPage: React.FC = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useTheme();
 
   // Fetch products
   useEffect(() => {
@@ -112,10 +114,10 @@ const ShopPage: React.FC = () => {
   const closeModal = () => setModalProduct(null);
 
   return (
-    <div className="min-h-screen bg-[#fdf0eb]">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#001F1F]' : 'bg-[#fdf0eb]'}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-blue-900">Shop</h1>
+          <h1 className={`text-3xl font-bold mb-8 ${theme === 'dark' ? 'text-white' : 'text-blue-900'}`}>Shop</h1>
           <div className="flex gap-2 items-center w-full md:w-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />

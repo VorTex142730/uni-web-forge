@@ -1,16 +1,18 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { theme } = useTheme();
+
   const renderStars = (rating: number) => {
     return Array(5)
       .fill(0)
@@ -26,7 +28,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+    <div className={`${theme === 'dark' ? 'bg-[#072E2E] text-white' : 'bg-white'} rounded-lg overflow-hidden shadow-sm`}>
       <div className="relative">
         {product.onSale && (
           <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-xs font-bold uppercase">
